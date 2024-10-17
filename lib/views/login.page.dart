@@ -1,12 +1,48 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:myapp/services/auth_service.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
+
+  @override
+  _LoginPageState createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  // Controladores para os campos de email e senha
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  // Instância do AuthService
+  final AuthService _authService = AuthService();
+
+  // Função para autenticar o usuário
+  Future<void> _signIn() async {
+    String email = _emailController.text.trim();
+    String password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      // Exibir mensagem se algum campo estiver vazio
+      Fluttertoast.showToast(
+        msg: "Por favor, insira email e senha",
+        toastLength: Toast.LENGTH_LONG,
+      );
+      return;
+    }
+
+    final user = await _authService.loginWithEmail(email, password);
+    if (user != null) {
+      // Se o login for bem-sucedido, navegue para a página inicial
+      Navigator.pushReplacementNamed(context, '/home');
+    }
+    // Não é necessário tratar erros aqui, o AuthService já lida com isso
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFD8D5B3), // Cor de fundo semelhante ao visto
+      backgroundColor: Color(0xFFD8D5B3),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Center(
@@ -21,14 +57,13 @@ class LoginPage extends StatelessWidget {
                   Image.asset(
                     'assets/logo_transparent.png',
                     height: 60,
-                    errorBuilder: (BuildContext context, Object error,
-                        StackTrace? stackTrace) {
-                      return const Text('Erro ao carregar imagem');
+                    errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
+                      return Text('Erro ao carregar imagem');
                     },
                   ),
-                  const SizedBox(width: 5), // Espaço entre logo e nome
+                  SizedBox(width: 5),
                   // Nome do aplicativo
-                  const Text(
+                  Text(
                     'BookTrade',
                     style: TextStyle(
                       fontSize: 30,
@@ -37,10 +72,11 @@ class LoginPage extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 40),
+              SizedBox(height: 40),
 
               // Campo de Email
               TextField(
+                controller: _emailController,
                 decoration: InputDecoration(
                   labelText: 'Email',
                   border: OutlineInputBorder(
@@ -50,10 +86,11 @@ class LoginPage extends StatelessWidget {
                   fillColor: Colors.white,
                 ),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: 20),
 
               // Campo de Senha
               TextField(
+                controller: _passwordController,
                 obscureText: true,
                 decoration: InputDecoration(
                   labelText: 'Senha',
@@ -64,7 +101,7 @@ class LoginPage extends StatelessWidget {
                   fillColor: Colors.white,
                 ),
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: 10),
 
               // Esqueceu a senha
               Align(
@@ -72,6 +109,7 @@ class LoginPage extends StatelessWidget {
                 child: TextButton(
                   onPressed: () {
                     // Ação para "Esqueceu sua senha?"
+                    // Você pode implementar a recuperação de senha aqui
                   },
                   child: Text(
                     'Esqueceu sua senha?',
@@ -86,19 +124,15 @@ class LoginPage extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(
-                        context, '/home'); // Ação ao clicar em "Entrar"
-                  },
+                  onPressed: _signIn,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        const Color(0xFF77C593), // Cor verde semelhante ao botão
+                    backgroundColor: Color(0xFF77C593),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: const Padding(
-                    padding: EdgeInsets.all(15.0),
+                  child: Padding(
+                    padding: const EdgeInsets.all(15.0),
                     child: Text('Entrar'),
                   ),
                 ),
@@ -107,10 +141,9 @@ class LoginPage extends StatelessWidget {
               // Criar nova conta
               TextButton(
                 onPressed: () {
-                  Navigator.pushNamed(
-                      context, "/register"); // Ação para "Criar nova conta"
+                  Navigator.pushNamed(context, "/register");
                 },
-                child: const Text(
+                child: Text(
                   'Criar nova conta',
                   style: TextStyle(
                     color: Colors.black,

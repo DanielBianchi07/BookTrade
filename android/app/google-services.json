@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "635889380060",
+    "project_id": "booktrade-c6ed3",
+    "storage_bucket": "booktrade-c6ed3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:635889380060:android:7bf71078b4cf190058a219",
+        "android_client_info": {
+          "package_name": "BookTrade.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA1Vj1V0SF7b3KwJURDE-4PI-dFEB5lHZM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

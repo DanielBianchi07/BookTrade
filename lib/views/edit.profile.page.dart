@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 
-
 class EditProfilePage extends StatelessWidget {
-  final TextEditingController nameController = TextEditingController(text: 'Fulano da Silva');
-  final TextEditingController phoneController = TextEditingController(text: '4002-8922');
-  final TextEditingController emailController = TextEditingController(text: 'fulano@gmail.com');
-  final TextEditingController passwordController = TextEditingController(text: '************');
+  final TextEditingController nameController =
+      TextEditingController(text: 'Fulano da Silva');
+  final TextEditingController phoneController =
+      TextEditingController(text: '4002-8922');
+  final TextEditingController emailController =
+      TextEditingController(text: 'fulano@gmail.com');
+  final TextEditingController passwordController =
+      TextEditingController(text: '************');
 
   EditProfilePage({super.key});
 
@@ -13,7 +16,8 @@ class EditProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFFD8D5B3), // Cor amarelada na parte superior
+        backgroundColor:
+            const Color(0xFFD8D5B3), // Cor amarelada na parte superior
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
@@ -103,7 +107,8 @@ class EditProfilePage extends StatelessWidget {
                   // Lógica para salvar as informações
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF77C593), // Cor do botão "Salvar"
+                  backgroundColor:
+                      const Color(0xFF77C593), // Cor do botão "Salvar"
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
