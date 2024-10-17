@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 class RegistrationPage extends StatelessWidget {
+  const RegistrationPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFD8D5B3), // Fundo branco para a tela
+      backgroundColor: const Color(0xFFD8D5B3), // Fundo branco para a tela
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
@@ -16,17 +18,17 @@ class RegistrationPage extends StatelessWidget {
                 'assets/logo_transparent.png', // Caminho para o logo
                 height: 80,
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
 
               // Nome do aplicativo
-              Text(
+              const Text(
                 'BookTrade',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
 
               // Texto descritivo
               Text(
@@ -38,7 +40,7 @@ class RegistrationPage extends StatelessWidget {
                   color: Colors.grey[700],
                 ),
               ),
-              SizedBox(height: 30),
+              const SizedBox(height: 30),
 
               // Campo de Nome
               TextField(
@@ -51,7 +53,7 @@ class RegistrationPage extends StatelessWidget {
                   fillColor: Colors.grey[200],
                 ),
               ),
-              SizedBox(height: 15),
+              const SizedBox(height: 15),
 
               // Campo de Telefone
               TextField(
@@ -64,7 +66,7 @@ class RegistrationPage extends StatelessWidget {
                   fillColor: Colors.grey[200],
                 ),
               ),
-              SizedBox(height: 15),
+              const SizedBox(height: 15),
 
               // Campo de Email
               TextField(
@@ -77,7 +79,7 @@ class RegistrationPage extends StatelessWidget {
                   fillColor: Colors.grey[200],
                 ),
               ),
-              SizedBox(height: 15),
+              const SizedBox(height: 15),
 
               // Campo de Senha
               TextField(
@@ -91,7 +93,7 @@ class RegistrationPage extends StatelessWidget {
                   fillColor: Colors.grey[200],
                 ),
               ),
-              SizedBox(height: 15),
+              const SizedBox(height: 15),
 
               // Campo de Confirmar Senha
               TextField(
@@ -105,7 +107,7 @@ class RegistrationPage extends StatelessWidget {
                   fillColor: Colors.grey[200],
                 ),
               ),
-              SizedBox(height: 30),
+              const SizedBox(height: 30),
 
               // Botão de Cadastro
               SizedBox(
@@ -116,13 +118,13 @@ class RegistrationPage extends StatelessWidget {
                         context, '/home'); // Ação ao clicar em "Cadastrar"
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF77C593), // Cor verde do botão
+                    backgroundColor: const Color(0xFF77C593), // Cor verde do botão
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(15.0),
+                  child: const Padding(
+                    padding: EdgeInsets.all(15.0),
                     child: Text(
                       'Cadastrar',
                       style: TextStyle(
@@ -133,7 +135,7 @@ class RegistrationPage extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
 
               // Link para entrar
               TextButton(
@@ -141,7 +143,7 @@ class RegistrationPage extends StatelessWidget {
                   Navigator.pushNamed(context,
                       '/login'); // Ação para "Já possui conta? Entre aqui"
                 },
-                child: Text(
+                child: const Text(
                   'Já possui conta? Entre aqui',
                   style: TextStyle(
                     color: Colors.black,

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
   @override
   _HomePageState createState() => _HomePageState();
 }
@@ -20,10 +22,10 @@ class _HomePageState extends State<HomePage> {
       key: _scaffoldKey,
       backgroundColor: Colors.white, // Cor de fundo branca para o aplicativo
       appBar: AppBar(
-        backgroundColor: Color(0xFFD8D5B3), // Cor amarelada apenas na parte de cima
+        backgroundColor: const Color(0xFFD8D5B3), // Cor amarelada apenas na parte de cima
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.menu, color: Colors.black), // Ícone do menu hambúrguer no lado esquerdo
+          icon: const Icon(Icons.menu, color: Colors.black), // Ícone do menu hambúrguer no lado esquerdo
           onPressed: () {
             _scaffoldKey.currentState?.openDrawer();
           },
@@ -34,13 +36,13 @@ class _HomePageState extends State<HomePage> {
             // Barra de pesquisa mais estreita e com borda verde
             Container(
               height: 28, // Reduzindo ainda mais a altura da barra de pesquisa
-              padding: EdgeInsets.symmetric(horizontal: 8.0),
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: Colors.green, width: 1.5), // Borda verde
               ),
-              child: Row(
+              child: const Row(
                 children: [
                   Icon(Icons.search, color: Colors.grey, size: 18), // Ícone menor
                   SizedBox(width: 8),
@@ -56,9 +58,9 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
-            SizedBox(height: 5),
+            const SizedBox(height: 5),
             // Endereço logo abaixo da barra de pesquisa
-            Row(
+            const Row(
               children: [
                 Icon(Icons.location_on, color: Colors.green, size: 18), // Ícone menor
                 SizedBox(width: 8),
@@ -80,36 +82,36 @@ class _HomePageState extends State<HomePage> {
           children: [
             // Cabeçalho do menu com foto, endereço, estrelas, e botão de edição
             Container(
-              color: Color(0xFFD8D5B3), // Cor amarelada semelhante à AppBar
-              padding: EdgeInsets.symmetric(vertical: 30.0, horizontal: 16.0),
+              color: const Color(0xFFD8D5B3), // Cor amarelada semelhante à AppBar
+              padding: const EdgeInsets.symmetric(vertical: 30.0, horizontal: 16.0),
               child: Stack(
                 children: [
                   Column(
                     children: [
-                      Center(
+                      const Center(
                         child: CircleAvatar(
                           backgroundImage: NetworkImage('https://i.pravatar.cc/300'), // Substituir pela URL da imagem do perfil
                           radius: 40,
                         ),
                       ),
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       // Nome do usuário
-                      Text(
+                      const Text(
                         'Fulano da Silva',
                         style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                       ),
-                      SizedBox(height: 5),
+                      const SizedBox(height: 5),
                       // Endereço do usuário
-                      Text(
+                      const Text(
                         'Address',
                         style: TextStyle(fontSize: 14),
                       ),
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       // Estrelas de avaliação
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: List.generate(5, (index) {
-                          return Icon(Icons.star, color: Colors.amber, size: 18);
+                          return const Icon(Icons.star, color: Colors.amber, size: 18);
                         }),
                       ),
                     ],
@@ -127,7 +129,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                       child: IconButton(
                         padding: EdgeInsets.zero,
-                        icon: Icon(
+                        icon: const Icon(
                           Icons.edit,
                           color: Colors.white,
                           size: 18,
@@ -143,43 +145,43 @@ class _HomePageState extends State<HomePage> {
             ),
             // Opções do menu
             ListTile(
-              leading: Icon(Icons.book, color: Colors.black),
-              title: Text('Meus livros'),
+              leading: const Icon(Icons.book, color: Colors.black),
+              title: const Text('Meus livros'),
               onTap: () {
                 Navigator.pushNamed(context, '/publicatedBooks');
               },
             ),
             ListTile(
-              leading: Icon(Icons.history, color: Colors.black),
-              title: Text('Histórico de trocas'),
+              leading: const Icon(Icons.history, color: Colors.black),
+              title: const Text('Histórico de trocas'),
               onTap: () {Navigator.pushNamed(context, '/tradeHistory');},
             ),
             ListTile(
-              leading: Icon(Icons.notifications, color: Colors.black),
-              title: Text('Notificações'),
+              leading: const Icon(Icons.notifications, color: Colors.black),
+              title: const Text('Notificações'),
               onTap: () {Navigator.pushNamed(context, '/notifications');},
             ),
             ListTile(
-              leading: Icon(Icons.swap_horiz, color: Colors.black),
-              title: Text('Status de trocas'),
+              leading: const Icon(Icons.swap_horiz, color: Colors.black),
+              title: const Text('Status de trocas'),
               onTap: () {Navigator.pushNamed(context, '/tradeStatus');},
             ),
             ListTile(
-              leading: Icon(Icons.favorite, color: Colors.black),
-              title: Text('Lista de desejos'),
+              leading: const Icon(Icons.favorite, color: Colors.black),
+              title: const Text('Lista de desejos'),
               onTap: () {
                 Navigator.pushNamed(context, '/favoriteBooks');
               },
             ),
             ListTile(
-              leading: Icon(Icons.chat, color: Colors.black),
-              title: Text('Chat'),
+              leading: const Icon(Icons.chat, color: Colors.black),
+              title: const Text('Chat'),
               onTap: () {Navigator.pushNamed(context, '/chats');},
             ),
             // Opção de sair
-            Spacer(),
+            const Spacer(),
             ListTile(
-              title: Text(
+              title: const Text(
                 'Sair',
                 style: TextStyle(color: Colors.red),
               ),
@@ -200,14 +202,14 @@ class _HomePageState extends State<HomePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Seção Recomendações
-            Text(
+            const Text(
               'Recomendados:',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             ListView.builder(
               shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
+              physics: const NeverScrollableScrollPhysics(),
               itemCount: favoriteStatus.length,
               itemBuilder: (context, index) {
                 return InkWell(
@@ -229,17 +231,17 @@ class _HomePageState extends State<HomePage> {
                 );
               },
             ),
-            SizedBox(height: 32),
+            const SizedBox(height: 32),
 
             // Seção Perto de você
-            Text(
+            const Text(
               'Pertos de você:',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             ListView.builder(
               shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
+              physics: const NeverScrollableScrollPhysics(),
               itemCount: favoriteStatusAround.length,
               itemBuilder: (context, index) {
                 return InkWell(
@@ -268,8 +270,8 @@ class _HomePageState extends State<HomePage> {
         onPressed: () {
           Navigator.pushNamed(context, '/newBook');// Ação para adicionar um novo livro
         },
-        backgroundColor: Color(0xFF77C593), // Cor verde usada no app
-        child: Icon(Icons.add, color: Colors.white),
+        backgroundColor: const Color(0xFF77C593), // Cor verde usada no app
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
@@ -285,7 +287,7 @@ class BookCard extends StatelessWidget {
   final double rating;
   final VoidCallback onFavoritePressed;
 
-  BookCard({
+  const BookCard({super.key, 
     required this.title,
     required this.author,
     required this.postedBy,
@@ -320,7 +322,7 @@ class BookCard extends StatelessWidget {
                   width: 80,
                   fit: BoxFit.cover,
                 ),
-                SizedBox(width: 16),
+                const SizedBox(width: 16),
 
                 // Informações do livro
                 Expanded(
@@ -329,17 +331,17 @@ class BookCard extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
                         author,
-                        style: TextStyle(fontSize: 14),
+                        style: const TextStyle(fontSize: 14),
                       ),
-                      SizedBox(height: 8),
-                      Text(
+                      const SizedBox(height: 8),
+                      const Text(
                         'Postado por:',
                         style: TextStyle(fontSize: 12),
                       ),
@@ -349,18 +351,18 @@ class BookCard extends StatelessWidget {
                             backgroundImage: NetworkImage(profileImageUrl),
                             radius: 15,
                           ),
-                          SizedBox(width: 8),
+                          const SizedBox(width: 8),
                           Text(
                             postedBy,
-                            style: TextStyle(fontSize: 14),
+                            style: const TextStyle(fontSize: 14),
                           ),
                         ],
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       // Estrelas de avaliação
                       RatingBarIndicator(
                         rating: rating,
-                        itemBuilder: (context, index) => Icon(
+                        itemBuilder: (context, index) => const Icon(
                           Icons.star,
                           color: Colors.amber,
                         ),

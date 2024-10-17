@@ -3,19 +3,21 @@ import 'package:flutter/services.dart';
 
 
 class TradeStatusPage extends StatelessWidget {
+  const TradeStatusPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFFD8D5B3), // Cor amarelada semelhante à parte superior
+        backgroundColor: const Color(0xFFD8D5B3), // Cor amarelada semelhante à parte superior
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black), // Ícone de voltar
+          icon: const Icon(Icons.arrow_back, color: Colors.black), // Ícone de voltar
           onPressed: () {
             Navigator.pop(context); // Ação para voltar
           },
         ),
-        title: Text(
+        title: const Text(
           'Status da Troca',
           style: TextStyle(color: Colors.black),
         ),
@@ -35,18 +37,18 @@ class TradeStatusPage extends StatelessWidget {
                   width: 60,
                   fit: BoxFit.cover,
                 ),
-                SizedBox(width: 16),
+                const SizedBox(width: 16),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       '1984',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Text(
+                    const Text(
                       'George Orwell',
                       style: TextStyle(fontSize: 16),
                     ),
@@ -58,7 +60,7 @@ class TradeStatusPage extends StatelessWidget {
                 ),
               ],
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
 
             // Status do Pedido
             _buildStatusCard(
@@ -70,59 +72,59 @@ class TradeStatusPage extends StatelessWidget {
               id: '237yb189fgp',
               copyLabel: 'Copiar ID',
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
 
             // Informações do Solicitante
-            Text(
+            const Text(
               'Solicitante',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Row(
               children: [
-                CircleAvatar(
+                const CircleAvatar(
                   backgroundImage: NetworkImage('https://via.placeholder.com/50'),
                   radius: 25,
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'Bernardo Almeida',
                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
-                    SizedBox(height: 5),
+                    const SizedBox(height: 5),
                     Row(
                       children: List.generate(5, (index) {
-                        return Icon(Icons.star, color: Colors.amber, size: 18);
+                        return const Icon(Icons.star, color: Colors.amber, size: 18);
                       }),
                     ),
                   ],
                 ),
-                Spacer(),
+                const Spacer(),
                 IconButton(
-                  icon: Icon(Icons.chat, color: Colors.black, size: 30),
+                  icon: const Icon(Icons.chat, color: Colors.black, size: 30),
                   onPressed: () {
                     Navigator.pushNamed(context, '/chat');
                   },
                 ),
               ],
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
 
             // Informações da Troca
-            Text(
+            const Text(
               'Informações da troca',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             _buildStatusCard(
               context,
               title: 'ORWELL, George. 1984, 4ª Edição',
@@ -160,19 +162,19 @@ class TradeStatusPage extends StatelessWidget {
             // Título do Card (Status do pedido)
             Text(
               title,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             // Conteúdo do Card (Endereço ou informações)
             Text(
               content,
-              style: TextStyle(fontSize: 14),
+              style: const TextStyle(fontSize: 14),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             // ID e Botão para copiar ID
             GestureDetector(
               onTap: () {
@@ -183,7 +185,7 @@ class TradeStatusPage extends StatelessWidget {
               },
               child: Text(
                 '$idLabel $id',
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 14,
                   color: Colors.green,
                   fontWeight: FontWeight.bold,
@@ -199,7 +201,7 @@ class TradeStatusPage extends StatelessWidget {
               },
               child: Text(
                 copyLabel,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 14,
                   color: Colors.green,
                   decoration: TextDecoration.underline,

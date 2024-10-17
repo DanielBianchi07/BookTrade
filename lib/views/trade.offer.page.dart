@@ -2,14 +2,16 @@ import 'package:flutter/material.dart';
 
 
 class TradeOfferPage extends StatelessWidget {
+  const TradeOfferPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFFD8D5B3), // Cor amarelada na parte superior
+        backgroundColor: const Color(0xFFD8D5B3), // Cor amarelada na parte superior
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
             Navigator.of(context).pop(); // Seta de navegação para voltar
           },
@@ -21,7 +23,7 @@ class TradeOfferPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Carrossel de Imagens
-            Container(
+            SizedBox(
               height: 200,
               child: PageView(
                 children: [
@@ -31,67 +33,67 @@ class TradeOfferPage extends StatelessWidget {
                 ],
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
 
             // Informações do Livro
-            Text(
+            const Text(
               'Código Da Vinci',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 10),
-            Text(
+            const SizedBox(height: 10),
+            const Text(
               'Autor: Dan Brown\nEdição: 8\nISBN: 2a18s76zc\nPublicado em: 1990\nEditora: Gota de peroba\nEstado de conservação: Novo',
               style: TextStyle(
                 fontSize: 14,
                 height: 1.5,
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             // Sinopse do Livro
-            Text(
+            const Text(
               'Sinopse',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 5),
-            Text(
+            const SizedBox(height: 5),
+            const Text(
               'Era uma vez um homem montado em um cavalo branco de napoleão que saiu de um buraco negro soltando arco íris. '
               'Ver mais...',
               style: TextStyle(fontSize: 16),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
 
             // Informação do Usuário
             Row(
               children: [
-                CircleAvatar(
+                const CircleAvatar(
                   backgroundImage: NetworkImage('https://via.placeholder.com/150'), // Imagem do perfil do usuário
                   radius: 25,
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'José Almeida',
                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
-                    SizedBox(height: 5),
+                    const SizedBox(height: 5),
                     Row(
                       children: List.generate(5, (index) {
-                        return Icon(Icons.star, color: Colors.amber, size: 16);
+                        return const Icon(Icons.star, color: Colors.amber, size: 16);
                       }),
                     ),
                   ],
                 ),
               ],
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
 
             // Botões de Solicitar e Chat
             Row(
@@ -102,12 +104,12 @@ class TradeOfferPage extends StatelessWidget {
                     // Lógica para solicitar troca
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF77C593), // Cor verde do botão "Solicitar"
+                    backgroundColor: const Color(0xFF77C593), // Cor verde do botão "Solicitar"
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
                   ),
-                  child: Text('Solicitar'),
+                  child: const Text('Solicitar'),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -119,7 +121,7 @@ class TradeOfferPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                     ),
                   ),
-                  child: Text('Chat'),
+                  child: const Text('Chat'),
                 ),
               ],
             ),
@@ -132,7 +134,7 @@ class TradeOfferPage extends StatelessWidget {
   // Função para construir a imagem do livro no carrossel
   Widget _buildBookImage(String imageUrl) {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 10.0),
+      margin: const EdgeInsets.symmetric(horizontal: 10.0),
       child: Image.network(
         imageUrl,
         fit: BoxFit.cover,

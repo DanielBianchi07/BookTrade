@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 class FavoriteBooksPage extends StatefulWidget {
+  const FavoriteBooksPage({super.key});
+
   @override
   FavoriteBooksPageState createState() => FavoriteBooksPageState();
 }
@@ -19,15 +21,15 @@ class FavoriteBooksPageState extends State<FavoriteBooksPage> {
       key: _scaffoldKey,
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Color(0xFFD8D5B3), // Cor amarelada da barra superior
+        backgroundColor: const Color(0xFFD8D5B3), // Cor amarelada da barra superior
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
             Navigator.of(context).pop(); // Voltar para a página anterior
           },
         ),
-        title: Text(
+        title: const Text(
           'Lista de desejos',
           style: TextStyle(color: Colors.black),
         ),
@@ -37,10 +39,10 @@ class FavoriteBooksPageState extends State<FavoriteBooksPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             ListView.builder(
               shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
+              physics: const NeverScrollableScrollPhysics(),
               itemCount: favoriteStatus.length,
               itemBuilder: (context, index) {
                 return InkWell(
@@ -79,7 +81,7 @@ class BookCard extends StatelessWidget {
   final double rating;
   final VoidCallback onFavoritePressed;
 
-  BookCard({
+  const BookCard({super.key, 
     required this.title,
     required this.author,
     required this.postedBy,
@@ -114,7 +116,7 @@ class BookCard extends StatelessWidget {
                   width: 80,
                   fit: BoxFit.cover,
                 ),
-                SizedBox(width: 16),
+                const SizedBox(width: 16),
 
                 // Informações do livro
                 Expanded(
@@ -123,17 +125,17 @@ class BookCard extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
                         author,
-                        style: TextStyle(fontSize: 14),
+                        style: const TextStyle(fontSize: 14),
                       ),
-                      SizedBox(height: 8),
-                      Text(
+                      const SizedBox(height: 8),
+                      const Text(
                         'Postado por:',
                         style: TextStyle(fontSize: 12),
                       ),
@@ -143,18 +145,18 @@ class BookCard extends StatelessWidget {
                             backgroundImage: NetworkImage(profileImageUrl),
                             radius: 15,
                           ),
-                          SizedBox(width: 8),
+                          const SizedBox(width: 8),
                           Text(
                             postedBy,
-                            style: TextStyle(fontSize: 14),
+                            style: const TextStyle(fontSize: 14),
                           ),
                         ],
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       // Estrelas de avaliação
                       RatingBarIndicator(
                         rating: rating,
-                        itemBuilder: (context, index) => Icon(
+                        itemBuilder: (context, index) => const Icon(
                           Icons.star,
                           color: Colors.amber,
                         ),

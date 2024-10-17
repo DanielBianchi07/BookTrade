@@ -3,19 +3,21 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 
 class TradeHistoryPage extends StatelessWidget {
+  const TradeHistoryPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFFD8D5B3), // Cor amarelada
+        backgroundColor: const Color(0xFFD8D5B3), // Cor amarelada
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
             Navigator.pop(context); // Ação para voltar
           },
         ),
-        title: Text(
+        title: const Text(
           'Histórico de trocas',
           style: TextStyle(color: Colors.black),
         ),
@@ -52,7 +54,7 @@ class TradeHistoryCard extends StatelessWidget {
   final String bookImageUrl;
   final bool inProgress;
 
-  TradeHistoryCard({
+  const TradeHistoryCard({super.key, 
     required this.title,
     required this.author,
     required this.postedBy,
@@ -73,7 +75,7 @@ class TradeHistoryCard extends StatelessWidget {
           width: 1.5,
         ),
       ),
-      margin: EdgeInsets.only(bottom: 16.0),
+      margin: const EdgeInsets.only(bottom: 16.0),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
@@ -91,7 +93,7 @@ class TradeHistoryCard extends StatelessWidget {
                     fit: BoxFit.cover,
                   ),
                 ),
-                SizedBox(width: 16),
+                const SizedBox(width: 16),
 
                 // Informações do livro
                 Expanded(
@@ -100,13 +102,13 @@ class TradeHistoryCard extends StatelessWidget {
                     children: [
                       Text(
                         '$title : $author',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(height: 8),
-                      Text(
+                      const SizedBox(height: 8),
+                      const Text(
                         'Postado por:',
                         style: TextStyle(fontSize: 12),
                       ),
@@ -116,18 +118,18 @@ class TradeHistoryCard extends StatelessWidget {
                             backgroundImage: NetworkImage(profileImageUrl),
                             radius: 15,
                           ),
-                          SizedBox(width: 8),
+                          const SizedBox(width: 8),
                           Text(
                             postedBy,
-                            style: TextStyle(fontSize: 14),
+                            style: const TextStyle(fontSize: 14),
                           ),
                         ],
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       // Estrelas de avaliação
                       RatingBarIndicator(
                         rating: rating,
-                        itemBuilder: (context, index) => Icon(
+                        itemBuilder: (context, index) => const Icon(
                           Icons.star,
                           color: Colors.amber,
                         ),
@@ -135,7 +137,7 @@ class TradeHistoryCard extends StatelessWidget {
                         itemSize: 16.0,
                         direction: Axis.horizontal,
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       // Status da Troca (Em andamento ou Data de Entrega)
                       Text(
                         inProgress ? 'Em andamento' : 'Data de Entrega: $deliveryDate',

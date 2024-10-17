@@ -2,20 +2,22 @@ import 'package:flutter/material.dart';
 
 
 class PublicatedBooksPage extends StatelessWidget {
+  const PublicatedBooksPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Color(0xFFD8D5B3), // Cor amarelada da barra superior
+        backgroundColor: const Color(0xFFD8D5B3), // Cor amarelada da barra superior
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
             Navigator.of(context).pop(); // Voltar para a página anterior
           },
         ),
-        title: Text(
+        title: const Text(
           'Livros publicados',
           style: TextStyle(color: Colors.black),
         ),
@@ -28,7 +30,7 @@ class PublicatedBooksPage extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10.0),
             ),
-            margin: EdgeInsets.only(bottom: 16.0),
+            margin: const EdgeInsets.only(bottom: 16.0),
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Row(
@@ -43,10 +45,10 @@ class PublicatedBooksPage extends StatelessWidget {
                       fit: BoxFit.cover,
                     ),
                   ),
-                  SizedBox(width: 16),
+                  const SizedBox(width: 16),
 
                   // Informações do livro
-                  Expanded(
+                  const Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -80,7 +82,7 @@ class PublicatedBooksPage extends StatelessWidget {
                     onPressed: () {
                       // Lógica para excluir o item
                     },
-                    icon: Icon(Icons.delete, color: Colors.red),
+                    icon: const Icon(Icons.delete, color: Colors.red),
                   ),
                 ],
               ),

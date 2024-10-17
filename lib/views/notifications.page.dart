@@ -2,26 +2,28 @@ import 'package:flutter/material.dart';
 
 
 class NotificationsPage extends StatelessWidget {
+  const NotificationsPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFFD8D5B3), // Cor amarelada semelhante à parte superior
+        backgroundColor: const Color(0xFFD8D5B3), // Cor amarelada semelhante à parte superior
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black), // Ícone de voltar
+          icon: const Icon(Icons.arrow_back, color: Colors.black), // Ícone de voltar
           onPressed: () {
             Navigator.pop(context); // Ação para voltar
           },
         ),
-        title: Text(
+        title: const Text(
           'Notificações',
           style: TextStyle(color: Colors.black),
         ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
-        children: [
+        children: const [
           // Notificação do usuário
           NotificationCard(
             profileImageUrl: 'https://via.placeholder.com/50',
@@ -54,7 +56,7 @@ class NotificationCard extends StatelessWidget {
   final String time;
   final bool isUserNotification;
 
-  NotificationCard({
+  const NotificationCard({super.key, 
     this.profileImageUrl,
     this.icon,
     required this.title,
@@ -66,7 +68,7 @@ class NotificationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(10.0),
+      padding: const EdgeInsets.all(10.0),
       decoration: BoxDecoration(
         color: Colors.grey[200],
         borderRadius: BorderRadius.circular(10),
@@ -86,7 +88,7 @@ class NotificationCard extends StatelessWidget {
               color: Colors.black,
             ),
           ],
-          SizedBox(width: 10),
+          const SizedBox(width: 10),
           // Conteúdo da notificação
           Expanded(
             child: Column(
@@ -94,17 +96,17 @@ class NotificationCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 5),
+                const SizedBox(height: 5),
                 Text(
                   message,
-                  style: TextStyle(fontSize: 14),
+                  style: const TextStyle(fontSize: 14),
                 ),
               ],
             ),
           ),
-          SizedBox(width: 10),
+          const SizedBox(width: 10),
           // Hora da notificação
           Text(
             time,

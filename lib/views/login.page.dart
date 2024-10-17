@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatelessWidget {
+  const LoginPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFD8D5B3), // Cor de fundo semelhante ao visto
+      backgroundColor: const Color(0xFFD8D5B3), // Cor de fundo semelhante ao visto
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Center(
@@ -21,12 +23,12 @@ class LoginPage extends StatelessWidget {
                     height: 60,
                     errorBuilder: (BuildContext context, Object error,
                         StackTrace? stackTrace) {
-                      return Text('Erro ao carregar imagem');
+                      return const Text('Erro ao carregar imagem');
                     },
                   ),
-                  SizedBox(width: 5), // Espaço entre logo e nome
+                  const SizedBox(width: 5), // Espaço entre logo e nome
                   // Nome do aplicativo
-                  Text(
+                  const Text(
                     'BookTrade',
                     style: TextStyle(
                       fontSize: 30,
@@ -35,7 +37,7 @@ class LoginPage extends StatelessWidget {
                   ),
                 ],
               ),
-              SizedBox(height: 40),
+              const SizedBox(height: 40),
 
               // Campo de Email
               TextField(
@@ -48,7 +50,7 @@ class LoginPage extends StatelessWidget {
                   fillColor: Colors.white,
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
 
               // Campo de Senha
               TextField(
@@ -62,7 +64,7 @@ class LoginPage extends StatelessWidget {
                   fillColor: Colors.white,
                 ),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
 
               // Esqueceu a senha
               Align(
@@ -90,13 +92,13 @@ class LoginPage extends StatelessWidget {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
-                        Color(0xFF77C593), // Cor verde semelhante ao botão
+                        const Color(0xFF77C593), // Cor verde semelhante ao botão
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(15.0),
+                  child: const Padding(
+                    padding: EdgeInsets.all(15.0),
                     child: Text('Entrar'),
                   ),
                 ),
@@ -108,7 +110,7 @@ class LoginPage extends StatelessWidget {
                   Navigator.pushNamed(
                       context, "/register"); // Ação para "Criar nova conta"
                 },
-                child: Text(
+                child: const Text(
                   'Criar nova conta',
                   style: TextStyle(
                     color: Colors.black,

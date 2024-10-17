@@ -7,14 +7,16 @@ class EditProfilePage extends StatelessWidget {
   final TextEditingController emailController = TextEditingController(text: 'fulano@gmail.com');
   final TextEditingController passwordController = TextEditingController(text: '************');
 
+  EditProfilePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFFD8D5B3), // Cor amarelada na parte superior
+        backgroundColor: const Color(0xFFD8D5B3), // Cor amarelada na parte superior
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
             Navigator.of(context).pop(); // Seta de navegação para voltar
           },
@@ -30,7 +32,7 @@ class EditProfilePage extends StatelessWidget {
                 children: [
                   Stack(
                     children: [
-                      CircleAvatar(
+                      const CircleAvatar(
                         radius: 40,
                         backgroundImage: NetworkImage(
                             'https://via.placeholder.com/150'), // Substituir pela URL da imagem do perfil
@@ -39,11 +41,11 @@ class EditProfilePage extends StatelessWidget {
                         bottom: 0,
                         right: 0,
                         child: Container(
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             shape: BoxShape.circle,
                             color: Colors.green,
                           ),
-                          child: Icon(
+                          child: const Icon(
                             Icons.edit,
                             color: Colors.white,
                           ),
@@ -51,8 +53,8 @@ class EditProfilePage extends StatelessWidget {
                       ),
                     ],
                   ),
-                  SizedBox(height: 5),
-                  Text(
+                  const SizedBox(height: 5),
+                  const Text(
                     'Fulano da Silva',
                     style: TextStyle(
                       fontSize: 24,
@@ -62,28 +64,28 @@ class EditProfilePage extends StatelessWidget {
                 ],
               ),
             ),
-            SizedBox(height: 5),
+            const SizedBox(height: 5),
 
             // Campo de Nome Editável
             _buildEditableField(
               label: 'Nome:',
               controller: nameController,
             ),
-            SizedBox(height: 5),
+            const SizedBox(height: 5),
 
             // Campo de Telefone Editável
             _buildEditableField(
               label: 'Telefone:',
               controller: phoneController,
             ),
-            SizedBox(height: 5),
+            const SizedBox(height: 5),
 
             // Campo de E-mail Editável
             _buildEditableField(
               label: 'E-mail:',
               controller: emailController,
             ),
-            SizedBox(height: 5),
+            const SizedBox(height: 5),
 
             // Campo de Senha Editável
             _buildEditableField(
@@ -91,7 +93,7 @@ class EditProfilePage extends StatelessWidget {
               controller: passwordController,
               obscureText: true,
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
 
             // Botão Salvar
             SizedBox(
@@ -101,13 +103,13 @@ class EditProfilePage extends StatelessWidget {
                   // Lógica para salvar as informações
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF77C593), // Cor do botão "Salvar"
+                  backgroundColor: const Color(0xFF77C593), // Cor do botão "Salvar"
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(15.0),
+                child: const Padding(
+                  padding: EdgeInsets.all(15.0),
                   child: Text('Salvar'),
                 ),
               ),
@@ -129,11 +131,11 @@ class EditProfilePage extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             fontWeight: FontWeight.bold,
           ),
         ),
-        SizedBox(height: 5),
+        const SizedBox(height: 5),
         TextFormField(
           controller: controller,
           obscureText: obscureText,

@@ -17,33 +17,37 @@ import 'trade.status.page.dart';
 //import 'chat.page.dart';
 
 class BookTradeApp extends StatelessWidget {
+  const BookTradeApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(useMaterial3: true),
-      home: SplashScreen(), // Definindo a tela inicial como SplashScreen
+      home: const SplashScreen(), // Definindo a tela inicial como SplashScreen
       routes: {
-        "/login": (context) => LoginPage(),
-        "/home": (context) => HomePage(),
-        "/favoriteBooks": (context) => FavoriteBooksPage(),
-        "/publicatedBooks": (context) => PublicatedBooksPage(),
+        "/login": (context) => const LoginPage(),
+        "/home": (context) => const HomePage(),
+        "/favoriteBooks": (context) => const FavoriteBooksPage(),
+        "/publicatedBooks": (context) => const PublicatedBooksPage(),
         "/editProfile": (context) => EditProfilePage(),
-        "/tradeOffer": (context) => TradeOfferPage(),
-        "/register": (context) => RegistrationPage(),
-        "/tradeHistory": (context) => TradeHistoryPage(),
-        "/newBook": (context) => BookRegistrationPage(),
-        "/notifications": (context) => NotificationsPage(),
-        "/tradeStatus": (context) => TradeStatusPage(),
+        "/tradeOffer": (context) => const TradeOfferPage(),
+        "/register": (context) => const RegistrationPage(),
+        "/tradeHistory": (context) => const TradeHistoryPage(),
+        "/newBook": (context) => const BookRegistrationPage(),
+        "/notifications": (context) => const NotificationsPage(),
+        "/tradeStatus": (context) => const TradeStatusPage(),
         //"/new-account": (context) => NewAccountPage(),
-        "/chats":(context) => ChatsPage(),
-        "/chat":(context) => ChatPage(),
+        "/chats":(context) => const ChatsPage(),
+        "/chat":(context) => const ChatPage(),
       },
     );
   }
 }
 
 class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
   @override
   _SplashScreenState createState() => _SplashScreenState();
 }
@@ -53,7 +57,7 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     // Aguarde 3 segundos e depois navegue para a tela de login
-    Future.delayed(Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 3), () {
       Navigator.pushReplacementNamed(context, '/login');
     });
   }
@@ -61,7 +65,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFD8D5B3), // Cor de fundo semelhante à imagem fornecida
+      backgroundColor: const Color(0xFFD8D5B3), // Cor de fundo semelhante à imagem fornecida
       body: Center(
         child: Image.asset(
           'assets/logo_transparent.png', // Substitua pelo caminho correto do seu logo

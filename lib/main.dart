@@ -3,5 +3,5 @@ import 'package:flutter/material.dart';
 import 'package:myapp/views/app.dart';
 
 void main() {
-  runApp(BookTradeApp());
+  runApp(const BookTradeApp());
 }
