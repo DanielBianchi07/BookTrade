@@ -1,26 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:myapp/controller/login.controller.dart';
 import 'package:myapp/services/auth_service.dart';
+import 'package:myapp/views/home.page.dart';
+import 'package:myapp/widgets/busy.widget.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
-
   @override
   _LoginPageState createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
-  // Controladores para os campos de email e senha
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-
-  // Instância do AuthService
+  final controller = new LoginController();
+  final TextEditingController _password = TextEditingController();
+  final TextEditingController _email = TextEditingController();
   final AuthService _authService = AuthService();
+  late String email;
+  late String password;
+  var busy = false;
 
-  // Função para autenticar o usuário
-  Future<void> _signIn() async {
-    String email = _emailController.text.trim();
-    String password = _passwordController.text.trim();
+  Future _signIn() async {
+    String email = _email.text.trim();
+    String password = _password.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
       // Exibir mensagem se algum campo estiver vazio
@@ -28,7 +30,6 @@ class _LoginPageState extends State<LoginPage> {
         msg: "Por favor, insira email e senha",
         toastLength: Toast.LENGTH_LONG,
       );
-      return;
     }
 
     final user = await _authService.loginWithEmail(email, password);
@@ -37,6 +38,33 @@ class _LoginPageState extends State<LoginPage> {
       Navigator.pushReplacementNamed(context, '/home');
     }
     // Não é necessário tratar erros aqui, o AuthService já lida com isso
+  }
+
+  handleSignIn() {
+    setState(() {
+      busy = true;
+      email = _email.text.trim();
+      password = _password.text.trim();
+    });
+    controller.loginWithEmail(email, password).then((data) {
+      onSuccess();
+    }).whenComplete(() {
+      onComplete();
+    });
+  }
+
+  onSuccess() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => HomePage(),
+      ),
+    );
+  }
+
+  onComplete() {
+    setState(() {
+      busy = false;
+    });
   }
 
   @override
@@ -76,7 +104,7 @@ class _LoginPageState extends State<LoginPage> {
 
               // Campo de Email
               TextField(
-                controller: _emailController,
+                controller: _email,
                 decoration: InputDecoration(
                   labelText: 'Email',
                   border: OutlineInputBorder(
@@ -90,7 +118,7 @@ class _LoginPageState extends State<LoginPage> {
 
               // Campo de Senha
               TextField(
-                controller: _passwordController,
+                controller: _password,
                 obscureText: true,
                 decoration: InputDecoration(
                   labelText: 'Senha',
@@ -121,19 +149,21 @@ class _LoginPageState extends State<LoginPage> {
               ),
 
               // Botão Entrar
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _signIn,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF77C593),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+              TDBusy(busy: busy,
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: handleSignIn,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF77C593),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(15.0),
-                    child: Text('Entrar'),
+                    child: Padding(
+                      padding: const EdgeInsets.all(15.0),
+                      child: Text('Entrar'),
+                    ),
                   ),
                 ),
               ),
