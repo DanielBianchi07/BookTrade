@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:myapp/controller/login.controller.dart';
-import 'package:myapp/services/auth_service.dart';
 import 'package:myapp/views/home.page.dart';
 import 'package:myapp/widgets/busy.widget.dart';
 
@@ -15,30 +14,9 @@ class _LoginPageState extends State<LoginPage> {
   final controller = new LoginController();
   final TextEditingController _password = TextEditingController();
   final TextEditingController _email = TextEditingController();
-  final AuthService _authService = AuthService();
   late String email;
   late String password;
   var busy = false;
-
-  Future _signIn() async {
-    String email = _email.text.trim();
-    String password = _password.text.trim();
-
-    if (email.isEmpty || password.isEmpty) {
-      // Exibir mensagem se algum campo estiver vazio
-      Fluttertoast.showToast(
-        msg: "Por favor, insira email e senha",
-        toastLength: Toast.LENGTH_LONG,
-      );
-    }
-
-    final user = await _authService.loginWithEmail(email, password);
-    if (user != null) {
-      // Se o login for bem-sucedido, navegue para a página inicial
-      Navigator.pushReplacementNamed(context, '/home');
-    }
-    // Não é necessário tratar erros aqui, o AuthService já lida com isso
-  }
 
   handleSignIn() {
     setState(() {
@@ -48,6 +26,8 @@ class _LoginPageState extends State<LoginPage> {
     });
     controller.loginWithEmail(email, password).then((data) {
       onSuccess();
+    }).catchError((e) {
+      onError(e);
     }).whenComplete(() {
       onComplete();
     });
@@ -59,6 +39,10 @@ class _LoginPageState extends State<LoginPage> {
       MaterialPageRoute(builder: (context) => HomePage(),
       ),
     );
+  }
+
+  onError(e) {
+    controller.handleFirebaseAuthError(e);
   }
 
   onComplete() {

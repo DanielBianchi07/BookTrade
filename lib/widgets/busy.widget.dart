@@ -15,7 +15,9 @@ class TDBusy extends StatelessWidget {
     return busy
         ? Container(
       child: Center(
-        child: CircularProgressIndicator(),
+        child: CircularProgressIndicator(
+          color: Color(0xFF77C593),
+        ),
       )
     )
         : child;

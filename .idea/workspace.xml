@@ -5,12 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4e9ea88f-7afb-495a-8062-f1ce7860c332" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/lib/controller/login.controller.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/user.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/widgets/busy.widget.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/controller/login.controller.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/controller/login.controller.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/services/auth_service.dart" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/views/login.page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/login.page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/widgets/busy.widget.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/widgets/busy.widget.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

@@ -24,59 +24,46 @@ class LoginController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   Future loginWithEmail(String email, String password) async {
-    try {
       final userCredential = await _auth.signInWithEmailAndPassword(email: email, password: password,);
       user.name = userCredential.user!.displayName!;
       user.email = userCredential.user!.email!;
       user.picture = userCredential.user!.photoURL!;
       user.telephone = userCredential.user!.phoneNumber!;
-    }
-    on FirebaseAuthException catch (e) {
-      _handleFirebaseAuthError(e);
-    }
-    catch (e) {
-      Fluttertoast.showToast(msg: "Erro desconhecido ao logar: $e", toastLength: Toast.LENGTH_LONG,);
-    }
   }
 
   Future logout() async {
-    try {
       await FirebaseAuth.instance.signOut();
       user = new IUser();
       Fluttertoast.showToast(msg: "Logout realizado com sucesso", toastLength: Toast.LENGTH_SHORT,);
-    }
-    catch (e) {
-      Fluttertoast.showToast(msg: "Erro ao fazer logout: $e", toastLength: Toast.LENGTH_LONG,);
-    }
   }
-}
 
-void _handleFirebaseAuthError(FirebaseAuthException e) {
-  String errorMessage;
-  switch (e.code) {
-    case 'email-already-in-use':
-      errorMessage = "Este email já está sendo usado.";
-      break;
-    case 'wrong-password':
-      errorMessage = "Senha incorreta.";
-      break;
-    case 'user-not-found':
-      errorMessage = "Usuário não encontrado.";
-      break;
-    case 'user-disabled':
-      errorMessage = "Esta conta foi desativada.";
-      break;
-    case 'too-many-requests':
-      errorMessage = "Muitas tentativas. Tente novamente mais tarde.";
-      break;
-    case 'operation-not-allowed':
-      errorMessage = "Operação não permitida.";
-      break;
-    default:
-      errorMessage = "Erro ao fazer login. Verifique suas credenciais.";
+  void handleFirebaseAuthError(FirebaseAuthException e) {
+    String errorMessage;
+    switch (e.code) {
+      case 'email-already-in-use':
+        errorMessage = "Este email já está sendo usado.";
+        break;
+      case 'wrong-password':
+        errorMessage = "Senha incorreta.";
+        break;
+      case 'user-not-found':
+        errorMessage = "Usuário não encontrado.";
+        break;
+      case 'user-disabled':
+        errorMessage = "Esta conta foi desativada.";
+        break;
+      case 'too-many-requests':
+        errorMessage = "Muitas tentativas. Tente novamente mais tarde.";
+        break;
+      case 'operation-not-allowed':
+        errorMessage = "Operação não permitida.";
+        break;
+      default:
+        errorMessage = "Erro ao fazer login. Verifique suas credenciais.";
+    }
+    Fluttertoast.showToast(
+      msg: errorMessage,
+      toastLength: Toast.LENGTH_LONG,
+    );
   }
-  Fluttertoast.showToast(
-    msg: errorMessage,
-    toastLength: Toast.LENGTH_LONG,
-  );
 }
