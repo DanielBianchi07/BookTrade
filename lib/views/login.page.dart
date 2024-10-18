@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:myapp/controller/login.controller.dart';
 import 'package:myapp/views/home.page.dart';
+import 'package:myapp/views/register.page.dart';
 import 'package:myapp/widgets/busy.widget.dart';
 
 class LoginPage extends StatefulWidget {
@@ -12,8 +13,8 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final controller = new LoginController();
-  final TextEditingController _password = TextEditingController();
-  final TextEditingController _email = TextEditingController();
+  late TextEditingController _password = TextEditingController();
+  late TextEditingController _email = TextEditingController();
   late String email;
   late String password;
   var busy = false;
@@ -33,6 +34,10 @@ class _LoginPageState extends State<LoginPage> {
     });
   }
 
+  handleRegister() {
+
+  }
+
   onSuccess() {
     Navigator.push(
       context,
@@ -46,6 +51,8 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   onComplete() {
+    _email = TextEditingController();
+    _password = TextEditingController();
     setState(() {
       busy = false;
     });
@@ -153,9 +160,15 @@ class _LoginPageState extends State<LoginPage> {
               ),
 
               // Criar nova conta
-              TextButton(
+              TDBusyClear(
+                busy: busy,
+                child: TextButton(
                 onPressed: () {
-                  Navigator.pushNamed(context, "/register");
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => RegistrationPage(),
+                    ),
+                  );
                 },
                 child: Text(
                   'Criar nova conta',
@@ -163,7 +176,7 @@ class _LoginPageState extends State<LoginPage> {
                     color: Colors.black,
                   ),
                 ),
-              ),
+              ),)
             ],
           ),
         ),

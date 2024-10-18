@@ -23,3 +23,22 @@ class TDBusy extends StatelessWidget {
         : child;
   }
 }
+
+class TDBusyClear extends StatelessWidget {
+  bool busy = false;
+  Widget child;
+
+  TDBusyClear({
+    required this.busy,
+    required this.child,
+});
+
+  @override
+  Widget build(BuildContext context) {
+    return busy
+        ? Container(
+      child: Center(),
+    )
+        : child;
+  }
+}
