@@ -4,11 +4,11 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 class BookCard extends StatelessWidget {
   final String title;
   final String author;
-  final String postedBy;
+  final String? postedBy; // Agora pode ser nulo
+  final String? profileImageUrl; // Agora pode ser nulo
   final String imageUrl;
-  final String profileImageUrl;
   final bool isFavorite;
-  final double rating;
+  final double? rating; // Agora pode ser nulo
   final VoidCallback onFavoritePressed;
 
   const BookCard({
@@ -67,23 +67,29 @@ class BookCard extends StatelessWidget {
                     'Postado por:',
                     style: TextStyle(fontSize: 12),
                   ),
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        backgroundImage: NetworkImage(profileImageUrl),
-                        radius: 15,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        postedBy,
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                    ],
-                  ),
+                  if (postedBy != null && profileImageUrl != null) // Checa se os valores não são nulos
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundImage: NetworkImage(profileImageUrl!),
+                          radius: 15,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          postedBy!,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ],
+                    )
+                  else
+                    Text(
+                      'Autor desconhecido',
+                      style: const TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
                   const SizedBox(height: 4),
                   // Estrelas de avaliação
                   RatingBarIndicator(
-                    rating: rating,
+                    rating: rating ?? 0.0, // Se rating for nulo, use 0.0
                     itemBuilder: (context, index) => const Icon(
                       Icons.star,
                       color: Colors.amber,

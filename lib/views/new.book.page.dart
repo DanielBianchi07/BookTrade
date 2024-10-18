@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io'; // Importante para usar File
 
-class BookRegistrationPage extends StatefulWidget {
-  const BookRegistrationPage({super.key});
+class NewBookPage extends StatefulWidget {
+  const NewBookPage({super.key});
 
   @override
-  _BookRegistrationPageState createState() => _BookRegistrationPageState();
+  _NewBookPageState createState() => _NewBookPageState();
 }
 
-class _BookRegistrationPageState extends State<BookRegistrationPage> {
+class _NewBookPageState extends State<NewBookPage> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _authorController = TextEditingController();
   final TextEditingController _editionController = TextEditingController();
@@ -16,6 +19,7 @@ class _BookRegistrationPageState extends State<BookRegistrationPage> {
   final TextEditingController _yearController = TextEditingController();
   final TextEditingController _publisherController = TextEditingController();
   String _condition = 'Novo';
+  String? _imageUrl; // URL da imagem
 
   @override
   void dispose() {
@@ -28,6 +32,31 @@ class _BookRegistrationPageState extends State<BookRegistrationPage> {
     super.dispose();
   }
 
+  // Método para escolher a imagem da galeria ou da câmera
+  Future<void> _pickImage() async {
+    final ImagePicker _picker = ImagePicker();
+    final XFile? image = await _picker.pickImage(source: ImageSource.camera);
+
+    if (image != null) {
+      // Carregar a imagem para o Firebase Storage
+      await _uploadImage(image.path);
+    }
+  }
+
+  // Método para fazer upload da imagem no Firebase Storage
+  Future<void> _uploadImage(String filePath) async {
+    try {
+      final storageRef = FirebaseStorage.instance.ref().child('books/${DateTime.now().millisecondsSinceEpoch}.png');
+      await storageRef.putFile(File(filePath));
+      String downloadUrl = await storageRef.getDownloadURL();
+      setState(() {
+        _imageUrl = downloadUrl; // Armazena a URL da imagem
+      });
+    } catch (e) {
+      print('Erro ao fazer upload da imagem: $e');
+    }
+  }
+
   Future<void> _addBook() async {
     await FirebaseFirestore.instance.collection('books').add({
       'title': _titleController.text,
@@ -37,6 +66,7 @@ class _BookRegistrationPageState extends State<BookRegistrationPage> {
       'year': _yearController.text,
       'publisher': _publisherController.text,
       'condition': _condition,
+      'imageUrl': _imageUrl, // Inclua a URL da imagem
     });
   }
 
@@ -79,9 +109,7 @@ class _BookRegistrationPageState extends State<BookRegistrationPage> {
             ),
             const SizedBox(height: 20),
             GestureDetector(
-              onTap: () {
-                // Ação ao clicar para adicionar uma foto
-              },
+              onTap: _pickImage, // Chama o método para escolher uma imagem
               child: Container(
                 height: 200,
                 width: double.infinity,
@@ -94,13 +122,21 @@ class _BookRegistrationPageState extends State<BookRegistrationPage> {
                   borderRadius: BorderRadius.circular(10),
                   color: Colors.grey[200],
                 ),
-                child: const Center(
-                  child: Icon(
-                    Icons.camera_alt,
-                    color: Colors.black,
-                    size: 50,
-                  ),
-                ),
+                child: _imageUrl == null
+                    ? const Center(
+                        child: Icon(
+                          Icons.camera_alt,
+                          color: Colors.black,
+                          size: 50,
+                        ),
+                      )
+                    : ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Image.network(
+                          _imageUrl!,
+                          fit: BoxFit.cover, // Ajusta a imagem para cobrir todo o container
+                        ),
+                      ), // Exibe a imagem se disponível
               ),
             ),
             const SizedBox(height: 20),

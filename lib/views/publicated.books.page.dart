@@ -27,7 +27,10 @@ class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
         title: data['title'] ?? '',
         author: data['author'] ?? '',
         imageUrl: data['imageUrl'] ?? 'https://via.placeholder.com/100',
-        publishedDate: DateTime.now(), // Substitua por uma data real se disponível
+        publishedDate: DateTime.now(), 
+        postedBy: null, 
+        profileImageUrl: null, 
+        rating: null, // Substitua por uma data real se disponível
       );
     }).toList();
 

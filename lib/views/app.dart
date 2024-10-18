@@ -29,7 +29,7 @@ class BookTradeApp extends StatelessWidget {
         // "/tradeOffer": (context) => TradeOfferPage(),
         "/register": (context) => RegistrationPage(),
         "/tradeHistory": (context) => TradeHistoryPage(),
-        "/newBook": (context) => BookRegistrationPage(),
+        "/newBook": (context) => NewBookPage(),
         "/notifications": (context) => NotificationsPage(),
         "/tradeStatus": (context) => TradeStatusPage(),
         "/chats": (context) => const ChatsPage(),

@@ -10,12 +10,12 @@ class TradeOfferPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFFD8D5B3), // Cor amarelada na parte superior
+        backgroundColor: const Color(0xFFD8D5B3),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
-            Navigator.of(context).pop(); // Seta de navegação para voltar
+            Navigator.of(context).pop();
           },
         ),
       ),
@@ -45,7 +45,7 @@ class TradeOfferPage extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              'Autor: ${book.author}\nPublicado em: ${book.publishedDate?.year ?? 'N/A'}', // Exibe as informações do livro
+              'Autor: ${book.author}\nPublicado em: ${book.publishedDate?.year ?? 'N/A'}',
               style: const TextStyle(
                 fontSize: 14,
                 height: 1.5,
@@ -68,11 +68,11 @@ class TradeOfferPage extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // Informação do Usuário (você pode ajustar para pegar dinamicamente)
+            // Informação do Usuário
             Row(
               children: [
                 const CircleAvatar(
-                  backgroundImage: NetworkImage('https://via.placeholder.com/150'), // Imagem do perfil do usuário
+                  backgroundImage: NetworkImage('https://via.placeholder.com/150'),
                   radius: 25,
                 ),
                 const SizedBox(width: 10),
@@ -80,7 +80,7 @@ class TradeOfferPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'José Almeida', // Nome do usuário pode ser dinâmico se disponível
+                      'José Almeida',
                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 5),
@@ -104,7 +104,7 @@ class TradeOfferPage extends StatelessWidget {
                     // Lógica para solicitar troca
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF77C593), // Cor verde do botão "Solicitar"
+                    backgroundColor: const Color(0xFF77C593),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
@@ -116,7 +116,7 @@ class TradeOfferPage extends StatelessWidget {
                     Navigator.pushNamed(context, '/chat');
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue, // Cor azul do botão "Chat"
+                    backgroundColor: Colors.blue,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
@@ -131,7 +131,6 @@ class TradeOfferPage extends StatelessWidget {
     );
   }
 
-  // Função para construir a imagem do livro no carrossel
   Widget _buildBookImage(String imageUrl) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 10.0),
