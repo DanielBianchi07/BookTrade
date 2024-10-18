@@ -1,54 +1,53 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:myapp/services/auth_service.dart'; // Certifique-se de ter o AuthService no caminho correto
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:myapp/services/auth_service.dart';
 
 class RegistrationPage extends StatefulWidget {
-  const RegistrationPage({super.key});
-
   @override
   _RegistrationPageState createState() => _RegistrationPageState();
 }
 
 class _RegistrationPageState extends State<RegistrationPage> {
   final AuthService _authService = AuthService();
+
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
 
+  String _errorMessage = '';
+
   // Função para registrar o usuário
-  Future<void> _register() async {
+  void _register() async {
     String name = _nameController.text.trim();
     String phone = _phoneController.text.trim();
     String email = _emailController.text.trim();
     String password = _passwordController.text.trim();
     String confirmPassword = _confirmPasswordController.text.trim();
 
-    // Verificação básica dos campos
-    if (name.isEmpty || phone.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
-      Fluttertoast.showToast(
-        msg: "Por favor, preencha todos os campos",
-        toastLength: Toast.LENGTH_LONG,
-      );
-      return;
-    }
-
     if (password != confirmPassword) {
-      Fluttertoast.showToast(
-        msg: "As senhas não correspondem",
-        toastLength: Toast.LENGTH_LONG,
-      );
+      setState(() {
+        _errorMessage = 'As senhas não coincidem!';
+      });
       return;
     }
 
-    // Chama o serviço de autenticação para registrar o usuário
-    final user = await _authService.registerWithEmail(email, password);
+    // Chamar o AuthService para registrar o usuário
+    User? user = await _authService.registerWithEmail(
+      email: email,
+      password: password,
+      name: name,
+      phone: phone,
+    );
+
     if (user != null) {
-      // Se o registro for bem-sucedido, navega para a página inicial
       Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      setState(() {
+        _errorMessage = 'Erro ao registrar. Tente novamente.';
+      });
     }
-    // Os erros já são tratados no AuthService
   }
 
   @override
@@ -79,14 +78,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
               const SizedBox(height: 10),
 
               // Texto descritivo
-              Text(
+              const Text(
                 'Cadastre-se para começar a\n'
                     'trocar seus livros',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[700],
-                ),
               ),
               const SizedBox(height: 30),
 
@@ -166,7 +161,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _register, // Chama a função de registro
+                  onPressed: _register,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF77C593),
                     shape: RoundedRectangleBorder(
@@ -200,6 +195,16 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   ),
                 ),
               ),
+
+              // Exibir mensagem de erro, se houver
+              if (_errorMessage.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    _errorMessage,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ),
             ],
           ),
         ),
