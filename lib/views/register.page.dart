@@ -1,12 +1,60 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:myapp/services/auth_service.dart'; // Certifique-se de ter o AuthService no caminho correto
 
-class RegistrationPage extends StatelessWidget {
+class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
+
+  @override
+  _RegistrationPageState createState() => _RegistrationPageState();
+}
+
+class _RegistrationPageState extends State<RegistrationPage> {
+  final AuthService _authService = AuthService();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+
+  // Função para registrar o usuário
+  Future<void> _register() async {
+    String name = _nameController.text.trim();
+    String phone = _phoneController.text.trim();
+    String email = _emailController.text.trim();
+    String password = _passwordController.text.trim();
+    String confirmPassword = _confirmPasswordController.text.trim();
+
+    // Verificação básica dos campos
+    if (name.isEmpty || phone.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+      Fluttertoast.showToast(
+        msg: "Por favor, preencha todos os campos",
+        toastLength: Toast.LENGTH_LONG,
+      );
+      return;
+    }
+
+    if (password != confirmPassword) {
+      Fluttertoast.showToast(
+        msg: "As senhas não correspondem",
+        toastLength: Toast.LENGTH_LONG,
+      );
+      return;
+    }
+
+    // Chama o serviço de autenticação para registrar o usuário
+    final user = await _authService.registerWithEmail(email, password);
+    if (user != null) {
+      // Se o registro for bem-sucedido, navega para a página inicial
+      Navigator.pushReplacementNamed(context, '/home');
+    }
+    // Os erros já são tratados no AuthService
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFD8D5B3), // Fundo branco para a tela
+      backgroundColor: const Color(0xFFD8D5B3),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
@@ -15,7 +63,7 @@ class RegistrationPage extends StatelessWidget {
             children: [
               // Logo do aplicativo
               Image.asset(
-                'assets/logo_transparent.png', // Caminho para o logo
+                'assets/logo_transparent.png',
                 height: 80,
               ),
               const SizedBox(height: 20),
@@ -33,7 +81,7 @@ class RegistrationPage extends StatelessWidget {
               // Texto descritivo
               Text(
                 'Cadastre-se para começar a\n'
-                'trocar seus livros',
+                    'trocar seus livros',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
@@ -44,6 +92,7 @@ class RegistrationPage extends StatelessWidget {
 
               // Campo de Nome
               TextField(
+                controller: _nameController,
                 decoration: InputDecoration(
                   labelText: 'Nome',
                   border: OutlineInputBorder(
@@ -57,6 +106,7 @@ class RegistrationPage extends StatelessWidget {
 
               // Campo de Telefone
               TextField(
+                controller: _phoneController,
                 decoration: InputDecoration(
                   labelText: 'Telefone',
                   border: OutlineInputBorder(
@@ -70,6 +120,7 @@ class RegistrationPage extends StatelessWidget {
 
               // Campo de Email
               TextField(
+                controller: _emailController,
                 decoration: InputDecoration(
                   labelText: 'Email',
                   border: OutlineInputBorder(
@@ -83,6 +134,7 @@ class RegistrationPage extends StatelessWidget {
 
               // Campo de Senha
               TextField(
+                controller: _passwordController,
                 obscureText: true,
                 decoration: InputDecoration(
                   labelText: 'Senha',
@@ -97,6 +149,7 @@ class RegistrationPage extends StatelessWidget {
 
               // Campo de Confirmar Senha
               TextField(
+                controller: _confirmPasswordController,
                 obscureText: true,
                 decoration: InputDecoration(
                   labelText: 'Confirme sua senha',
@@ -113,12 +166,9 @@ class RegistrationPage extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(
-                        context, '/home'); // Ação ao clicar em "Cadastrar"
-                  },
+                  onPressed: _register, // Chama a função de registro
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF77C593), // Cor verde do botão
+                    backgroundColor: const Color(0xFF77C593),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -140,8 +190,7 @@ class RegistrationPage extends StatelessWidget {
               // Link para entrar
               TextButton(
                 onPressed: () {
-                  Navigator.pushNamed(context,
-                      '/login'); // Ação para "Já possui conta? Entre aqui"
+                  Navigator.pushNamed(context, '/login');
                 },
                 child: const Text(
                   'Já possui conta? Entre aqui',
