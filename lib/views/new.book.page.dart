@@ -1,19 +1,55 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-
-class BookRegistrationPage extends StatelessWidget {
+class BookRegistrationPage extends StatefulWidget {
   const BookRegistrationPage({super.key});
+
+  @override
+  _BookRegistrationPageState createState() => _BookRegistrationPageState();
+}
+
+class _BookRegistrationPageState extends State<BookRegistrationPage> {
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _authorController = TextEditingController();
+  final TextEditingController _editionController = TextEditingController();
+  final TextEditingController _isbnController = TextEditingController();
+  final TextEditingController _yearController = TextEditingController();
+  final TextEditingController _publisherController = TextEditingController();
+  String _condition = 'Novo';
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _authorController.dispose();
+    _editionController.dispose();
+    _isbnController.dispose();
+    _yearController.dispose();
+    _publisherController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _addBook() async {
+    await FirebaseFirestore.instance.collection('books').add({
+      'title': _titleController.text,
+      'author': _authorController.text,
+      'edition': _editionController.text,
+      'isbn': _isbnController.text,
+      'year': _yearController.text,
+      'publisher': _publisherController.text,
+      'condition': _condition,
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFFD8D5B3), // Cor amarelada semelhante à parte superior
+        backgroundColor: const Color(0xFFD8D5B3),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black), // Ícone de voltar
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
-            Navigator.pop(context); // Ação para voltar
+            Navigator.pop(context);
           },
         ),
         title: const Text(
@@ -26,7 +62,6 @@ class BookRegistrationPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Título e Subtítulo da Seção de Foto
             const Text(
               'Adicione uma foto:',
               style: TextStyle(
@@ -43,8 +78,6 @@ class BookRegistrationPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-
-            // Container de Adicionar Foto
             GestureDetector(
               onTap: () {
                 // Ação ao clicar para adicionar uma foto
@@ -71,22 +104,18 @@ class BookRegistrationPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-
-            // Campos de Texto para Cadastro do Livro
-            _buildTextField('Nome do Livro'),
+            _buildTextField('Nome do Livro', _titleController),
             const SizedBox(height: 15),
-            _buildTextField('Nome do Autor'),
+            _buildTextField('Nome do Autor', _authorController),
             const SizedBox(height: 15),
-            _buildTextField('Edição'),
+            _buildTextField('Edição', _editionController),
             const SizedBox(height: 15),
-            _buildTextField('ISBN'),
+            _buildTextField('ISBN', _isbnController),
             const SizedBox(height: 15),
-            _buildTextField('Ano de publicação'),
+            _buildTextField('Ano de publicação', _yearController),
             const SizedBox(height: 15),
-            _buildTextField('Editora'),
+            _buildTextField('Editora', _publisherController),
             const SizedBox(height: 15),
-
-            // Dropdown para Estado de Conservação
             Text(
               'Estado de conservação',
               style: TextStyle(
@@ -107,7 +136,7 @@ class BookRegistrationPage extends StatelessWidget {
               ),
               child: DropdownButton<String>(
                 isExpanded: true,
-                value: 'Novo',
+                value: _condition,
                 items: [
                   'Novo',
                   'Poucas marcas de uso',
@@ -120,22 +149,23 @@ class BookRegistrationPage extends StatelessWidget {
                   );
                 }).toList(),
                 onChanged: (String? newValue) {
-                  // Ação ao mudar o valor
+                  setState(() {
+                    _condition = newValue!;
+                  });
                 },
                 underline: const SizedBox(),
               ),
             ),
             const SizedBox(height: 30),
-
-            // Botão de Confirmar
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/publicatedBooks');// Ação ao clicar em "Confirmar"
+                onPressed: () async {
+                  await _addBook();
+                  Navigator.pushNamed(context, '/publicatedBooks');
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF77C593), // Cor verde do botão
+                  backgroundColor: const Color(0xFF77C593),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -158,9 +188,9 @@ class BookRegistrationPage extends StatelessWidget {
     );
   }
 
-  // Widget Helper para TextField
-  Widget _buildTextField(String label) {
+  Widget _buildTextField(String label, TextEditingController controller) {
     return TextField(
+      controller: controller,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(

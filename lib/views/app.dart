@@ -11,12 +11,9 @@ import 'publicated.books.page.dart';
 import 'login.page.dart';
 import 'register.page.dart';
 import 'trade.history.page.dart';
-import 'trade.offer.page.dart';
 import 'trade.status.page.dart';
 
 class BookTradeApp extends StatelessWidget {
-  const BookTradeApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -28,23 +25,22 @@ class BookTradeApp extends StatelessWidget {
         "/favoriteBooks": (context) => FavoriteBooksPage(),
         "/publicatedBooks": (context) => PublicatedBooksPage(),
         "/editProfile": (context) => EditProfilePage(),
-        "/tradeOffer": (context) => TradeOfferPage(),
+        // Remova a rota nomeada para `TradeOfferPage`, pois ela requer um argumento:
+        // "/tradeOffer": (context) => TradeOfferPage(),
         "/register": (context) => RegistrationPage(),
         "/tradeHistory": (context) => TradeHistoryPage(),
         "/newBook": (context) => BookRegistrationPage(),
         "/notifications": (context) => NotificationsPage(),
         "/tradeStatus": (context) => TradeStatusPage(),
-        "/chats":(context) => const ChatsPage(),
-        "/chat":(context) => const ChatPage(),
+        "/chats": (context) => const ChatsPage(),
+        "/chat": (context) => const ChatPage(),
       },
       home: StreamBuilder(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, AsyncSnapshot<User?> snapshot) {
           if (snapshot.connectionState == ConnectionState.active) {
-            // Se o usuário não estiver autenticado, redirecionar para a tela de login
             return snapshot.data == null ? LoginPage() : HomePage();
           } else {
-            // Mostrar uma tela de carregamento enquanto a conexão está sendo estabelecida
             return SplashScreen();
           }
         },
@@ -54,8 +50,6 @@ class BookTradeApp extends StatelessWidget {
 }
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
-
   @override
   _SplashScreenState createState() => _SplashScreenState();
 }
@@ -73,11 +67,11 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFD8D5B3), // Cor de fundo semelhante à imagem fornecida
+      backgroundColor: Color(0xFFD8D5B3), // Cor de fundo
       body: Center(
         child: Image.asset(
-          'assets/logo_transparent.png', // Substitua pelo caminho correto do seu logo
-          height: 200, // Ajuste a altura conforme necessário
+          'assets/logo_transparent.png', // Caminho correto do seu logo
+          height: 200, // Ajuste conforme necessário
         ),
       ),
     );

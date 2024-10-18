@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-
+import '../models/book.dart'; // Importe o modelo Book
 
 class TradeOfferPage extends StatelessWidget {
-  const TradeOfferPage({super.key});
+  final Book book; // Receber o livro como argumento
+
+  const TradeOfferPage({super.key, required this.book});
 
   @override
   Widget build(BuildContext context) {
@@ -27,31 +29,30 @@ class TradeOfferPage extends StatelessWidget {
               height: 200,
               child: PageView(
                 children: [
-                  _buildBookImage('https://via.placeholder.com/150'), // Imagem de exemplo
-                  _buildBookImage('https://via.placeholder.com/150'),
-                  _buildBookImage('https://via.placeholder.com/150'),
+                  _buildBookImage(book.imageUrl), // Imagem do livro
                 ],
               ),
             ),
             const SizedBox(height: 20),
 
             // Informações do Livro
-            const Text(
-              'Código Da Vinci',
-              style: TextStyle(
+            Text(
+              book.title,
+              style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 10),
-            const Text(
-              'Autor: Dan Brown\nEdição: 8\nISBN: 2a18s76zc\nPublicado em: 1990\nEditora: Gota de peroba\nEstado de conservação: Novo',
-              style: TextStyle(
+            Text(
+              'Autor: ${book.author}\nPublicado em: ${book.publishedDate?.year ?? 'N/A'}', // Exibe as informações do livro
+              style: const TextStyle(
                 fontSize: 14,
                 height: 1.5,
               ),
             ),
             const SizedBox(height: 20),
+
             // Sinopse do Livro
             const Text(
               'Sinopse',
@@ -62,13 +63,12 @@ class TradeOfferPage extends StatelessWidget {
             ),
             const SizedBox(height: 5),
             const Text(
-              'Era uma vez um homem montado em um cavalo branco de napoleão que saiu de um buraco negro soltando arco íris. '
-              'Ver mais...',
+              'Aqui você pode adicionar uma sinopse se estiver disponível...',
               style: TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 20),
 
-            // Informação do Usuário
+            // Informação do Usuário (você pode ajustar para pegar dinamicamente)
             Row(
               children: [
                 const CircleAvatar(
@@ -80,7 +80,7 @@ class TradeOfferPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'José Almeida',
+                      'José Almeida', // Nome do usuário pode ser dinâmico se disponível
                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 5),
