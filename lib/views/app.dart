@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'book.exchange.page.dart';
 import 'chat.page.dart';
 import 'chats.page.dart';
 import 'edit.profile.page.dart';
@@ -13,6 +14,7 @@ import 'register.page.dart';
 import 'trade.history.page.dart';
 import 'trade.offer.page.dart';
 import 'trade.status.page.dart';
+import 'notification.detail.page.dart'; // Importe a tela de detalhes de notificação
 
 class BookTradeApp extends StatelessWidget {
   const BookTradeApp({super.key});
@@ -34,8 +36,11 @@ class BookTradeApp extends StatelessWidget {
         "/newBook": (context) => BookRegistrationPage(),
         "/notifications": (context) => NotificationsPage(),
         "/tradeStatus": (context) => TradeStatusPage(),
-        "/chats":(context) => const ChatsPage(),
-        "/chat":(context) => const ChatPage(),
+        "/chats": (context) => const ChatsPage(),
+        "/chat": (context) => const ChatPage(),
+        "/bookExchange": (context) => BookExchangePage(
+          bookDetails: ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>,
+        ),
       },
       home: StreamBuilder(
         stream: FirebaseAuth.instance.authStateChanges(),
@@ -49,6 +54,22 @@ class BookTradeApp extends StatelessWidget {
           }
         },
       ),
+      onGenerateRoute: (settings) {
+        if (settings.name == '/notificationDetail') {
+          final args = settings.arguments as Map<String, String>;
+
+          return MaterialPageRoute(
+            builder: (context) {
+              return NotificationDetailPage(
+                title: args['title'] ?? 'Notificação',
+                message: args['message'] ?? 'Sem mensagem',
+                time: args['time'] ?? 'Sem data',
+              );
+            },
+          );
+        }
+        return null; // Adicione outras rotas dinâmicas aqui, se necessário
+      },
     );
   }
 }
@@ -65,7 +86,7 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     // Adicionar um delay para mostrar a tela de carregamento
-    Future.delayed(Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 3), () {
       // Aqui o StreamBuilder no home do MaterialApp já redireciona
     });
   }
@@ -73,11 +94,11 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFD8D5B3), // Cor de fundo semelhante à imagem fornecida
+      backgroundColor: const Color(0xFFD8D5B3),
       body: Center(
         child: Image.asset(
-          'assets/logo_transparent.png', // Substitua pelo caminho correto do seu logo
-          height: 200, // Ajuste a altura conforme necessário
+          'assets/logo_transparent.png',
+          height: 200,
         ),
       ),
     );

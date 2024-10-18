@@ -56,45 +56,54 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   Future<void> _uploadImage() async {
-    if (_selectedImage != null && currentUser != null) {
-      final storageRef = FirebaseStorage.instance.ref().child('profile_images').child(currentUser!.uid);
-      final uploadTask = storageRef.putFile(_selectedImage!);
-      final snapshot = await uploadTask.whenComplete(() => null);
-      final downloadUrl = await snapshot.ref.getDownloadURL();
+    try {
+      if (_selectedImage != null && currentUser != null) {
+        final storageRef = FirebaseStorage.instance
+            .ref()
+            .child('profile_images')
+            .child(currentUser!.uid);
 
-      // Atualiza a URL da imagem no Firestore
-      await FirebaseFirestore.instance.collection('users').doc(currentUser!.uid).update({
-        'profileImageUrl': downloadUrl,
-      });
+        final uploadTask = storageRef.putFile(_selectedImage!);
+        final snapshot = await uploadTask.whenComplete(() => null);
+        final downloadUrl = await snapshot.ref.getDownloadURL();
 
-      setState(() {
-        profileImageUrl = downloadUrl;
-      });
+        // Atualiza a URL da imagem no Firestore
+        await FirebaseFirestore.instance.collection('users').doc(currentUser!.uid).update({
+          'profileImageUrl': downloadUrl,
+        });
 
+        setState(() {
+          profileImageUrl = downloadUrl;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Foto de perfil atualizada com sucesso!')),
+        );
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Foto de perfil atualizada com sucesso!')),
+        SnackBar(content: Text('Erro ao fazer upload da imagem: $e')),
       );
     }
   }
 
   Future<void> _updateUserProfile() async {
-    if (currentUser != null) {
-      // Atualiza o Firestore com os novos dados do usuário
-      await FirebaseFirestore.instance.collection('users').doc(currentUser!.uid).update({
-        'name': nameController.text,
-        'phone': phoneController.text,
-      });
+    try {
+      if (currentUser != null) {
+        // Atualiza o Firestore com os novos dados do usuário
+        await FirebaseFirestore.instance.collection('users').doc(currentUser!.uid).update({
+          'name': nameController.text,
+          'phone': phoneController.text,
+        });
 
-      // Atualiza o email se necessário
-      if (emailController.text != currentUser!.email) {
-        await currentUser!.updateEmail(emailController.text);
-      }
+        // Atualiza o email se necessário
+        if (emailController.text != currentUser!.email) {
+          await currentUser!.updateEmail(emailController.text);
+        }
 
-      // Lógica para alterar a senha
-      if (newPasswordController.text.isNotEmpty &&
-          newPasswordController.text == confirmNewPasswordController.text) {
-        try {
-          // Reautentica o usuário antes de mudar a senha
+        // Lógica para alterar a senha
+        if (newPasswordController.text.isNotEmpty &&
+            newPasswordController.text == confirmNewPasswordController.text) {
           AuthCredential credential = EmailAuthProvider.credential(
             email: currentUser!.email!,
             password: currentPasswordController.text,
@@ -106,19 +115,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Senha atualizada com sucesso!')),
           );
-        } catch (e) {
+        } else if (newPasswordController.text != confirmNewPasswordController.text) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Erro ao atualizar a senha: $e')),
+            const SnackBar(content: Text('As senhas não coincidem!')),
           );
         }
-      } else if (newPasswordController.text != confirmNewPasswordController.text) {
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('As senhas não coincidem!')),
+          const SnackBar(content: Text('Perfil atualizado com sucesso!')),
         );
       }
-
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Perfil atualizado com sucesso!')),
+        SnackBar(content: Text('Erro ao atualizar perfil: $e')),
       );
     }
   }
