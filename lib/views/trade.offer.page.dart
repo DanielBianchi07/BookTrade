@@ -45,11 +45,36 @@ class TradeOfferPage extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              'Autor: ${book.author}\nPublicado em: ${book.publishedDate?.year ?? 'N/A'}',
+              'Autor: ${book.author}\nPublicado em: ${book.publicationYear ?? 'N/A'}',
               style: const TextStyle(
                 fontSize: 14,
                 height: 1.5,
               ),
+            ),
+            const SizedBox(height: 0),
+            Text(
+              'Condição: ${book.condition ?? 'N/A'}',
+              style: const TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 0),
+            Text(
+              'Edição: ${book.edition ?? 'N/A'}',
+              style: const TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 0),
+            Text(
+              'Gêneros: ${book.genres?.join(', ') ?? 'N/A'}',
+              style: const TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 0),
+            Text(
+              'ISBN: ${book.isbn ?? 'N/A'}',
+              style: const TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 0),
+            Text(
+              'Editora: ${book.publisher ?? 'N/A'}',
+              style: const TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 20),
 

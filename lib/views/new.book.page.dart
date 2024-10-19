@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io'; // Importante para usar File
+import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class NewBookPage extends StatefulWidget {
-  const NewBookPage({super.key});
-
   @override
   _NewBookPageState createState() => _NewBookPageState();
 }
@@ -16,58 +14,102 @@ class _NewBookPageState extends State<NewBookPage> {
   final TextEditingController _authorController = TextEditingController();
   final TextEditingController _editionController = TextEditingController();
   final TextEditingController _isbnController = TextEditingController();
-  final TextEditingController _yearController = TextEditingController();
+  final TextEditingController _publicationYearController = TextEditingController();
   final TextEditingController _publisherController = TextEditingController();
-  String _condition = 'Novo';
-  String? _imageUrl; // URL da imagem
+  String _condition = 'Novo'; // Default condition
+  bool _isLoading = false;
+  List<String> _genres = [];
+  File? _selectedImage; // Para armazenar a imagem selecionada
 
-  @override
-  void dispose() {
-    _titleController.dispose();
-    _authorController.dispose();
-    _editionController.dispose();
-    _isbnController.dispose();
-    _yearController.dispose();
-    _publisherController.dispose();
-    super.dispose();
-  }
+  // Método para buscar os gêneros a partir do ISBN
+  Future<void> _fetchGenresFromISBN(String isbn) async {
+    final url = 'https://www.googleapis.com/books/v1/volumes?q=isbn:$isbn';
 
-  // Método para escolher a imagem da galeria ou da câmera
-  Future<void> _pickImage() async {
-    final ImagePicker _picker = ImagePicker();
-    final XFile? image = await _picker.pickImage(source: ImageSource.camera);
-
-    if (image != null) {
-      // Carregar a imagem para o Firebase Storage
-      await _uploadImage(image.path);
-    }
-  }
-
-  // Método para fazer upload da imagem no Firebase Storage
-  Future<void> _uploadImage(String filePath) async {
     try {
-      final storageRef = FirebaseStorage.instance.ref().child('books/${DateTime.now().millisecondsSinceEpoch}.png');
-      await storageRef.putFile(File(filePath));
-      String downloadUrl = await storageRef.getDownloadURL();
-      setState(() {
-        _imageUrl = downloadUrl; // Armazena a URL da imagem
-      });
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        if (data['totalItems'] > 0) {
+          final volumeInfo = data['items'][0]['volumeInfo'];
+          final categories = volumeInfo['categories'] ?? [];
+
+          setState(() {
+            _genres = List<String>.from(categories);
+          });
+        } else {
+          _showError('Nenhum livro encontrado para o ISBN fornecido.');
+        }
+      } else {
+        _showError('Erro ao buscar os dados do livro.');
+      }
     } catch (e) {
-      print('Erro ao fazer upload da imagem: $e');
+      _showError('Erro ao buscar dados: $e');
     }
   }
 
-  Future<void> _addBook() async {
-    await FirebaseFirestore.instance.collection('books').add({
-      'title': _titleController.text,
-      'author': _authorController.text,
-      'edition': _editionController.text,
-      'isbn': _isbnController.text,
-      'year': _yearController.text,
-      'publisher': _publisherController.text,
-      'condition': _condition,
-      'imageUrl': _imageUrl, // Inclua a URL da imagem
-    });
+  // Exibir erros
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  // Validação do ISBN
+  bool _validateISBN(String isbn) {
+    return (isbn.length == 10 || isbn.length == 13) && isbn.contains(RegExp(r'^\d+$'));
+  }
+
+  // Validação dos campos
+  bool _validateFields() {
+    if (_titleController.text.isEmpty ||
+        _authorController.text.isEmpty ||
+        _editionController.text.isEmpty ||
+        _isbnController.text.isEmpty ||
+        _publicationYearController.text.isEmpty ||
+        _publisherController.text.isEmpty){// Remoção da imagem como obrigatória apenas para teste||
+        //_selectedImage == null) {
+      _showError('Todos os campos, incluindo a imagem, são obrigatórios.');
+      return false;
+    }
+
+    if (!_validateISBN(_isbnController.text.trim())) {
+      _showError('ISBN inválido. Deve ter 10 ou 13 dígitos.');
+      return false;
+    }
+
+    return true;
+  }
+
+  // Selecionar imagem
+  Future<void> _pickImage() async {
+    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        _selectedImage = File(pickedFile.path);
+      });
+    }
+  }
+
+  // Confirmar e redirecionar
+  Future<void> _onConfirm() async {
+    if (_validateFields()) {
+      await _fetchGenresFromISBN(_isbnController.text.trim());
+
+      Navigator.pushNamed(context, '/bookExchange', arguments: {
+        'title': _titleController.text.trim(),
+        'author': _authorController.text.trim(),
+        'edition': _editionController.text.trim(),
+        'isbn': _isbnController.text.trim(),
+        'publicationYear': _publicationYearController.text.trim(),
+        'publisher': _publisherController.text.trim(),
+        'condition': _condition,
+        'genres': _genres,
+        'image': _selectedImage, // Incluindo a imagem para passar na próxima página
+      });
+    }
   }
 
   @override
@@ -82,34 +124,28 @@ class _NewBookPageState extends State<NewBookPage> {
             Navigator.pop(context);
           },
         ),
-        title: const Text(
-          'Cadastro do Livro',
-          style: TextStyle(color: Colors.black),
-        ),
+        title: const Text('Cadastro do Livro', style: TextStyle(color: Colors.black)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Título e subtítulo para a foto
             const Text(
               'Adicione uma foto:',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 5),
             Text(
               'Envie uma foto do seu livro.',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
             const SizedBox(height: 20),
+
+            // Container de Adicionar Foto
             GestureDetector(
-              onTap: _pickImage, // Chama o método para escolher uma imagem
+              onTap: _pickImage, // Ação ao clicar para selecionar uma foto
               child: Container(
                 height: 200,
                 width: double.infinity,
@@ -122,24 +158,19 @@ class _NewBookPageState extends State<NewBookPage> {
                   borderRadius: BorderRadius.circular(10),
                   color: Colors.grey[200],
                 ),
-                child: _imageUrl == null
-                    ? const Center(
-                        child: Icon(
-                          Icons.camera_alt,
-                          color: Colors.black,
-                          size: 50,
-                        ),
-                      )
-                    : ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.network(
-                          _imageUrl!,
-                          fit: BoxFit.cover, // Ajusta a imagem para cobrir todo o container
-                        ),
-                      ), // Exibe a imagem se disponível
+                child: _selectedImage != null
+                    ? Image.file(_selectedImage!, fit: BoxFit.cover)
+                    : const Center(
+                  child: Icon(
+                    Icons.camera_alt,
+                    color: Colors.black,
+                    size: 50,
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 20),
+
             _buildTextField('Nome do Livro', _titleController),
             const SizedBox(height: 15),
             _buildTextField('Nome do Autor', _authorController),
@@ -148,16 +179,15 @@ class _NewBookPageState extends State<NewBookPage> {
             const SizedBox(height: 15),
             _buildTextField('ISBN', _isbnController),
             const SizedBox(height: 15),
-            _buildTextField('Ano de publicação', _yearController),
+            _buildTextField('Ano de publicação', _publicationYearController),
             const SizedBox(height: 15),
             _buildTextField('Editora', _publisherController),
             const SizedBox(height: 15),
+
+            // Dropdown para Estado de Conservação
             Text(
               'Estado de conservação',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[700],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[700]),
             ),
             const SizedBox(height: 5),
             Container(
@@ -165,10 +195,7 @@ class _NewBookPageState extends State<NewBookPage> {
               decoration: BoxDecoration(
                 color: Colors.grey[200],
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: Colors.black,
-                  width: 1,
-                ),
+                border: Border.all(color: Colors.black, width: 1),
               ),
               child: DropdownButton<String>(
                 isExpanded: true,
@@ -177,7 +204,7 @@ class _NewBookPageState extends State<NewBookPage> {
                   'Novo',
                   'Poucas marcas de uso',
                   'Manchas e páginas rasgadas',
-                  'Páginas faltando ou ilegíveis'
+                  'Páginas faltando ou ilegíveis',
                 ].map((String value) {
                   return DropdownMenuItem<String>(
                     value: value,
@@ -186,20 +213,19 @@ class _NewBookPageState extends State<NewBookPage> {
                 }).toList(),
                 onChanged: (String? newValue) {
                   setState(() {
-                    _condition = newValue!;
+                    _condition = newValue ?? _condition;
                   });
                 },
                 underline: const SizedBox(),
               ),
             ),
             const SizedBox(height: 30),
+
+            // Botão de Confirmar
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () async {
-                  await _addBook();
-                  Navigator.pushNamed(context, '/publicatedBooks');
-                },
+                onPressed: _onConfirm,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF77C593),
                   shape: RoundedRectangleBorder(
@@ -210,10 +236,7 @@ class _NewBookPageState extends State<NewBookPage> {
                   padding: EdgeInsets.all(15.0),
                   child: Text(
                     'Confirmar',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),

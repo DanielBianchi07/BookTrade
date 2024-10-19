@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:myapp/views/trade.offer.page.dart';
-import '../models/bookcard.dart'; // Ajuste o caminho se necessário
-import '../models/book.dart'; // Ajuste o caminho se necessário
+import 'trade.offer.page.dart';
+import '../models/bookcard.dart'; 
+import '../models/book.dart'; 
 // Certifique-se de que a TradeOfferPage está importada
 
 class HomePage extends StatefulWidget {
