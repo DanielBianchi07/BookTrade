@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
-
+import '../models/book.dart'; // Importe o modelo Book
 
 class TradeOfferPage extends StatelessWidget {
-  const TradeOfferPage({super.key});
+  final Book book; // Receber o livro como argumento
+
+  const TradeOfferPage({super.key, required this.book});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFFD8D5B3), // Cor amarelada na parte superior
+        backgroundColor: const Color(0xFFD8D5B3),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
-            Navigator.of(context).pop(); // Seta de navegação para voltar
+            Navigator.of(context).pop();
           },
         ),
       ),
@@ -27,31 +29,55 @@ class TradeOfferPage extends StatelessWidget {
               height: 200,
               child: PageView(
                 children: [
-                  _buildBookImage('https://via.placeholder.com/150'), // Imagem de exemplo
-                  _buildBookImage('https://via.placeholder.com/150'),
-                  _buildBookImage('https://via.placeholder.com/150'),
+                  _buildBookImage(book.imageUrl), // Imagem do livro
                 ],
               ),
             ),
             const SizedBox(height: 20),
 
             // Informações do Livro
-            const Text(
-              'Código Da Vinci',
-              style: TextStyle(
+            Text(
+              book.title,
+              style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 10),
-            const Text(
-              'Autor: Dan Brown\nEdição: 8\nISBN: 2a18s76zc\nPublicado em: 1990\nEditora: Gota de peroba\nEstado de conservação: Novo',
-              style: TextStyle(
+            Text(
+              'Autor: ${book.author}\nPublicado em: ${book.publicationYear ?? 'N/A'}',
+              style: const TextStyle(
                 fontSize: 14,
                 height: 1.5,
               ),
             ),
+            const SizedBox(height: 0),
+            Text(
+              'Condição: ${book.condition ?? 'N/A'}',
+              style: const TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 0),
+            Text(
+              'Edição: ${book.edition ?? 'N/A'}',
+              style: const TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 0),
+            Text(
+              'Gêneros: ${book.genres?.join(', ') ?? 'N/A'}',
+              style: const TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 0),
+            Text(
+              'ISBN: ${book.isbn ?? 'N/A'}',
+              style: const TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 0),
+            Text(
+              'Editora: ${book.publisher ?? 'N/A'}',
+              style: const TextStyle(fontSize: 14),
+            ),
             const SizedBox(height: 20),
+
             // Sinopse do Livro
             const Text(
               'Sinopse',
@@ -62,8 +88,7 @@ class TradeOfferPage extends StatelessWidget {
             ),
             const SizedBox(height: 5),
             const Text(
-              'Era uma vez um homem montado em um cavalo branco de napoleão que saiu de um buraco negro soltando arco íris. '
-              'Ver mais...',
+              'Aqui você pode adicionar uma sinopse se estiver disponível...',
               style: TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 20),
@@ -72,7 +97,7 @@ class TradeOfferPage extends StatelessWidget {
             Row(
               children: [
                 const CircleAvatar(
-                  backgroundImage: NetworkImage('https://via.placeholder.com/150'), // Imagem do perfil do usuário
+                  backgroundImage: NetworkImage('https://via.placeholder.com/150'),
                   radius: 25,
                 ),
                 const SizedBox(width: 10),
@@ -104,7 +129,7 @@ class TradeOfferPage extends StatelessWidget {
                     // Lógica para solicitar troca
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF77C593), // Cor verde do botão "Solicitar"
+                    backgroundColor: const Color(0xFF77C593),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
@@ -116,7 +141,7 @@ class TradeOfferPage extends StatelessWidget {
                     Navigator.pushNamed(context, '/chat');
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue, // Cor azul do botão "Chat"
+                    backgroundColor: Colors.blue,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
@@ -131,7 +156,6 @@ class TradeOfferPage extends StatelessWidget {
     );
   }
 
-  // Função para construir a imagem do livro no carrossel
   Widget _buildBookImage(String imageUrl) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 10.0),
