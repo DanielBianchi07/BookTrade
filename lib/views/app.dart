@@ -12,13 +12,10 @@ import 'publicated.books.page.dart';
 import 'login.page.dart';
 import 'register.page.dart';
 import 'trade.history.page.dart';
-import 'trade.offer.page.dart';
 import 'trade.status.page.dart';
 import 'notification.detail.page.dart'; // Importe a tela de detalhes de notificação
 
 class BookTradeApp extends StatelessWidget {
-  const BookTradeApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -30,10 +27,11 @@ class BookTradeApp extends StatelessWidget {
         "/favoriteBooks": (context) => FavoriteBooksPage(),
         "/publicatedBooks": (context) => PublicatedBooksPage(),
         "/editProfile": (context) => EditProfilePage(),
-        "/tradeOffer": (context) => TradeOfferPage(),
+        // Remova a rota nomeada para `TradeOfferPage`, pois ela requer um argumento:
+        // "/tradeOffer": (context) => TradeOfferPage(),
         "/register": (context) => RegistrationPage(),
         "/tradeHistory": (context) => TradeHistoryPage(),
-        "/newBook": (context) => BookRegistrationPage(),
+        "/newBook": (context) => NewBookPage(),
         "/notifications": (context) => NotificationsPage(),
         "/tradeStatus": (context) => TradeStatusPage(),
         "/chats": (context) => const ChatsPage(),
@@ -46,10 +44,8 @@ class BookTradeApp extends StatelessWidget {
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, AsyncSnapshot<User?> snapshot) {
           if (snapshot.connectionState == ConnectionState.active) {
-            // Se o usuário não estiver autenticado, redirecionar para a tela de login
             return snapshot.data == null ? LoginPage() : HomePage();
           } else {
-            // Mostrar uma tela de carregamento enquanto a conexão está sendo estabelecida
             return SplashScreen();
           }
         },
@@ -75,8 +71,6 @@ class BookTradeApp extends StatelessWidget {
 }
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
-
   @override
   _SplashScreenState createState() => _SplashScreenState();
 }

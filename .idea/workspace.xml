@@ -4,6 +4,7 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
+
     <list default="true" id="4e9ea88f-7afb-495a-8062-f1ce7860c332" name="Changes" comment="">
       <change afterPath="$PROJECT_DIR$/lib/views/notification.detail.page.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
