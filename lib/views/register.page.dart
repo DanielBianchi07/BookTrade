@@ -1,54 +1,96 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:myapp/services/auth_service.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:myapp/controller/login.controller.dart';
+import 'package:myapp/controller/register.controller.dart';
+import 'package:myapp/views/login.page.dart';
+import 'package:myapp/widgets/busy.widget.dart';
+
+import 'home.page.dart';
 
 class RegistrationPage extends StatefulWidget {
+  const RegistrationPage({super.key});
+
   @override
   _RegistrationPageState createState() => _RegistrationPageState();
 }
 
 class _RegistrationPageState extends State<RegistrationPage> {
-  final AuthService _authService = AuthService();
+  final controller = new RegisterController();
+  final loginController = new LoginController();
+  var _name = TextEditingController();
+  var _phone = TextEditingController();
+  var _email = TextEditingController();
+  var _password = TextEditingController();
+  var _passwordConfirm = TextEditingController();
+  late String name;
+  late String phone;
+  late String email;
+  late String password;
+  late String passwordConfirm;
+  var busy = false;
 
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
-
-  String _errorMessage = '';
-
-  // Função para registrar o usuário
-  void _register() async {
-    String name = _nameController.text.trim();
-    String phone = _phoneController.text.trim();
-    String email = _emailController.text.trim();
-    String password = _passwordController.text.trim();
-    String confirmPassword = _confirmPasswordController.text.trim();
-
-    if (password != confirmPassword) {
-      setState(() {
-        _errorMessage = 'As senhas não coincidem!';
-      });
-      return;
+  handleRegister(){
+    setState(() {
+      name = _name.text.trim();
+      phone = _phone.text.trim();
+      email = _email.text.trim();
+      password = _password.text.trim();
+      passwordConfirm = _passwordConfirm.text.trim();
+    });
+    if (name.isEmpty || phone.isEmpty || email.isEmpty || password.isEmpty || passwordConfirm.isEmpty) {
+      Fluttertoast.showToast(
+        msg: "Por favor, preencha todos os campos",
+        toastLength: Toast.LENGTH_LONG,
+      );
     }
-
-    // Chamar o AuthService para registrar o usuário
-    User? user = await _authService.registerWithEmail(
-      email: email,
-      password: password,
-      name: name,
-      phone: phone,
-    );
-
-    if (user != null) {
-      Navigator.pushReplacementNamed(context, '/home');
-    } else {
-      setState(() {
-        _errorMessage = 'Erro ao registrar. Tente novamente.';
-      });
+    else {
+      if (password == passwordConfirm) {
+        busy = true;
+        final user = controller.registerWithEmail(email: email, password: password, passwordConfirm: passwordConfirm, name: name, phone: phone).then((data) {
+          onSuccess();
+        }).catchError((e) {
+          onError(e);
+        }).whenComplete(() {
+          onComplete();
+        });
+      }
+      else {
+        Fluttertoast.showToast(
+        msg: "As senhas devem coincidir",
+        toastLength: Toast.LENGTH_LONG,
+        );
+      }
     }
   }
+
+  onSuccess() {
+    loginController.loginWithEmail(email, password);
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => HomePage(),
+      ),
+    );
+  }
+
+  onError(e) {
+    Fluttertoast.showToast(
+      msg: "Erro ao registrar: $e",
+      toastLength: Toast.LENGTH_LONG,
+    );
+  }
+
+  onComplete() {
+    _name = TextEditingController();
+    _phone = TextEditingController();
+    _email = TextEditingController();
+    _password = TextEditingController();
+    _passwordConfirm = TextEditingController();
+    setState(() {
+      busy = false;
+    });
+  }
+
+  //============================================================================
 
   @override
   Widget build(BuildContext context) {
@@ -78,16 +120,20 @@ class _RegistrationPageState extends State<RegistrationPage> {
               const SizedBox(height: 10),
 
               // Texto descritivo
-              const Text(
+              Text(
                 'Cadastre-se para começar a\n'
                     'trocar seus livros',
                 textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey[700],
+                ),
               ),
               const SizedBox(height: 30),
 
               // Campo de Nome
               TextField(
-                controller: _nameController,
+                controller: _name,
                 decoration: InputDecoration(
                   labelText: 'Nome',
                   border: OutlineInputBorder(
@@ -101,7 +147,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
               // Campo de Telefone
               TextField(
-                controller: _phoneController,
+                controller: _phone,
                 decoration: InputDecoration(
                   labelText: 'Telefone',
                   border: OutlineInputBorder(
@@ -115,7 +161,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
               // Campo de Email
               TextField(
-                controller: _emailController,
+                controller: _email,
                 decoration: InputDecoration(
                   labelText: 'Email',
                   border: OutlineInputBorder(
@@ -129,7 +175,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
               // Campo de Senha
               TextField(
-                controller: _passwordController,
+                controller: _password,
                 obscureText: true,
                 decoration: InputDecoration(
                   labelText: 'Senha',
@@ -144,7 +190,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
               // Campo de Confirmar Senha
               TextField(
-                controller: _confirmPasswordController,
+                controller: _passwordConfirm,
                 obscureText: true,
                 decoration: InputDecoration(
                   labelText: 'Confirme sua senha',
@@ -158,10 +204,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
               const SizedBox(height: 30),
 
               // Botão de Cadastro
-              SizedBox(
+              TDBusy(busy: busy,
+                child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _register,
+                  onPressed: handleRegister, // Chama a função de registro
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF77C593),
                     shape: RoundedRectangleBorder(
@@ -175,17 +222,19 @@ class _RegistrationPageState extends State<RegistrationPage> {
                       style: TextStyle(
                         color: Colors.black,
                         fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
+
               const SizedBox(height: 20),
 
               // Link para entrar
               TextButton(
                 onPressed: () {
-                  Navigator.pushNamed(context, '/login');
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => LoginPage()));
                 },
                 child: const Text(
                   'Já possui conta? Entre aqui',
@@ -195,16 +244,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   ),
                 ),
               ),
-
-              // Exibir mensagem de erro, se houver
-              if (_errorMessage.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    _errorMessage,
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                ),
             ],
           ),
         ),

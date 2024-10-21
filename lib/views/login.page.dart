@@ -1,43 +1,60 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:myapp/services/auth_service.dart';
+import 'package:myapp/controller/login.controller.dart';
+import 'package:myapp/views/home.page.dart';
+import 'package:myapp/views/register.page.dart';
+import 'package:myapp/widgets/busy.widget.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
-
   @override
   _LoginPageState createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
-  // Controladores para os campos de email e senha
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final controller = new LoginController();
+  late TextEditingController _password = TextEditingController();
+  late TextEditingController _email = TextEditingController();
+  late String email;
+  late String password;
+  var busy = false;
 
-  // Instância do AuthService
-  final AuthService _authService = AuthService();
-
-  // Função para autenticar o usuário
-  Future<void> _signIn() async {
-    String email = _emailController.text.trim();
-    String password = _passwordController.text.trim();
-
-    if (email.isEmpty || password.isEmpty) {
-      // Exibir mensagem se algum campo estiver vazio
-      Fluttertoast.showToast(
-        msg: "Por favor, insira email e senha",
-        toastLength: Toast.LENGTH_LONG,
-      );
-      return;
-    }
-
-    final user = await _authService.loginWithEmail(email, password);
-    if (user != null) {
-      // Se o login for bem-sucedido, navegue para a página inicial
-      Navigator.pushReplacementNamed(context, '/home');
-    }
-    // Não é necessário tratar erros aqui, o AuthService já lida com isso
+  handleSignIn() {
+    setState(() {
+      busy = true;
+      email = _email.text.trim();
+      password = _password.text.trim();
+    });
+    controller.loginWithEmail(email, password).then((data) {
+      onSuccess();
+    }).catchError((e) {
+      onError(e);
+    }).whenComplete(() {
+      onComplete();
+    });
   }
+
+  onSuccess() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => HomePage(),
+      ),
+    );
+  }
+
+  onError(e) {
+    controller.handleFirebaseAuthError(e);
+  }
+
+  onComplete() {
+    _email = TextEditingController();
+    _password = TextEditingController();
+    setState(() {
+      busy = false;
+    });
+  }
+
+  //============================================================================
 
   @override
   Widget build(BuildContext context) {
@@ -76,7 +93,7 @@ class _LoginPageState extends State<LoginPage> {
 
               // Campo de Email
               TextField(
-                controller: _emailController,
+                controller: _email,
                 decoration: InputDecoration(
                   labelText: 'Email',
                   border: OutlineInputBorder(
@@ -90,7 +107,7 @@ class _LoginPageState extends State<LoginPage> {
 
               // Campo de Senha
               TextField(
-                controller: _passwordController,
+                controller: _password,
                 obscureText: true,
                 decoration: InputDecoration(
                   labelText: 'Senha',
@@ -121,27 +138,35 @@ class _LoginPageState extends State<LoginPage> {
               ),
 
               // Botão Entrar
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _signIn,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF77C593),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+              TDBusy(busy: busy,
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: handleSignIn,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF77C593),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(15.0),
-                    child: Text('Entrar'),
+                    child: Padding(
+                      padding: const EdgeInsets.all(15.0),
+                      child: Text('Entrar'),
+                    ),
                   ),
                 ),
               ),
 
               // Criar nova conta
-              TextButton(
+              TDBusyClear(
+                busy: busy,
+                child: TextButton(
                 onPressed: () {
-                  Navigator.pushNamed(context, "/register");
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => RegistrationPage(),
+                    ),
+                  );
                 },
                 child: Text(
                   'Criar nova conta',
@@ -149,7 +174,7 @@ class _LoginPageState extends State<LoginPage> {
                     color: Colors.black,
                   ),
                 ),
-              ),
+              ),)
             ],
           ),
         ),
