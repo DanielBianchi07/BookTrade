@@ -1,25 +1,37 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Registrar usuário
-  Future<User?> registerWithEmail(String email, String password) async {
+  // Registrar usuário e salvar seus dados (exceto a imagem de perfil)
+  Future<User?> registerWithEmail({
+    required String email,
+    required String password,
+    required String name,
+    required String phone,
+  }) async {
     try {
+      // Criar o usuário no Firebase Authentication
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
-      return userCredential.user;
-    } on FirebaseAuthException catch (e) {
-      _handleFirebaseAuthError(e); // Lida com o erro diretamente
-      return null;
+      User? user = userCredential.user;
+
+      // Criar documento no Firestore para o usuário (sem imagem inicialmente)
+      await _firestore.collection('users').doc(user!.uid).set({
+        'name': name,
+        'phone': phone,
+        'email': email,
+        'profileImageUrl': '', // Deixamos a imagem vazia por enquanto
+      });
+
+      return user;
     } catch (e) {
-      Fluttertoast.showToast(
-        msg: "Erro desconhecido ao registrar: $e",
-        toastLength: Toast.LENGTH_LONG,
-      );
+      print('Erro ao registrar: $e');
       return null;
     }
   }
