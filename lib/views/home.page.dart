@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:myapp/controller/login.controller.dart';
+
+import 'login.page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -11,6 +15,40 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   // Chave global para acessar o Scaffold
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final loginController = new LoginController();
+  var busy = false;
+
+  handleSignOut() {
+    setState(() {
+      busy = true;
+    });
+    loginController.logout().then((data) {
+      onSuccess();
+    }).whenComplete(() {
+      onComplete();
+    });
+  }
+
+  onSuccess() {
+    Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => LoginPage(),
+        ),
+    );
+  }
+
+  onError(e) {
+    Fluttertoast.showToast(
+      msg: "Erro ao sair: $e",
+      toastLength: Toast.LENGTH_LONG,
+    );
+  }
+
+  onComplete() {
+    setState(() {
+      busy = false;
+    });
+  }
 
   // Lista para gerenciar o estado dos corações (favoritados ou não)
   List<bool> favoriteStatus = [false, false, false]; // Exemplo com 3 itens
@@ -186,7 +224,7 @@ class _HomePageState extends State<HomePage> {
                 style: TextStyle(color: Colors.red),
               ),
               onTap: () {
-                Navigator.pushNamed(context, '/login');
+                handleSignOut();
               },
             ),
           ],
@@ -287,7 +325,7 @@ class BookCard extends StatelessWidget {
   final double rating;
   final VoidCallback onFavoritePressed;
 
-  const BookCard({super.key, 
+  const BookCard({super.key,
     required this.title,
     required this.author,
     required this.postedBy,

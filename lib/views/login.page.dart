@@ -34,10 +34,6 @@ class _LoginPageState extends State<LoginPage> {
     });
   }
 
-  handleRegister() {
-
-  }
-
   onSuccess() {
     Navigator.push(
       context,
@@ -57,6 +53,8 @@ class _LoginPageState extends State<LoginPage> {
       busy = false;
     });
   }
+
+  //============================================================================
 
   @override
   Widget build(BuildContext context) {

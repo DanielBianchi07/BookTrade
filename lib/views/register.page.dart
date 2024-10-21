@@ -1,12 +1,101 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:myapp/controller/login.controller.dart';
+import 'package:myapp/controller/register.controller.dart';
+import 'package:myapp/views/login.page.dart';
+import 'package:myapp/widgets/busy.widget.dart';
 
-class RegistrationPage extends StatelessWidget {
+import 'home.page.dart';
+
+class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
+
+  @override
+  _RegistrationPageState createState() => _RegistrationPageState();
+}
+
+class _RegistrationPageState extends State<RegistrationPage> {
+  final controller = new RegisterController();
+  final loginController = new LoginController();
+  var _name = TextEditingController();
+  var _phone = TextEditingController();
+  var _email = TextEditingController();
+  var _password = TextEditingController();
+  var _passwordConfirm = TextEditingController();
+  late String name;
+  late String phone;
+  late String email;
+  late String password;
+  late String passwordConfirm;
+  var busy = false;
+
+  handleRegister(){
+    setState(() {
+      name = _name.text.trim();
+      phone = _phone.text.trim();
+      email = _email.text.trim();
+      password = _password.text.trim();
+      passwordConfirm = _passwordConfirm.text.trim();
+    });
+    if (name.isEmpty || phone.isEmpty || email.isEmpty || password.isEmpty || passwordConfirm.isEmpty) {
+      Fluttertoast.showToast(
+        msg: "Por favor, preencha todos os campos",
+        toastLength: Toast.LENGTH_LONG,
+      );
+    }
+    else {
+      if (password == passwordConfirm) {
+        busy = true;
+        final user = controller.registerWithEmail(email: email, password: password, passwordConfirm: passwordConfirm, name: name, phone: phone).then((data) {
+          onSuccess();
+        }).catchError((e) {
+          onError(e);
+        }).whenComplete(() {
+          onComplete();
+        });
+      }
+      else {
+        Fluttertoast.showToast(
+        msg: "As senhas devem coincidir",
+        toastLength: Toast.LENGTH_LONG,
+        );
+      }
+    }
+  }
+
+  onSuccess() {
+    loginController.loginWithEmail(email, password);
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => HomePage(),
+      ),
+    );
+  }
+
+  onError(e) {
+    Fluttertoast.showToast(
+      msg: "Erro ao registrar: $e",
+      toastLength: Toast.LENGTH_LONG,
+    );
+  }
+
+  onComplete() {
+    _name = TextEditingController();
+    _phone = TextEditingController();
+    _email = TextEditingController();
+    _password = TextEditingController();
+    _passwordConfirm = TextEditingController();
+    setState(() {
+      busy = false;
+    });
+  }
+
+  //============================================================================
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFD8D5B3), // Fundo branco para a tela
+      backgroundColor: const Color(0xFFD8D5B3),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
@@ -15,7 +104,7 @@ class RegistrationPage extends StatelessWidget {
             children: [
               // Logo do aplicativo
               Image.asset(
-                'assets/logo_transparent.png', // Caminho para o logo
+                'assets/logo_transparent.png',
                 height: 80,
               ),
               const SizedBox(height: 20),
@@ -33,7 +122,7 @@ class RegistrationPage extends StatelessWidget {
               // Texto descritivo
               Text(
                 'Cadastre-se para começar a\n'
-                'trocar seus livros',
+                    'trocar seus livros',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
@@ -44,6 +133,7 @@ class RegistrationPage extends StatelessWidget {
 
               // Campo de Nome
               TextField(
+                controller: _name,
                 decoration: InputDecoration(
                   labelText: 'Nome',
                   border: OutlineInputBorder(
@@ -57,6 +147,7 @@ class RegistrationPage extends StatelessWidget {
 
               // Campo de Telefone
               TextField(
+                controller: _phone,
                 decoration: InputDecoration(
                   labelText: 'Telefone',
                   border: OutlineInputBorder(
@@ -70,6 +161,7 @@ class RegistrationPage extends StatelessWidget {
 
               // Campo de Email
               TextField(
+                controller: _email,
                 decoration: InputDecoration(
                   labelText: 'Email',
                   border: OutlineInputBorder(
@@ -83,6 +175,7 @@ class RegistrationPage extends StatelessWidget {
 
               // Campo de Senha
               TextField(
+                controller: _password,
                 obscureText: true,
                 decoration: InputDecoration(
                   labelText: 'Senha',
@@ -97,6 +190,7 @@ class RegistrationPage extends StatelessWidget {
 
               // Campo de Confirmar Senha
               TextField(
+                controller: _passwordConfirm,
                 obscureText: true,
                 decoration: InputDecoration(
                   labelText: 'Confirme sua senha',
@@ -110,15 +204,13 @@ class RegistrationPage extends StatelessWidget {
               const SizedBox(height: 30),
 
               // Botão de Cadastro
-              SizedBox(
+              TDBusy(busy: busy,
+                child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(
-                        context, '/home'); // Ação ao clicar em "Cadastrar"
-                  },
+                  onPressed: handleRegister, // Chama a função de registro
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF77C593), // Cor verde do botão
+                    backgroundColor: const Color(0xFF77C593),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -130,18 +222,19 @@ class RegistrationPage extends StatelessWidget {
                       style: TextStyle(
                         color: Colors.black,
                         fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
+
               const SizedBox(height: 20),
 
               // Link para entrar
               TextButton(
                 onPressed: () {
-                  Navigator.pushNamed(context,
-                      '/login'); // Ação para "Já possui conta? Entre aqui"
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => LoginPage()));
                 },
                 child: const Text(
                   'Já possui conta? Entre aqui',
