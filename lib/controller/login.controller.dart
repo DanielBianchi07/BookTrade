@@ -24,17 +24,24 @@ class LoginController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   Future loginWithEmail(String email, String password) async {
-      final userCredential = await _auth.signInWithEmailAndPassword(email: email, password: password,);
-      user.name = userCredential.user!.displayName!;
-      user.email = userCredential.user!.email!;
-      user.picture = userCredential.user!.photoURL!;
-      user.telephone = userCredential.user!.phoneNumber!;
+      final userCredential = await _auth.signInWithEmailAndPassword(email: email, password: password);
+      user.uid = userCredential.user!.uid;
+      user.name = userCredential.user!.displayName ?? "";
+      user.email = userCredential.user!.email ?? "";
+      user.picture = userCredential.user!.photoURL ?? "";
+      user.telephone = userCredential.user!.phoneNumber ?? "";
   }
 
   Future logout() async {
       await FirebaseAuth.instance.signOut();
+      await FirebaseAuth.instance.currentUser?.reload();
       user = new IUser();
-      Fluttertoast.showToast(msg: "Logout realizado com sucesso", toastLength: Toast.LENGTH_SHORT,);
+      var currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        Fluttertoast.showToast(msg: "Logout realizado com sucesso", toastLength: Toast.LENGTH_SHORT);
+      } else {
+        Fluttertoast.showToast(msg: "Falha ao deslogar", toastLength: Toast.LENGTH_SHORT);
+      }
   }
 
   void handleFirebaseAuthError(FirebaseAuthException e) {

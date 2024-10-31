@@ -3,13 +3,17 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart'; // Import FirebaseAuth
+import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore
 
-class BookRegistrationPage extends StatefulWidget {
+class NewBookPage extends StatefulWidget {
+  const NewBookPage({super.key});
+
   @override
-  _BookRegistrationPageState createState() => _BookRegistrationPageState();
+  _NewBookPageState createState() => _NewBookPageState();
 }
 
-class _BookRegistrationPageState extends State<BookRegistrationPage> {
+class _NewBookPageState extends State<NewBookPage> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _authorController = TextEditingController();
   final TextEditingController _editionController = TextEditingController();
@@ -17,7 +21,7 @@ class _BookRegistrationPageState extends State<BookRegistrationPage> {
   final TextEditingController _publicationYearController = TextEditingController();
   final TextEditingController _publisherController = TextEditingController();
   String _condition = 'Novo'; // Default condition
-  bool _isLoading = false;
+  final bool _isLoading = false;
   List<String> _genres = [];
   File? _selectedImage; // Para armazenar a imagem selecionada
 
@@ -68,8 +72,7 @@ class _BookRegistrationPageState extends State<BookRegistrationPage> {
         _editionController.text.isEmpty ||
         _isbnController.text.isEmpty ||
         _publicationYearController.text.isEmpty ||
-        _publisherController.text.isEmpty){// Remoção da imagem como obrigatória apenas para teste||
-        //_selectedImage == null) {
+        _publisherController.text.isEmpty) {
       _showError('Todos os campos, incluindo a imagem, são obrigatórios.');
       return false;
     }
@@ -93,22 +96,46 @@ class _BookRegistrationPageState extends State<BookRegistrationPage> {
     }
   }
 
-  // Confirmar e redirecionar
+  // Confirmar e salvar o livro
   Future<void> _onConfirm() async {
     if (_validateFields()) {
       await _fetchGenresFromISBN(_isbnController.text.trim());
 
-      Navigator.pushNamed(context, '/bookExchange', arguments: {
-        'title': _titleController.text.trim(),
-        'author': _authorController.text.trim(),
-        'edition': _editionController.text.trim(),
-        'isbn': _isbnController.text.trim(),
-        'publicationYear': _publicationYearController.text.trim(),
-        'publisher': _publisherController.text.trim(),
-        'condition': _condition,
-        'genres': _genres,
-        'image': _selectedImage, // Incluindo a imagem para passar na próxima página
-      });
+      // Obtém o ID do usuário atual logado
+      User? currentUser = FirebaseAuth.instance.currentUser;
+
+      if (currentUser != null) {
+        String userId = currentUser.uid;
+
+        // Adiciona o ID do usuário junto com os dados do livro
+        await FirebaseFirestore.instance.collection('books').add({
+          'title': _titleController.text.trim(),
+          'author': _authorController.text.trim(),
+          'edition': _editionController.text.trim(),
+          'isbn': _isbnController.text.trim(),
+          'publicationYear': _publicationYearController.text.trim(),
+          'publisher': _publisherController.text.trim(),
+          'condition': _condition,
+          'genres': _genres,
+          'image': _selectedImage != null ? _selectedImage!.path : '',
+          'userId': userId, // Inclui o ID do usuário no documento
+        });
+
+        // Redireciona para a página de troca de livro
+        Navigator.pushNamed(context, '/home', arguments: {
+          'title': _titleController.text.trim(),
+          'author': _authorController.text.trim(),
+          'edition': _editionController.text.trim(),
+          'isbn': _isbnController.text.trim(),
+          'publicationYear': _publicationYearController.text.trim(),
+          'publisher': _publisherController.text.trim(),
+          'condition': _condition,
+          'genres': _genres,
+          'image': _selectedImage, // Incluindo a imagem para passar na próxima página
+        });
+      } else {
+        _showError('Erro: Nenhum usuário autenticado.');
+      }
     }
   }
 
