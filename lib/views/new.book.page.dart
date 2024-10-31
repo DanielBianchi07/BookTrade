@@ -4,12 +4,12 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-class BookRegistrationPage extends StatefulWidget {
+class NewBookPage extends StatefulWidget {
   @override
-  _BookRegistrationPageState createState() => _BookRegistrationPageState();
+  _NewBookPageState createState() => _NewBookPageState();
 }
 
-class _BookRegistrationPageState extends State<BookRegistrationPage> {
+class _NewBookPageState extends State<NewBookPage> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _authorController = TextEditingController();
   final TextEditingController _editionController = TextEditingController();
