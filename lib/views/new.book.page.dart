@@ -76,7 +76,43 @@ class _NewBookPageState extends State<NewBookPage> {
     }
   }
 
+  bool _validateFields() {
+    if (_titleController.text.isEmpty) {
+      _showError('O campo "Nome do Livro" é obrigatório.');
+      return false;
+    }
+    if (_authorController.text.isEmpty) {
+      _showError('O campo "Nome do Autor" é obrigatório.');
+      return false;
+    }
+    if (_editionController.text.isEmpty) {
+      _showError('O campo "Edição" é obrigatório.');
+      return false;
+    }
+    if (!_noIsbn && _isbnController.text.isEmpty) {
+      _showError('O campo "ISBN" é obrigatório quando "Não possui ISBN" não está marcado.');
+      return false;
+    }
+    if (_publicationYearController.text.isEmpty) {
+      _showError('O campo "Ano de publicação" é obrigatório.');
+      return false;
+    }
+    if (_publisherController.text.isEmpty) {
+      _showError('O campo "Editora" é obrigatório.');
+      return false;
+    }
+    if (_noIsbn && _genreController.text.isEmpty) {
+      _showError('O campo "Gênero" é obrigatório quando "Não possui ISBN" está marcado.');
+      return false;
+    }
+    return true;
+  }
+
   Future<void> _onConfirm() async {
+    if (!_validateFields()) {
+      return; // Parar se a validação falhar
+    }
+
     User? currentUser = FirebaseAuth.instance.currentUser;
 
     if (currentUser != null) {
@@ -100,6 +136,7 @@ class _NewBookPageState extends State<NewBookPage> {
           'genres': _noIsbn ? [_genreController.text] : _genres,
           'imageUser': _selectedImage != null ? _selectedImage!.path : '',
           'imageApi': _apiImage != null ? _apiImage!.path : '',
+          'userId': userId,
           'userInfo': {
             'profileImageUrl': userData['profileImageUrl'] ?? '',
             'address': userData['address'] ?? '',
