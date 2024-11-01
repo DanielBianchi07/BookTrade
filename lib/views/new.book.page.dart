@@ -7,10 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'book.exchange.page.dart';
 
-
 class NewBookPage extends StatefulWidget {
-  const NewBookPage({super.key});
-
   @override
   _NewBookPageState createState() => _NewBookPageState();
 }
@@ -22,9 +19,11 @@ class _NewBookPageState extends State<NewBookPage> {
   final TextEditingController _isbnController = TextEditingController();
   final TextEditingController _publicationYearController = TextEditingController();
   final TextEditingController _publisherController = TextEditingController();
+
   final TextEditingController _genreController = TextEditingController();
   String _condition = 'Novo';
   bool _noIsbn = false;
+
   List<String> _genres = [];
   File? _selectedImage;
   File? _apiImage;
