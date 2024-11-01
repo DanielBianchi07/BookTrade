@@ -50,6 +50,7 @@ class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
       final DateTime publishedDate = timestamp.toDate();
 
       return Book(
+        uid: user.uid,
         id: doc.id,
         title: data['title'] ?? '',
         author: data['author'] ?? '',

@@ -42,7 +42,7 @@ class BookTradeApp extends StatelessWidget {
       },
       home: StreamBuilder(
         stream: FirebaseAuth.instance.authStateChanges(),
-        builder: (context, AsyncSnapshot<User?> snapshot) {
+        builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.active) {
             return snapshot.data == null ? LoginPage() : HomePage();
           } else {

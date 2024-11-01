@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:myapp/controller/login.controller.dart';
@@ -43,7 +45,14 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   onError(e) {
-    controller.handleFirebaseAuthError(e);
+    if (e is FirebaseAuthException) {
+      controller.handleFirebaseAuthError(e);
+    } else {
+      Fluttertoast.showToast(
+        msg: "Erro inesperado: $e",
+        toastLength: Toast.LENGTH_LONG,
+      );
+    }
   }
 
   onComplete() {

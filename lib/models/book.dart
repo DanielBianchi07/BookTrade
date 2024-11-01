@@ -1,11 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../user.dart';
+
 class Book {
-  final String id;
-  final String title;
-  final String author;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final String uid; // Id de quem postou o livro
+  final String? postedBy; // Nome de quem postou o livro
+  final String id; // Id do livro
+  final String title; // Titulo do ivro
+  final String author; // Autor do livro
   final String imageUrl; // URL da imagem
-  final String? postedBy; // Quem postou o livro
   final String? profileImageUrl; // URL da imagem de perfil
   final double? rating; // Avaliação do livro
   final DateTime? publishedDate; // Data de publicação
@@ -18,11 +22,12 @@ class Book {
   final String? publisher; // Editora do livro
 
   Book({
+    required this.uid,
+    required this.postedBy,
     required this.id,
     required this.title,
     required this.author,
     required this.imageUrl,
-    this.postedBy,
     this.profileImageUrl,
     this.rating,
     this.publishedDate,
@@ -38,6 +43,7 @@ class Book {
   // Método para criar uma instância de Book a partir de um documento do Firestore
   factory Book.fromDocument(DocumentSnapshot doc) {
     return Book(
+      uid: user.uid,
       id: doc.id,
       title: doc['title'],
       author: doc['author'],
