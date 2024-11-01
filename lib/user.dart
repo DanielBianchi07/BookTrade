@@ -6,4 +6,4 @@ class IUser {
   String telephone = "";
 }
 
-IUser user = new IUser();
+IUser user = IUser();

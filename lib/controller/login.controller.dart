@@ -1,5 +1,4 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 //import 'package:google_sign_in/google_sign_in.dart';
 import 'package:myapp/user.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -35,7 +34,7 @@ class LoginController {
   Future logout() async {
       await FirebaseAuth.instance.signOut();
       await FirebaseAuth.instance.currentUser?.reload();
-      user = new IUser();
+      user = IUser();
       var currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) {
         Fluttertoast.showToast(msg: "Logout realizado com sucesso", toastLength: Toast.LENGTH_SHORT);

@@ -5,6 +5,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class NewBookPage extends StatefulWidget {
+  const NewBookPage({super.key});
+
   @override
   _NewBookPageState createState() => _NewBookPageState();
 }
@@ -17,7 +19,7 @@ class _NewBookPageState extends State<NewBookPage> {
   final TextEditingController _publicationYearController = TextEditingController();
   final TextEditingController _publisherController = TextEditingController();
   String _condition = 'Novo'; // Default condition
-  bool _isLoading = false;
+  final bool _isLoading = false;
   List<String> _genres = [];
   File? _selectedImage; // Para armazenar a imagem selecionada
 

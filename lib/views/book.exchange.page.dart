@@ -7,14 +7,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 class BookExchangePage extends StatefulWidget {
   final Map<String, dynamic> bookDetails;
 
-  const BookExchangePage({Key? key, required this.bookDetails}) : super(key: key);
+  const BookExchangePage({super.key, required this.bookDetails});
 
   @override
   _BookExchangePageState createState() => _BookExchangePageState();
 }
 
 class _BookExchangePageState extends State<BookExchangePage> {
-  List<String> _selectedGenres = [];
+  final List<String> _selectedGenres = [];
   List<String> _allGenres = [];
   User? currentUser;
 

@@ -1,11 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:myapp/controller/edit.profile.controller.dart';
 
 class EditProfilePage extends StatefulWidget {
+  const EditProfilePage({super.key});
+
   @override
   _EditProfilePageState createState() => _EditProfilePageState();
 }
@@ -18,119 +17,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final TextEditingController newPasswordController = TextEditingController();
   final TextEditingController confirmNewPasswordController = TextEditingController();
 
-  User? currentUser;
   String? profileImageUrl;
   File? _selectedImage;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUserData();
-  }
-
-  Future<void> _loadUserData() async {
-    currentUser = FirebaseAuth.instance.currentUser;
-
-    if (currentUser != null) {
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(currentUser!.uid)
-          .get();
-
-      setState(() {
-        nameController.text = userDoc['name'] ?? '';
-        phoneController.text = userDoc['phone'] ?? '';
-        emailController.text = userDoc['email'] ?? '';
-        profileImageUrl = userDoc['profileImageUrl'] ?? '';
-      });
-    }
-  }
-
-  Future<void> _pickImage() async {
-    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        _selectedImage = File(pickedFile.path);
-      });
-    }
-  }
-
-  Future<void> _uploadImage() async {
-    try {
-      if (_selectedImage != null && currentUser != null) {
-        final storageRef = FirebaseStorage.instance
-            .ref()
-            .child('profile_images')
-            .child(currentUser!.uid);
-
-        final uploadTask = storageRef.putFile(_selectedImage!);
-        final snapshot = await uploadTask.whenComplete(() => null);
-        final downloadUrl = await snapshot.ref.getDownloadURL();
-
-        // Atualiza a URL da imagem no Firestore
-        await FirebaseFirestore.instance.collection('users').doc(currentUser!.uid).update({
-          'profileImageUrl': downloadUrl,
-        });
-
-        setState(() {
-          profileImageUrl = downloadUrl;
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Foto de perfil atualizada com sucesso!')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao fazer upload da imagem: $e')),
-      );
-    }
-  }
-
-  Future<void> _updateUserProfile() async {
-    try {
-      if (currentUser != null) {
-        // Atualiza o Firestore com os novos dados do usuário
-        await FirebaseFirestore.instance.collection('users').doc(currentUser!.uid).update({
-          'name': nameController.text,
-          'phone': phoneController.text,
-        });
-
-        // Atualiza o email se necessário
-        if (emailController.text != currentUser!.email) {
-          await currentUser!.updateEmail(emailController.text);
-        }
-
-        // Lógica para alterar a senha
-        if (newPasswordController.text.isNotEmpty &&
-            newPasswordController.text == confirmNewPasswordController.text) {
-          AuthCredential credential = EmailAuthProvider.credential(
-            email: currentUser!.email!,
-            password: currentPasswordController.text,
-          );
-
-          await currentUser!.reauthenticateWithCredential(credential);
-          await currentUser!.updatePassword(newPasswordController.text);
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Senha atualizada com sucesso!')),
-          );
-        } else if (newPasswordController.text != confirmNewPasswordController.text) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('As senhas não coincidem!')),
-          );
-        }
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Perfil atualizado com sucesso!')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao atualizar perfil: $e')),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -167,7 +55,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         bottom: 0,
                         right: 0,
                         child: GestureDetector(
-                          onTap: _pickImage, // Selecionar nova imagem
+                          onTap: pickIm, // Selecionar nova imagem
                           child: Container(
                             decoration: const BoxDecoration(
                               shape: BoxShape.circle,
