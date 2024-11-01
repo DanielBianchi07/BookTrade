@@ -2,17 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 class BookCard extends StatelessWidget {
+  final String bookId; // Identificador único do livro
   final String title;
   final String author;
-  final String? postedBy; // Agora pode ser nulo
-  final String? profileImageUrl; // Agora pode ser nulo
+  final String? postedBy;
+  final String? profileImageUrl;
   final String imageUrl;
   final bool isFavorite;
-  final double? rating; // Agora pode ser nulo
+  final double? rating;
   final VoidCallback onFavoritePressed;
 
   const BookCard({
     super.key,
+    required this.bookId, // Identificador único do livro
     required this.title,
     required this.author,
     required this.postedBy,
@@ -37,7 +39,7 @@ class BookCard extends StatelessWidget {
         padding: const EdgeInsets.all(8.0),
         child: Row(
           children: [
-            // Imagem do livro
+            // Exibe a imagem do livro
             Image.network(
               imageUrl,
               height: 100,
@@ -45,12 +47,11 @@ class BookCard extends StatelessWidget {
               fit: BoxFit.cover,
             ),
             const SizedBox(width: 16),
-
-            // Informações do livro
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Exibe o título do livro
                   Text(
                     title,
                     style: const TextStyle(
@@ -58,6 +59,7 @@ class BookCard extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  // Exibe o autor do livro
                   Text(
                     author,
                     style: const TextStyle(fontSize: 14),
@@ -67,7 +69,8 @@ class BookCard extends StatelessWidget {
                     'Postado por:',
                     style: TextStyle(fontSize: 12),
                   ),
-                  if (postedBy != null && profileImageUrl != null) // Checa se os valores não são nulos
+                  // Exibe o nome e a foto do perfil da pessoa que postou, se disponível
+                  if (postedBy != null && profileImageUrl != null)
                     Row(
                       children: [
                         CircleAvatar(
@@ -82,14 +85,15 @@ class BookCard extends StatelessWidget {
                       ],
                     )
                   else
+                    // Caso o perfil esteja vazio, mostra um texto padrão
                     Text(
                       'Autor desconhecido',
                       style: const TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                   const SizedBox(height: 4),
-                  // Estrelas de avaliação
+                  // Exibe a avaliação do livro em estrelas
                   RatingBarIndicator(
-                    rating: rating ?? 0.0, // Se rating for nulo, use 0.0
+                    rating: rating ?? 0.0,
                     itemBuilder: (context, index) => const Icon(
                       Icons.star,
                       color: Colors.amber,
@@ -101,12 +105,11 @@ class BookCard extends StatelessWidget {
                 ],
               ),
             ),
-
-            // Botão de coração
+            // Botão de favorito (ícone de coração)
             IconButton(
-              onPressed: onFavoritePressed,
+              onPressed: onFavoritePressed, // Função chamada ao pressionar o botão
               icon: Icon(
-                isFavorite ? Icons.favorite : Icons.favorite_border,
+                isFavorite ? Icons.favorite : Icons.favorite_border, // Ícone muda com base no status
                 color: Colors.green,
                 size: 24,
               ),

@@ -1,14 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:myapp/controller/login.controller.dart';
 import 'package:myapp/views/trade.offer.page.dart';
-
 import '../models/book.dart';
-import '../user.dart';
 import 'login.page.dart';
+import '../widgets/bookcard.widget.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -22,6 +20,8 @@ class _HomePageState extends State<HomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final loginController = new LoginController();
   var busy = false;
+  List<Book> books = [];
+  List<bool> favoriteStatus = [];
 
   handleSignOut() {
     setState(() {
@@ -62,10 +62,6 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  // Lista para gerenciar o estado dos corações (favoritados ou não)
-  List<Book> books = []; // Lista de livros
-  List<bool> favoriteStatus = []; // Status dos favoritos
-
   @override
   void initState() {
     super.initState();
@@ -75,27 +71,84 @@ class _HomePageState extends State<HomePage> {
   Future<void> _loadBooks() async {
     try {
       QuerySnapshot snapshot = await FirebaseFirestore.instance.collection('books').get();
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+
+    // Inicialize uma lista de favoritos
+    List<String> favoriteBooks = [];
+
+    // Se o usuário estiver logado, busque os livros favoritados
+    if (userId != null) {
+      QuerySnapshot favoritesSnapshot = await FirebaseFirestore.instance.collection('favorites')
+          .doc(userId)
+          .collection('userFavorites')
+          .get();
+
+      favoriteBooks = favoritesSnapshot.docs.map((doc) => doc.id).toList();
+    }
+
       setState(() {
-        books = snapshot.docs.map((doc) {
+        books = snapshot.docs.where((doc) => (doc.data() as Map<String, dynamic>)['userId'] != userId)
+          .map((doc) {
           final data = doc.data() as Map<String, dynamic>;
           return Book(
-            uid:user.uid,
+            uid: data['userId'] ?? '',
             id: doc.id,
             title: data['title'] ?? '',
             author: data['author'] ?? '',
             imageUrl: data['imageUrl'] ?? 'https://via.placeholder.com/100',
-            publishedDate: DateTime.now(), // Atualize conforme necessário
-            postedBy: null, // Você pode atualizar conforme necessário
-            profileImageUrl: null, // Você pode atualizar conforme necessário
-            rating: null, // Substitua por uma nota real se disponível
+            publishedDate: DateTime.now(),
+            postedBy: data['postedBy'],
+            profileImageUrl: data['profileImageUrl'],
+            rating: data['rating'],
+            isFavorite: data['isFavorite'] ?? false,
           );
         }).toList();
-        favoriteStatus = List.generate(books.length, (_) => false); // Inicializa o status de favoritos
+        favoriteStatus = List.generate(books.length, (index) => favoriteBooks.contains(books[index].id));
       });
     } catch (e) {
       print('Erro ao carregar livros: $e');
     }
   }
+
+  void toggleFavoriteStatus(String bookId, int index) async {
+  final userId = FirebaseAuth.instance.currentUser?.uid;
+  if (userId == null) return; // Certifique-se de que o usuário está logado
+
+  // Alterna o estado local
+  setState(() {
+    favoriteStatus[index] = !favoriteStatus[index];
+  });
+
+  try {
+    if (favoriteStatus[index]) {
+      // Adiciona aos favoritos
+      await FirebaseFirestore.instance
+          .collection('favorites')
+          .doc(userId)
+          .collection('userFavorites')
+          .doc(bookId)
+          .set({
+        'isFavorite': true,
+      });
+    } else {
+      // Remove dos favoritos
+      await FirebaseFirestore.instance
+          .collection('favorites')
+          .doc(userId)
+          .collection('userFavorites')
+          .doc(bookId)
+          .delete();
+    }
+
+  } catch (e) {
+    print('Erro ao atualizar favoritos: $e');
+    // Reverte a mudança em caso de erro
+    setState(() {
+      favoriteStatus[index] = !favoriteStatus[index]; // Reverte o estado local
+    });
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -301,6 +354,7 @@ class _HomePageState extends State<HomePage> {
                     );
                   },
                   child: BookCard(
+                    bookId: book.id,
                     title: book.title,
                     author: book.author,
                     postedBy: book.postedBy ?? 'Desconhecido',
@@ -308,11 +362,7 @@ class _HomePageState extends State<HomePage> {
                     profileImageUrl: book.profileImageUrl ?? 'https://via.placeholder.com/50',
                     isFavorite: favoriteStatus[index],
                     rating: book.rating ?? 0.0,
-                    onFavoritePressed: () {
-                      setState(() {
-                        favoriteStatus[index] = !favoriteStatus[index];
-                      });
-                    },
+                    onFavoritePressed: () => toggleFavoriteStatus(book.id, index),
                   ),
                 );
               },
@@ -333,121 +383,6 @@ class _HomePageState extends State<HomePage> {
         },
         backgroundColor: const Color(0xFF77C593),
         child: const Icon(Icons.add, color: Colors.white),
-      ),
-    );
-  }
-}
-
-class BookCard extends StatelessWidget {
-  final String title;
-  final String author;
-  final String postedBy;
-  final String imageUrl;
-  final String profileImageUrl;
-  final bool isFavorite;
-  final double rating;
-  final VoidCallback onFavoritePressed;
-
-  const BookCard({super.key,
-    required this.title,
-    required this.author,
-    required this.postedBy,
-    required this.imageUrl,
-    required this.profileImageUrl,
-    required this.isFavorite,
-    required this.rating,
-    required this.onFavoritePressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10.0),
-        side: BorderSide(
-          color: Colors.grey.shade400, // Adiciona a borda à caixa do livro
-          width: 1.5,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                // Imagem do livro
-                Image.network(
-                  imageUrl,
-                  height: 100,
-                  width: 80,
-                  fit: BoxFit.cover,
-                ),
-                const SizedBox(width: 16),
-
-                // Informações do livro
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        author,
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Postado por:',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            backgroundImage: NetworkImage(profileImageUrl),
-                            radius: 15,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            postedBy,
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      // Estrelas de avaliação
-                      RatingBarIndicator(
-                        rating: rating,
-                        itemBuilder: (context, index) => const Icon(
-                          Icons.star,
-                          color: Colors.amber,
-                        ),
-                        itemCount: 5,
-                        itemSize: 18.0,
-                        direction: Axis.horizontal,
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Botão de coração
-                IconButton(
-                  onPressed: onFavoritePressed,
-                  icon: Icon(
-                    isFavorite ? Icons.favorite : Icons.favorite_border,
-                    color: Colors.green, // Ícone de coração na cor verde
-                    size: 24,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
       ),
     );
   }
