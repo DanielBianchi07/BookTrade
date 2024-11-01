@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class BookExchangePage extends StatefulWidget {
   final Map<String, dynamic> bookDetails;
@@ -15,19 +15,38 @@ class BookExchangePage extends StatefulWidget {
 
 class _BookExchangePageState extends State<BookExchangePage> {
   List<String> _selectedGenres = [];
-  List<String> _allGenres = [];
+  List<String> _searchResults = [];
+  TextEditingController _searchController = TextEditingController();
   User? currentUser;
 
   @override
   void initState() {
     super.initState();
-    currentUser = FirebaseAuth.instance.currentUser; // Obter usuário autenticado
-    _fetchGenresFromGoogleBooksAPI();
+    _searchController.addListener(_onSearchChanged);
+    currentUser = FirebaseAuth.instance.currentUser; // Obter o usuário autenticado
   }
 
-  // Função para buscar todos os gêneros possíveis da API do Google Books
-  Future<void> _fetchGenresFromGoogleBooksAPI() async {
-    final url = 'https://www.googleapis.com/books/v1/volumes?q=subject:fiction'; // Puxa livros de ficção, troque para outro termo se desejar
+  @override
+  void dispose() {
+    _searchController.removeListener(_onSearchChanged);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  // Função chamada sempre que o texto de busca muda
+  void _onSearchChanged() {
+    if (_searchController.text.isNotEmpty) {
+      _fetchGenresFromGoogleBooksAPI(_searchController.text);
+    } else {
+      setState(() {
+        _searchResults.clear();
+      });
+    }
+  }
+
+  // Função para buscar gêneros com base na entrada do usuário
+  Future<void> _fetchGenresFromGoogleBooksAPI(String query) async {
+    final url = 'https://www.googleapis.com/books/v1/volumes?q=subject:$query';
 
     try {
       final response = await http.get(Uri.parse(url));
@@ -35,17 +54,23 @@ class _BookExchangePageState extends State<BookExchangePage> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
 
-        // Pega todos os gêneros listados em cada livro obtido
-        Set<String> genres = {};
-        for (var item in data['items']) {
-          if (item['volumeInfo']['categories'] != null) {
-            genres.addAll(List<String>.from(item['volumeInfo']['categories']));
+        if (data['items'] != null && data['items'].isNotEmpty) {
+          Set<String> genres = {};
+          for (var item in data['items']) {
+            if (item['volumeInfo']['categories'] != null) {
+              genres.addAll(List<String>.from(item['volumeInfo']['categories']));
+            }
           }
-        }
 
-        setState(() {
-          _allGenres = genres.toList();
-        });
+          setState(() {
+            _searchResults = genres.toList();
+          });
+        } else {
+          setState(() {
+            _searchResults.clear();
+          });
+          _showError('Nenhum gênero encontrado para "$query".');
+        }
       } else {
         _showError('Erro ao buscar gêneros.');
       }
@@ -60,78 +85,123 @@ class _BookExchangePageState extends State<BookExchangePage> {
     );
   }
 
-  Future<void> _saveBookWithGenres() async {
-    try {
-      // Salvando os detalhes do livro com os gêneros escolhidos no Firestore
-      if (currentUser != null) {
+  // Função para salvar as informações na coleção 'books' e redirecionar para a HomePage
+  Future<void> _saveSelectedGenres() async {
+    if (currentUser != null) {
+      try {
+        // Salvar as informações na coleção 'books'
         await FirebaseFirestore.instance.collection('books').add({
           'userId': currentUser!.uid, // Salvar o ID do usuário autenticado
-          ...widget.bookDetails,
-          'exchangeGenres': _selectedGenres,
+          ...widget.bookDetails,       // Inclui todos os detalhes do livro
+          'selectedGenres': _selectedGenres, // Inclui os gêneros selecionados
+          'publicationDate': Timestamp.now(), // Data de publicação
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Livro registrado com sucesso!')),
+          SnackBar(content: Text('Livro publicado com sucesso!')),
         );
 
-        // Navegar para a página inicial
+        // Redirecionar para a página inicial
         Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
-      } else {
-        _showError('Usuário não autenticado.');
+      } catch (e) {
+        _showError('Erro ao salvar os gêneros: $e');
       }
-    } catch (e) {
-      _showError('Erro ao salvar o livro: $e');
+    } else {
+      _showError('Usuário não autenticado.');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (widget.bookDetails.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Erro'),
+          backgroundColor: const Color(0xFFD8D5B3),
+        ),
+        body: Center(
+          child: const Text('Erro: Detalhes do livro estão ausentes.'),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Escolha gêneros de troca'),
+        title: const Text('Escolha gêneros de troca'),
         backgroundColor: const Color(0xFFD8D5B3),
       ),
-      body: Column(
-        children: [
-          const SizedBox(height: 20),
-          const Text(
-            'Selecione os gêneros que você gostaria de receber em troca:',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 10),
-
-          // Campo de escolha de gêneros usando ChoiceChip para selecionar vários gêneros
-          Expanded(
-            child: SingleChildScrollView(
-              child: Wrap(
-                spacing: 10.0,
-                runSpacing: 5.0,
-                children: _allGenres.map((genre) {
-                  return ChoiceChip(
-                    label: Text(genre),
-                    selected: _selectedGenres.contains(genre),
-                    onSelected: (selected) {
-                      setState(() {
-                        if (selected) {
-                          _selectedGenres.add(genre);
-                        } else {
-                          _selectedGenres.remove(genre);
-                        }
-                      });
-                    },
-                  );
-                }).toList(),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Digite o gênero que você gostaria de receber em troca:',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                labelText: 'Buscar gêneros',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.search),
               ),
             ),
-          ),
+            const SizedBox(height: 10),
 
-          // Botão de Confirmar
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: SizedBox(
+            // Exibição de gêneros recomendados em um espaço compacto
+            Wrap(
+              spacing: 8.0,
+              runSpacing: 4.0,
+              children: _searchResults.map((genre) {
+                final isSelected = _selectedGenres.contains(genre);
+                return ChoiceChip(
+                  label: Text(genre),
+                  selected: isSelected,
+                  onSelected: (selected) {
+                    setState(() {
+                      if (selected && !isSelected) {
+                        _selectedGenres.add(genre);
+                      } else {
+                        _selectedGenres.remove(genre);
+                      }
+                    });
+                  },
+                );
+              }).toList(),
+            ),
+
+            const SizedBox(height: 20),
+            const Text(
+              'Gêneros selecionados:',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+
+            // Exibição de gêneros selecionados com opção de remoção
+            Wrap(
+              spacing: 8.0,
+              runSpacing: 4.0,
+              children: _selectedGenres.map((genre) {
+                return Chip(
+                  label: Text(genre),
+                  deleteIcon: Icon(Icons.close),
+                  onDeleted: () {
+                    setState(() {
+                      _selectedGenres.remove(genre);
+                    });
+                  },
+                );
+              }).toList(),
+            ),
+
+            // Botão de Confirmar
+            Spacer(),
+            SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _saveBookWithGenres,
+                onPressed: _saveSelectedGenres, // Função para salvar os gêneros
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF77C593),
                   shape: RoundedRectangleBorder(
@@ -147,8 +217,8 @@ class _BookExchangePageState extends State<BookExchangePage> {
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

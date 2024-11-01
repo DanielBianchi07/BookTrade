@@ -3,8 +3,10 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:firebase_auth/firebase_auth.dart'; // Import FirebaseAuth
-import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'book.exchange.page.dart';
+
 
 class NewBookPage extends StatefulWidget {
   const NewBookPage({super.key});
@@ -20,27 +22,35 @@ class _NewBookPageState extends State<NewBookPage> {
   final TextEditingController _isbnController = TextEditingController();
   final TextEditingController _publicationYearController = TextEditingController();
   final TextEditingController _publisherController = TextEditingController();
-  String _condition = 'Novo'; // Default condition
-  final bool _isLoading = false;
+  final TextEditingController _genreController = TextEditingController();
+  String _condition = 'Novo';
+  bool _noIsbn = false;
   List<String> _genres = [];
-  File? _selectedImage; // Para armazenar a imagem selecionada
+  File? _selectedImage;
+  File? _apiImage;
 
-  // Método para buscar os gêneros a partir do ISBN
-  Future<void> _fetchGenresFromISBN(String isbn) async {
+  // Método para buscar informações do livro pelo ISBN
+  Future<void> _fetchBookData(String isbn) async {
     final url = 'https://www.googleapis.com/books/v1/volumes?q=isbn:$isbn';
 
     try {
       final response = await http.get(Uri.parse(url));
-
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-
         if (data['totalItems'] > 0) {
           final volumeInfo = data['items'][0]['volumeInfo'];
-          final categories = volumeInfo['categories'] ?? [];
 
           setState(() {
-            _genres = List<String>.from(categories);
+            _titleController.text = volumeInfo['title'] ?? '';
+            _authorController.text = volumeInfo['authors']?.join(', ') ?? '';
+            _publicationYearController.text = volumeInfo['publishedDate']?.split('-')[0] ?? '';
+            _publisherController.text = volumeInfo['publisher'] ?? '';
+            _genres = List<String>.from(volumeInfo['categories'] ?? []);
+
+            // Carregar imagem do livro da API
+            if (volumeInfo['imageLinks']?['thumbnail'] != null) {
+              _apiImage = File.fromUri(Uri.parse(volumeInfo['imageLinks']['thumbnail']));
+            }
           });
         } else {
           _showError('Nenhum livro encontrado para o ISBN fornecido.');
@@ -53,42 +63,12 @@ class _NewBookPageState extends State<NewBookPage> {
     }
   }
 
-  // Exibir erros
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  // Validação do ISBN
-  bool _validateISBN(String isbn) {
-    return (isbn.length == 10 || isbn.length == 13) && isbn.contains(RegExp(r'^\d+$'));
-  }
-
-  // Validação dos campos
-  bool _validateFields() {
-    if (_titleController.text.isEmpty ||
-        _authorController.text.isEmpty ||
-        _editionController.text.isEmpty ||
-        _isbnController.text.isEmpty ||
-        _publicationYearController.text.isEmpty ||
-        _publisherController.text.isEmpty) {
-      _showError('Todos os campos, incluindo a imagem, são obrigatórios.');
-      return false;
-    }
-
-    if (!_validateISBN(_isbnController.text.trim())) {
-      _showError('ISBN inválido. Deve ter 10 ou 13 dígitos.');
-      return false;
-    }
-
-    return true;
-  }
-
-  // Selecionar imagem
   Future<void> _pickImage() async {
     final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
-
     if (pickedFile != null) {
       setState(() {
         _selectedImage = File(pickedFile.path);
@@ -96,46 +76,51 @@ class _NewBookPageState extends State<NewBookPage> {
     }
   }
 
-  // Confirmar e salvar o livro
   Future<void> _onConfirm() async {
-    if (_validateFields()) {
-      await _fetchGenresFromISBN(_isbnController.text.trim());
+    User? currentUser = FirebaseAuth.instance.currentUser;
 
-      // Obtém o ID do usuário atual logado
-      User? currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      String userId = currentUser.uid;
 
-      if (currentUser != null) {
-        String userId = currentUser.uid;
+      // Pega dados adicionais do usuário
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
 
-        // Adiciona o ID do usuário junto com os dados do livro
-        await FirebaseFirestore.instance.collection('books').add({
+      if (userDoc.exists && userDoc.data() != null) {
+        Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+
+        // Criar esboço de dados do livro sem salvar no Firestore
+        final bookData = {
           'title': _titleController.text.trim(),
           'author': _authorController.text.trim(),
           'edition': _editionController.text.trim(),
-          'isbn': _isbnController.text.trim(),
+          'isbn': _noIsbn ? '' : _isbnController.text.trim(),
           'publicationYear': _publicationYearController.text.trim(),
           'publisher': _publisherController.text.trim(),
           'condition': _condition,
-          'genres': _genres,
-          'image': _selectedImage != null ? _selectedImage!.path : '',
-          'userId': userId, // Inclui o ID do usuário no documento
-        });
+          'genres': _noIsbn ? [_genreController.text] : _genres,
+          'imageUser': _selectedImage != null ? _selectedImage!.path : '',
+          'imageApi': _apiImage != null ? _apiImage!.path : '',
+          'userInfo': {
+            'profileImageUrl': userData['profileImageUrl'] ?? '',
+            'address': userData['address'] ?? '',
+            'customerRating': userData['customerRating'] ?? 0,
+            'name': userData['name'] ?? '',
+            'userId': userId,
+          },
+        };
 
-        // Redireciona para a página de troca de livro
-        Navigator.pushNamed(context, '/home', arguments: {
-          'title': _titleController.text.trim(),
-          'author': _authorController.text.trim(),
-          'edition': _editionController.text.trim(),
-          'isbn': _isbnController.text.trim(),
-          'publicationYear': _publicationYearController.text.trim(),
-          'publisher': _publisherController.text.trim(),
-          'condition': _condition,
-          'genres': _genres,
-          'image': _selectedImage, // Incluindo a imagem para passar na próxima página
-        });
+        // Redirecionar para a página BookExchangePage com o esboço do livro (sem salvar no Firestore ainda)
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => BookExchangePage(bookDetails: bookData),
+          ),
+        );
       } else {
-        _showError('Erro: Nenhum usuário autenticado.');
+        _showError('Erro: Dados do usuário não encontrados.');
       }
+    } else {
+      _showError('Erro: Nenhum usuário autenticado.');
     }
   }
 
@@ -147,9 +132,7 @@ class _NewBookPageState extends State<NewBookPage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
         ),
         title: const Text('Cadastro do Livro', style: TextStyle(color: Colors.black)),
       ),
@@ -158,58 +141,55 @@ class _NewBookPageState extends State<NewBookPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Título e subtítulo para a foto
-            const Text(
-              'Adicione uma foto:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 5),
-            Text(
-              'Envie uma foto do seu livro.',
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-            ),
+            const Text('Adicione uma foto:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
-
-            // Container de Adicionar Foto
             GestureDetector(
-              onTap: _pickImage, // Ação ao clicar para selecionar uma foto
+              onTap: _pickImage,
               child: Container(
                 height: 200,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Colors.black,
-                    width: 2,
-                    style: BorderStyle.solid,
-                  ),
+                  border: Border.all(color: Colors.black, width: 2),
                   borderRadius: BorderRadius.circular(10),
                   color: Colors.grey[200],
                 ),
                 child: _selectedImage != null
                     ? Image.file(_selectedImage!, fit: BoxFit.cover)
-                    : const Center(
-                  child: Icon(
-                    Icons.camera_alt,
-                    color: Colors.black,
-                    size: 50,
-                  ),
-                ),
+                    : const Center(child: Icon(Icons.camera_alt, color: Colors.black, size: 50)),
               ),
             ),
             const SizedBox(height: 20),
-
+            _buildTextField('ISBN', _isbnController,
+                enabled: !_noIsbn, // Desabilitar ISBN se "Não possui ISBN" for marcado
+                onChanged: (value) {
+                  if (_validateISBN(value)) {
+                    _fetchBookData(value.trim());
+                  }
+                }),
+            Row(
+              children: [
+                Checkbox(
+                  value: _noIsbn,
+                  onChanged: (bool? value) {
+                    setState(() {
+                      _noIsbn = value ?? false;
+                      if (_noIsbn) {
+                        _isbnController.clear();
+                      }
+                    });
+                  },
+                ),
+                const Text('Não possui ISBN'),
+              ],
+            ),
+            if (_noIsbn) _buildTextField('Gênero', _genreController),
+            const SizedBox(height: 20),
             _buildTextField('Nome do Livro', _titleController),
-            const SizedBox(height: 15),
             _buildTextField('Nome do Autor', _authorController),
-            const SizedBox(height: 15),
             _buildTextField('Edição', _editionController),
-            const SizedBox(height: 15),
-            _buildTextField('ISBN', _isbnController),
-            const SizedBox(height: 15),
             _buildTextField('Ano de publicação', _publicationYearController),
-            const SizedBox(height: 15),
             _buildTextField('Editora', _publisherController),
-            const SizedBox(height: 15),
+            const SizedBox(height: 20),
 
             // Dropdown para Estado de Conservação
             Text(
@@ -247,24 +227,17 @@ class _NewBookPageState extends State<NewBookPage> {
               ),
             ),
             const SizedBox(height: 30),
-
-            // Botão de Confirmar
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: _onConfirm,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF77C593),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 child: const Padding(
                   padding: EdgeInsets.all(15.0),
-                  child: Text(
-                    'Confirmar',
-                    style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-                  ),
+                  child: Text('Confirmar', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
                 ),
               ),
             ),
@@ -274,17 +247,23 @@ class _NewBookPageState extends State<NewBookPage> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller) {
-    return TextField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+  Widget _buildTextField(String label, TextEditingController controller,
+      {void Function(String)? onChanged, bool enabled = true}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10.0),
+      child: TextField(
+        controller: controller,
+        onChanged: onChanged,
+        enabled: enabled,
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          filled: true,
+          fillColor: Colors.grey[200],
         ),
-        filled: true,
-        fillColor: Colors.grey[200],
       ),
     );
   }
+
+  bool _validateISBN(String isbn) => (isbn.length == 10 || isbn.length == 13) && isbn.contains(RegExp(r'^\d+$'));
 }
