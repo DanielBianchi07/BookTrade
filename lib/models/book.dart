@@ -1,13 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../user.dart';
-
 class Book {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore firestore = FirebaseFirestore.instance;
   final String uid; // Id de quem postou o livro
   final String? postedBy; // Nome de quem postou o livro
   final String id; // Id do livro
-  final String title; // Titulo do ivro
+  final String title; // Titulo do livro
   final String author; // Autor do livro
   final String imageUrl; // URL da imagem
   final String? profileImageUrl; // URL da imagem de perfil
@@ -17,17 +15,19 @@ class Book {
   final String? edition; // Edição do livro
   final List<String>? exchangeGenres; // Gêneros de troca
   final List<String>? genres; // Gêneros do livro
+  final List<String>? selectedGenres;
   final String? isbn; // ISBN do livro
   final String? publicationYear; // Ano de publicação
   final String? publisher; // Editora do livro
+  final bool isFavorite;
 
   Book({
     required this.uid,
-    required this.postedBy,
     required this.id,
     required this.title,
     required this.author,
     required this.imageUrl,
+    this.postedBy,
     this.profileImageUrl,
     this.rating,
     this.publishedDate,
@@ -35,18 +35,20 @@ class Book {
     this.edition,
     this.exchangeGenres,
     this.genres,
+    this.selectedGenres,
     this.isbn,
     this.publicationYear,
     this.publisher,
+    this.isFavorite = false,
   });
 
   // Método para criar uma instância de Book a partir de um documento do Firestore
   factory Book.fromDocument(DocumentSnapshot doc) {
     return Book(
-      uid: user.uid,
+      uid: doc['userId'] ?? '', // Pega o campo uid do documento
       id: doc.id,
-      title: doc['title'],
-      author: doc['author'],
+      title: doc['title'] ?? 'Título não disponível',
+      author: doc['author'] ?? 'Autor desconhecido',
       imageUrl: doc['imageUrl'] ?? '', // Certifique-se de que não seja nulo
       postedBy: doc['postedBy'],
       profileImageUrl: doc['profileImageUrl'],
@@ -56,6 +58,7 @@ class Book {
       edition: doc['edition'],
       exchangeGenres: List<String>.from(doc['exchangeGenres'] ?? []),
       genres: List<String>.from(doc['genres'] ?? []),
+      selectedGenres: List<String>.from(doc['selectedGenres'] ?? []),
       isbn: doc['isbn'],
       publicationYear: doc['publicationYear'],
       publisher: doc['publisher'],
