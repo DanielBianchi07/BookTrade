@@ -1,64 +1,79 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'user.info.dart';
 
-import '../user.dart';
-
-class Book {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final String uid; // Id de quem postou o livro
-  final String? postedBy; // Nome de quem postou o livro
+class BookModel {
+  final String userId; // Id de quem postou o livro
   final String id; // Id do livro
-  final String title; // Titulo do ivro
+  final String title; // Titulo do livro
   final String author; // Autor do livro
-  final String imageUrl; // URL da imagem
-  final String? profileImageUrl; // URL da imagem de perfil
-  final double? rating; // Avaliação do livro
-  final DateTime? publishedDate; // Data de publicação
-  final String? condition; // Condição do livro
-  final String? edition; // Edição do livro
-  final List<String>? exchangeGenres; // Gêneros de troca
+  final String imageUserUrl; // URL da imagem do livro colocado pelo Usuário
+  final String? imageApiUrl; // URL da Imagem do Livro da API
+  final DateTime publishedDate; // Data de publicação do livro no app
+  final String condition; // Condição do livro
+  final String edition; // Edição do livro
   final List<String>? genres; // Gêneros do livro
+  final List<String> selectedExchangeGenres; // Gêneros de troca
   final String? isbn; // ISBN do livro
-  final String? publicationYear; // Ano de publicação
-  final String? publisher; // Editora do livro
+  final String publicationYear; // Ano de publicação
+  final String publisher; // Editora do livro
+  final UserInfo userInfo; // Informações do Usuário que postou o livro
 
-  Book({
-    required this.uid,
-    required this.postedBy,
+  BookModel({
+    required this.userId,
     required this.id,
     required this.title,
     required this.author,
-    required this.imageUrl,
-    this.profileImageUrl,
-    this.rating,
-    this.publishedDate,
-    this.condition,
-    this.edition,
-    this.exchangeGenres,
+    required this.imageUserUrl,
+    this.imageApiUrl,
+    required this.publishedDate,
+    required this.condition,
+    required this.edition,
     this.genres,
+    required this.selectedExchangeGenres,
     this.isbn,
-    this.publicationYear,
-    this.publisher,
+    required this.publicationYear,
+    required this.publisher,
+    required this.userInfo,
   });
 
-  // Método para criar uma instância de Book a partir de um documento do Firestore
-  factory Book.fromDocument(DocumentSnapshot doc) {
-    return Book(
-      uid: user.uid,
+  Map<String, dynamic> toMap() {
+    return {
+      'uid': userId,
+      'id': id,
+      'title': title,
+      'author': author,
+      'imageUrl': imageUserUrl,
+      'imageApi': imageApiUrl,
+      'publishedDate': publishedDate.toIso8601String(),
+      'condition': condition,
+      'edition': edition,
+      'genres': genres,
+      'selectedGenres': selectedExchangeGenres,
+      'isbn': isbn,
+      'publicationYear': publicationYear,
+      'publisher': publisher,
+      'userInfo': userInfo.toMap(),
+    };
+  }
+
+  factory BookModel.fromDocument(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return BookModel(
+      userId: data['uid'],
       id: doc.id,
-      title: doc['title'],
-      author: doc['author'],
-      imageUrl: doc['imageUrl'] ?? '', // Certifique-se de que não seja nulo
-      postedBy: doc['postedBy'],
-      profileImageUrl: doc['profileImageUrl'],
-      rating: (doc['rating'] ?? 0.0).toDouble(),
-      publishedDate: (doc['publishedDate'] as Timestamp?)?.toDate(),
-      condition: doc['condition'],
-      edition: doc['edition'],
-      exchangeGenres: List<String>.from(doc['exchangeGenres'] ?? []),
-      genres: List<String>.from(doc['genres'] ?? []),
-      isbn: doc['isbn'],
-      publicationYear: doc['publicationYear'],
-      publisher: doc['publisher'],
+      title: data['title'],
+      author: data['author'],
+      imageUserUrl: data['imageUrl'],
+      imageApiUrl: data['imageApi'] ?? '',
+      publishedDate: (data['publishedDate'] as Timestamp).toDate(),
+      condition: data['condition'],
+      edition: data['edition'],
+      genres: List<String>.from(data['genres'] ?? []),
+      selectedExchangeGenres: List<String>.from(data['selectedGenres'] ?? []),
+      isbn: data['isbn'] ?? '',
+      publicationYear: data['publicationYear'],
+      publisher: data['publisher'],
+      userInfo: UserInfo.fromMap(data['userInfo']),
     );
   }
 }

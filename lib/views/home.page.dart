@@ -1,13 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:myapp/controller/login.controller.dart';
 import 'package:myapp/views/trade.offer.page.dart';
 
 import '../models/book.dart';
 import '../user.dart';
+import '../widgets/bookcard.widget.dart';
 import 'login.page.dart';
 
 class HomePage extends StatefulWidget {
@@ -63,7 +63,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   // Lista para gerenciar o estado dos corações (favoritados ou não)
-  List<Book> books = []; // Lista de livros
+  List<BookModel> books = []; // Lista de livros
   List<bool> favoriteStatus = []; // Status dos favoritos
 
   @override
@@ -78,16 +78,22 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         books = snapshot.docs.map((doc) {
           final data = doc.data() as Map<String, dynamic>;
-          return Book(
-            uid:user.uid,
+          return BookModel(
+            userId:user.uid,
             id: doc.id,
-            title: data['title'] ?? '',
-            author: data['author'] ?? '',
-            imageUrl: data['imageUrl'] ?? 'https://via.placeholder.com/100',
-            publishedDate: DateTime.now(), // Atualize conforme necessário
-            postedBy: null, // Você pode atualizar conforme necessário
-            profileImageUrl: null, // Você pode atualizar conforme necessário
-            rating: null, // Substitua por uma nota real se disponível
+            author: data['author'],
+            condition: data['condition'],
+            edition: data['edition'],
+            genres: List<String>.from(data['genres']),
+            imageUserUrl: data['imageUserUrl'],
+            publicationYear: data['publicationYear'],
+            publishedDate: data['publishedDate'],
+            publisher: data['publisher'],
+            selectedExchangeGenres: List<String>.from(data['selectedExchangeGenres']),
+            title: data['title'],
+            userInfo: data[''],
+            imageApiUrl: data['imageApiUrl'],
+            isbn: data['isbn'],
           );
         }).toList();
         favoriteStatus = List.generate(books.length, (_) => false); // Inicializa o status de favoritos
@@ -303,11 +309,11 @@ class _HomePageState extends State<HomePage> {
                   child: BookCard(
                     title: book.title,
                     author: book.author,
-                    postedBy: book.postedBy ?? 'Desconhecido',
-                    imageUrl: book.imageUrl,
-                    profileImageUrl: book.profileImageUrl ?? 'https://via.placeholder.com/50',
+                    imageUrl: book.imageUserUrl,
+                    postedBy: book.userInfo.name,
+                    profileImageUrl: book.userInfo.profileImageUrl,
+                    userRating: book.userInfo.customerRating,
                     isFavorite: favoriteStatus[index],
-                    rating: book.rating ?? 0.0,
                     onFavoritePressed: () {
                       setState(() {
                         favoriteStatus[index] = !favoriteStatus[index];
@@ -333,121 +339,6 @@ class _HomePageState extends State<HomePage> {
         },
         backgroundColor: const Color(0xFF77C593),
         child: const Icon(Icons.add, color: Colors.white),
-      ),
-    );
-  }
-}
-
-class BookCard extends StatelessWidget {
-  final String title;
-  final String author;
-  final String postedBy;
-  final String imageUrl;
-  final String profileImageUrl;
-  final bool isFavorite;
-  final double rating;
-  final VoidCallback onFavoritePressed;
-
-  const BookCard({super.key,
-    required this.title,
-    required this.author,
-    required this.postedBy,
-    required this.imageUrl,
-    required this.profileImageUrl,
-    required this.isFavorite,
-    required this.rating,
-    required this.onFavoritePressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10.0),
-        side: BorderSide(
-          color: Colors.grey.shade400, // Adiciona a borda à caixa do livro
-          width: 1.5,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                // Imagem do livro
-                Image.network(
-                  imageUrl,
-                  height: 100,
-                  width: 80,
-                  fit: BoxFit.cover,
-                ),
-                const SizedBox(width: 16),
-
-                // Informações do livro
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        author,
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Postado por:',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            backgroundImage: NetworkImage(profileImageUrl),
-                            radius: 15,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            postedBy,
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      // Estrelas de avaliação
-                      RatingBarIndicator(
-                        rating: rating,
-                        itemBuilder: (context, index) => const Icon(
-                          Icons.star,
-                          color: Colors.amber,
-                        ),
-                        itemCount: 5,
-                        itemSize: 18.0,
-                        direction: Axis.horizontal,
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Botão de coração
-                IconButton(
-                  onPressed: onFavoritePressed,
-                  icon: Icon(
-                    isFavorite ? Icons.favorite : Icons.favorite_border,
-                    color: Colors.green, // Ícone de coração na cor verde
-                    size: 24,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
       ),
     );
   }

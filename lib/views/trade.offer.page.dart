@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/book.dart'; // Importe o modelo Book
 
 class TradeOfferPage extends StatelessWidget {
-  final Book book; // Receber o livro como argumento
+  final BookModel book; // Receber o livro como argumento
 
   const TradeOfferPage({super.key, required this.book});
 
@@ -29,7 +29,7 @@ class TradeOfferPage extends StatelessWidget {
               height: 200,
               child: PageView(
                 children: [
-                  _buildBookImage(book.imageUrl), // Imagem do livro
+                  _buildBookImage(book.imageUserUrl), // Imagem do livro
                 ],
               ),
             ),
@@ -53,27 +53,27 @@ class TradeOfferPage extends StatelessWidget {
             ),
             const SizedBox(height: 0),
             Text(
-              'Condição: ${book.condition ?? 'N/A'}',
+              'Condição: ${book.condition}',
               style: const TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 0),
             Text(
-              'Edição: ${book.edition ?? 'N/A'}',
+              'Edição: ${book.edition}',
               style: const TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 0),
             Text(
-              'Gêneros: ${book.genres?.join(', ') ?? 'N/A'}',
+              'Gêneros: ${book.genres}',
               style: const TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 0),
             Text(
-              'ISBN: ${book.isbn ?? 'N/A'}',
+              'ISBN: ${book.isbn ?? ''}',
               style: const TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 0),
             Text(
-              'Editora: ${book.publisher ?? 'N/A'}',
+              'Editora: ${book.publisher}',
               style: const TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 20),

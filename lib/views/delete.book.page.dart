@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class DeleteBookPage extends StatelessWidget {
-  final Book book; // Receber o livro como argumento
+  final BookModel book; // Receber o livro como argumento
 
   const DeleteBookPage({super.key, required this.book});
 
@@ -31,7 +31,7 @@ class DeleteBookPage extends StatelessWidget {
               height: 200,
               child: PageView(
                 children: [
-                  _buildBookImage(book.imageUrl), // Imagem do livro
+                  _buildBookImage(book.imageUserUrl), // Imagem do livro
                 ],
               ),
             ),
@@ -55,7 +55,7 @@ class DeleteBookPage extends StatelessWidget {
             ),
             const SizedBox(height: 0),
             Text(
-              'Condição: ${book.condition ?? 'N/A'}\nEdição: ${book.edition ?? 'N/A'}\nGêneros de troca: ${book.exchangeGenres?.join(', ') ?? 'N/A'}\nGêneros: ${book.genres?.join(', ') ?? 'N/A'}\nISBN: ${book.isbn ?? 'N/A'}\nAno de publicação: ${book.publicationYear ?? 'N/A'}\nEditora: ${book.publisher ?? 'N/A'}',
+              'Condição: ${book.condition ?? 'N/A'}\nEdição: ${book.edition ?? 'N/A'}\nGêneros de troca: ${book.selectedExchangeGenres.join(', ') ?? 'N/A'}\nGêneros: ${book.genres}\nISBN: ${book.isbn ?? 'N/A'}\nAno de publicação: ${book.publicationYear ?? 'N/A'}\nEditora: ${book.publisher ?? 'N/A'}',
               style: const TextStyle(
                 fontSize: 14,
                 height: 1.5,
