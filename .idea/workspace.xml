@@ -5,20 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4e9ea88f-7afb-495a-8062-f1ce7860c332" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/lib/controller/edit.profile.controller.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/controller/login.controller.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/controller/login.controller.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/user.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/user.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/views/app.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/app.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/views/book.exchange.page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/book.exchange.page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/controller/edit.profile.controller.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/controller/edit.profile.controller.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/views/edit.profile.page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/edit.profile.page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/views/home.page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/home.page.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/views/login.page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/login.page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/views/new.book.page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/new.book.page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/views/notification.detail.page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/notification.detail.page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/views/register.page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/register.page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/widgets/busy.widget.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/widgets/busy.widget.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.lock" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

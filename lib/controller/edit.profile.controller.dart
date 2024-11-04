@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -13,20 +12,19 @@ import '../user.dart';
 class EditProfileController {
   final Firebasestorage = FirebaseStorage.instance;
 
-  Future pickImage(File? selectedImage) async {
+  Future<File?> pickImage() async {
     final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
-        selectedImage = File(pickedFile.path);
-        return selectedImage;
+      return File(pickedFile.path); // Retorna o arquivo selecionado
     }
-    return null;
+    return null; // Retorna null se nenhum arquivo for selecionado
   }
 
   Future uploadImage(File? selectedImage, BuildContext context) async {
     try {
       if (selectedImage != null) {
         final storageref = Firebasestorage.ref().child('profile_images').child(user.uid);
-        final uploadTask = storageref.putFile(selectedImage!);
+        final uploadTask = storageref.putFile(selectedImage);
         final snapshot = await uploadTask.whenComplete(() => null);
         final downloadUrl = await snapshot.ref.getDownloadURL();
 
@@ -84,11 +82,11 @@ class EditProfileController {
 
         // Atualiza o email se necessário
         if (email != user.email) {
-          await currentUser!.updateEmail(email);
+          await currentUser!.verifyBeforeUpdateEmail(email);
         }
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Perfil atualizado com sucesso!')),
+          SnackBar(content: Text('Perfil atualizado com sucesso!')),
         );
       } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

@@ -16,17 +16,13 @@ class _LoginPageState extends State<LoginPage> {
   final controller = LoginController();
   late TextEditingController _password = TextEditingController();
   late TextEditingController _email = TextEditingController();
-  late String email;
-  late String password;
   var busy = false;
 
   handleSignIn() {
     setState(() {
       busy = true;
-      email = _email.text.trim();
-      password = _password.text.trim();
     });
-    controller.loginWithEmail(email, password).then((data) {
+    controller.loginWithEmail(_email.text.trim(), _password.text.trim()).then((data) {
       onSuccess();
     }).catchError((e) {
       onError(e);

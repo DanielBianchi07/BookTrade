@@ -10,15 +10,50 @@ class EditProfilePage extends StatefulWidget {
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController phoneController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController currentPasswordController = TextEditingController();
-  final TextEditingController newPasswordController = TextEditingController();
-  final TextEditingController confirmNewPasswordController = TextEditingController();
-
+  final controller = EditProfileController();
+  final TextEditingController name = TextEditingController();
+  final TextEditingController phone = TextEditingController();
+  final TextEditingController email = TextEditingController();
+  final TextEditingController currentPassword = TextEditingController();
+  final TextEditingController newPassword = TextEditingController();
+  final TextEditingController confirmNewPassword = TextEditingController();
   String? profileImageUrl;
-  File? _selectedImage;
+  File? selectedImage;
+  var busy = false;
+
+hanfleEditProfile() {
+  setState(() {
+    busy = true;
+  });
+  controller.updateUserProfile(context, currentPassword.text.trim(), name.text.trim(), phone.text.trim(), email.text.trim(), currentPassword.text.trim(), newPassword.text.trim(), confirmNewPassword.text.trim()).then((data) {
+    onSuccess();
+  }).catchError((err) {
+    onError();
+  }).whenComplete(() {
+    onComplete();
+  });
+}
+
+onSuccess() {
+
+}
+
+onError() {
+
+}
+
+onComplete() {
+
+}
+
+selectImage() async {
+  final selectedImage = await controller.pickImage(); // Espera o resultado
+  if (selectedImage != null) {
+    setState(() {
+      this.selectedImage = selectedImage; // Atualiza o estado aqui
+    });
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -45,8 +80,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     children: [
                       CircleAvatar(
                         radius: 40,
-                        backgroundImage: _selectedImage != null
-                            ? FileImage(_selectedImage!)
+                        backgroundImage: selectedImage != null
+                            ? FileImage(selectedImage!)
                             : (profileImageUrl != null && profileImageUrl!.isNotEmpty
                             ? NetworkImage(profileImageUrl!)
                             : const NetworkImage('https://via.placeholder.com/150')) as ImageProvider<Object>,
@@ -55,7 +90,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         bottom: 0,
                         right: 0,
                         child: GestureDetector(
-                          onTap: pickIm, // Selecionar nova imagem
+                          onTap: selectImage(), // Selecionar nova imagem
                           child: Container(
                             decoration: const BoxDecoration(
                               shape: BoxShape.circle,
@@ -72,7 +107,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    nameController.text,
+                    name.text,
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -86,28 +121,28 @@ class _EditProfilePageState extends State<EditProfilePage> {
             // Campo de Nome Editável
             _buildEditableField(
               label: 'Nome:',
-              controller: nameController,
+              controller: name,
             ),
             const SizedBox(height: 5),
 
             // Campo de Telefone Editável
             _buildEditableField(
               label: 'Telefone:',
-              controller: phoneController,
+              controller: phone,
             ),
             const SizedBox(height: 5),
 
             // Campo de E-mail Editável
             _buildEditableField(
               label: 'E-mail:',
-              controller: emailController,
+              controller: email,
             ),
             const SizedBox(height: 5),
 
             // Campo de Senha Atual
             _buildEditableField(
               label: 'Senha Atual:',
-              controller: currentPasswordController,
+              controller: currentPassword,
               obscureText: true,
             ),
             const SizedBox(height: 5),
@@ -115,7 +150,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             // Campo de Nova Senha
             _buildEditableField(
               label: 'Nova Senha:',
-              controller: newPasswordController,
+              controller: newPassword,
               obscureText: true,
             ),
             const SizedBox(height: 5),
@@ -123,7 +158,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             // Campo de Confirmar Nova Senha
             _buildEditableField(
               label: 'Confirmar Nova Senha:',
-              controller: confirmNewPasswordController,
+              controller: confirmNewPassword,
               obscureText: true,
             ),
             const SizedBox(height: 20),
@@ -133,8 +168,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  _updateUserProfile();
-                  _uploadImage(); // Faz o upload da nova imagem de perfil
+                  hanfleEditProfile();
+                  controller.uploadImage(selectedImage, context); // Faz o upload da nova imagem de perfil
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF77C593),
