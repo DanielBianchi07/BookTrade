@@ -9,6 +9,7 @@ import 'home.page.dart';
 import 'new.book.page.dart';
 import 'notifications.page.dart';
 import 'publicated.books.page.dart';
+import 'selected.book.page.dart';
 import 'login.page.dart';
 import 'register.page.dart';
 import 'trade.history.page.dart';
@@ -26,6 +27,7 @@ class BookTradeApp extends StatelessWidget {
         "/home": (context) => HomePage(),
         "/favoriteBooks": (context) => FavoriteBooksPage(),
         "/publicatedBooks": (context) => PublicatedBooksPage(),
+        "/selectedBook": (context) => SelectedBookPage(),
         "/editProfile": (context) => EditProfilePage(),
         // Remova a rota nomeada para `TradeOfferPage`, pois ela requer um argumento:
         // "/tradeOffer": (context) => TradeOfferPage(),

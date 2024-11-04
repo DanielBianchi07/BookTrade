@@ -18,7 +18,7 @@ class TradeStatusPage extends StatelessWidget {
           },
         ),
         title: const Text(
-          'Status da Troca',
+          'Trocas Pendentes',
           style: TextStyle(color: Colors.black),
         ),
       ),

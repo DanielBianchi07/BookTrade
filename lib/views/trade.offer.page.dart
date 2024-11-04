@@ -126,6 +126,7 @@ class TradeOfferPage extends StatelessWidget {
               children: [
                 ElevatedButton(
                   onPressed: () {
+                    Navigator.pushNamed(context, '/selectedBook');
                     // Lógica para solicitar troca
                   },
                   style: ElevatedButton.styleFrom(
