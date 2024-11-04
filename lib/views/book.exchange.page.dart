@@ -7,7 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class BookExchangePage extends StatefulWidget {
   final Map<String, dynamic> bookDetails;
 
-  const BookExchangePage({Key? key, required this.bookDetails}) : super(key: key);
+  const BookExchangePage({super.key, required this.bookDetails});
 
   @override
   _BookExchangePageState createState() => _BookExchangePageState();

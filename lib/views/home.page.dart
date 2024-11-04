@@ -5,8 +5,9 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:myapp/controller/login.controller.dart';
 import 'package:myapp/views/trade.offer.page.dart';
 import '../models/book.dart';
-import 'login.page.dart';
+import '../user.dart';
 import '../widgets/bookcard.widget.dart';
+import 'login.page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,7 +19,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   // Chave global para acessar o Scaffold
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  final loginController = new LoginController();
+  final loginController = LoginController();
   var busy = false;
   List<Book> books = [];
   List<bool> favoriteStatus = [];
@@ -62,6 +63,10 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  // Lista para gerenciar o estado dos corações (favoritados ou não)
+  List<BookModel> books = []; // Lista de livros
+  List<bool> favoriteStatus = []; // Status dos favoritos
+
   @override
   void initState() {
     super.initState();
@@ -90,17 +95,23 @@ class _HomePageState extends State<HomePage> {
         books = snapshot.docs.where((doc) => (doc.data() as Map<String, dynamic>)['userId'] != userId)
           .map((doc) {
           final data = doc.data() as Map<String, dynamic>;
-          return Book(
-            uid: data['userId'] ?? '',
+          return BookModel(
+            userId:user.uid,
             id: doc.id,
-            title: data['title'] ?? '',
-            author: data['author'] ?? '',
-            imageUrl: data['imageUrl'] ?? 'https://via.placeholder.com/100',
-            publishedDate: DateTime.now(),
-            postedBy: data['postedBy'],
-            profileImageUrl: data['profileImageUrl'],
-            rating: data['rating'],
-            isFavorite: data['isFavorite'] ?? false,
+            author: data['author'],
+            condition: data['condition'],
+            edition: data['edition'],
+            genres: List<String>.from(data['genres']),
+            imageUserUrl: data['imageUserUrl'],
+            publicationYear: data['publicationYear'],
+            publishedDate: data['publishedDate'],
+            publisher: data['publisher'],
+            selectedExchangeGenres: List<String>.from(data['selectedExchangeGenres']),
+            title: data['title'],
+            userInfo: data[''],
+            imageApiUrl: data['imageApiUrl'],
+            isbn: data['isbn'],
+
           );
         }).toList();
         favoriteStatus = List.generate(books.length, (index) => favoriteBooks.contains(books[index].id));
@@ -357,9 +368,10 @@ class _HomePageState extends State<HomePage> {
                     bookId: book.id,
                     title: book.title,
                     author: book.author,
-                    postedBy: book.postedBy ?? 'Desconhecido',
-                    imageUrl: book.imageUrl,
-                    profileImageUrl: book.profileImageUrl ?? 'https://via.placeholder.com/50',
+                    imageUrl: book.imageUserUrl,
+                    postedBy: book.userInfo.name,
+                    profileImageUrl: book.userInfo.profileImageUrl,
+                    userRating: book.userInfo.customerRating,
                     isFavorite: favoriteStatus[index],
                     rating: book.rating ?? 0.0,
                     onFavoritePressed: () => toggleFavoriteStatus(book.id, index),

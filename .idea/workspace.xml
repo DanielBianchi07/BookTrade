@@ -5,7 +5,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4e9ea88f-7afb-495a-8062-f1ce7860c332" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/lib/controller/books.controller.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/error.message.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/models/user.info.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/models/book.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/models/book.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/views/delete.book.page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/delete.book.page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/views/home.page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/home.page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/views/publicated.books.page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/publicated.books.page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/views/trade.offer.page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/trade.offer.page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/widgets/bookcard.widget.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/widgets/bookcard.widget.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -14,6 +23,13 @@
   </component>
   <component name="ClangdSettings">
     <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Dart File" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
@@ -27,6 +43,9 @@
   &quot;associatedIndex&quot;: 3
 }</component>
   <component name="ProjectId" id="2n1U10mxzFDJsgyouuoLTh0HZfo" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -41,7 +60,7 @@
     "cidr.known.project.marker": "true",
     "com.google.services.firebase.aqiPopupShown": "true",
     "dart.analysis.tool.window.visible": "false",
-    "git-widget-placeholder": "Gustavo",
+    "git-widget-placeholder": "Daniel",
     "ignore.virus.scanning.warn.message": "true",
     "io.flutter.reload.alreadyRun": "true",
     "kotlin-language-version-configured": "true",
@@ -49,7 +68,7 @@
     "project.structure.last.edited": "Project",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.2",
-    "settings.editor.selected.configurable": "preferences.updates",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
     "show.migrate.to.gradle.popup": "false"
   }
 }]]></component>

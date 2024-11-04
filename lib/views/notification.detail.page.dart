@@ -5,7 +5,7 @@ class NotificationDetailPage extends StatelessWidget {
   final String message;
   final String time;
 
-  NotificationDetailPage({
+  const NotificationDetailPage({super.key, 
     required this.title,
     required this.message,
     required this.time,

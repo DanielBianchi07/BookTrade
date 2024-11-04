@@ -16,6 +16,8 @@ import 'trade.status.page.dart';
 import 'notification.detail.page.dart'; // Importe a tela de detalhes de notificação
 
 class BookTradeApp extends StatelessWidget {
+  const BookTradeApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -71,6 +73,8 @@ class BookTradeApp extends StatelessWidget {
 }
 
 class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
   @override
   _SplashScreenState createState() => _SplashScreenState();
 }
