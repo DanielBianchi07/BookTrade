@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:myapp/controller/login.controller.dart';
 import 'package:myapp/views/trade.offer.page.dart';
-
 import '../models/book.dart';
 import '../user.dart';
 import '../widgets/bookcard.widget.dart';
@@ -22,6 +21,8 @@ class _HomePageState extends State<HomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final loginController = LoginController();
   var busy = false;
+  List<Book> books = [];
+  List<bool> favoriteStatus = [];
 
   handleSignOut() {
     setState(() {
@@ -75,8 +76,24 @@ class _HomePageState extends State<HomePage> {
   Future<void> _loadBooks() async {
     try {
       QuerySnapshot snapshot = await FirebaseFirestore.instance.collection('books').get();
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+
+    // Inicialize uma lista de favoritos
+    List<String> favoriteBooks = [];
+
+    // Se o usuário estiver logado, busque os livros favoritados
+    if (userId != null) {
+      QuerySnapshot favoritesSnapshot = await FirebaseFirestore.instance.collection('favorites')
+          .doc(userId)
+          .collection('userFavorites')
+          .get();
+
+      favoriteBooks = favoritesSnapshot.docs.map((doc) => doc.id).toList();
+    }
+
       setState(() {
-        books = snapshot.docs.map((doc) {
+        books = snapshot.docs.where((doc) => (doc.data() as Map<String, dynamic>)['userId'] != userId)
+          .map((doc) {
           final data = doc.data() as Map<String, dynamic>;
           return BookModel(
             userId:user.uid,
@@ -94,14 +111,55 @@ class _HomePageState extends State<HomePage> {
             userInfo: data[''],
             imageApiUrl: data['imageApiUrl'],
             isbn: data['isbn'],
+
           );
         }).toList();
-        favoriteStatus = List.generate(books.length, (_) => false); // Inicializa o status de favoritos
+        favoriteStatus = List.generate(books.length, (index) => favoriteBooks.contains(books[index].id));
       });
     } catch (e) {
       print('Erro ao carregar livros: $e');
     }
   }
+
+  void toggleFavoriteStatus(String bookId, int index) async {
+  final userId = FirebaseAuth.instance.currentUser?.uid;
+  if (userId == null) return; // Certifique-se de que o usuário está logado
+
+  // Alterna o estado local
+  setState(() {
+    favoriteStatus[index] = !favoriteStatus[index];
+  });
+
+  try {
+    if (favoriteStatus[index]) {
+      // Adiciona aos favoritos
+      await FirebaseFirestore.instance
+          .collection('favorites')
+          .doc(userId)
+          .collection('userFavorites')
+          .doc(bookId)
+          .set({
+        'isFavorite': true,
+      });
+    } else {
+      // Remove dos favoritos
+      await FirebaseFirestore.instance
+          .collection('favorites')
+          .doc(userId)
+          .collection('userFavorites')
+          .doc(bookId)
+          .delete();
+    }
+
+  } catch (e) {
+    print('Erro ao atualizar favoritos: $e');
+    // Reverte a mudança em caso de erro
+    setState(() {
+      favoriteStatus[index] = !favoriteStatus[index]; // Reverte o estado local
+    });
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -307,6 +365,7 @@ class _HomePageState extends State<HomePage> {
                     );
                   },
                   child: BookCard(
+                    bookId: book.id,
                     title: book.title,
                     author: book.author,
                     imageUrl: book.imageUserUrl,
@@ -314,11 +373,8 @@ class _HomePageState extends State<HomePage> {
                     profileImageUrl: book.userInfo.profileImageUrl,
                     userRating: book.userInfo.customerRating,
                     isFavorite: favoriteStatus[index],
-                    onFavoritePressed: () {
-                      setState(() {
-                        favoriteStatus[index] = !favoriteStatus[index];
-                      });
-                    },
+                    rating: book.rating ?? 0.0,
+                    onFavoritePressed: () => toggleFavoriteStatus(book.id, index),
                   ),
                 );
               },

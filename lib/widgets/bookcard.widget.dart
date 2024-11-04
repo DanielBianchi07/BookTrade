@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 class BookCard extends StatelessWidget {
+  final String bookId; // Identificador único do livro
   final String title;
   final String author;
   final String postedBy;
