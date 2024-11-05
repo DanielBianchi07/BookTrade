@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import '../controller/book.controller.dart';
 import '../models/book.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import '../user.dart';
 import 'delete.book.page.dart';
 
 class PublicatedBooksPage extends StatefulWidget {
@@ -13,7 +14,8 @@ class PublicatedBooksPage extends StatefulWidget {
 }
 
 class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
-  final List<Book> _books = [];
+  List<BookModel> _books = [];
+  final BooksController booksController = BooksController();
   bool _isLoading = true;
 
   @override
@@ -22,54 +24,6 @@ class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
     _fetchBooks();
   }
 
-  // Função para buscar os livros do usuário logado
-  Future<void> _fetchBooks() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    // Obtém o usuário logado
-    final user = FirebaseAuth.instance.currentUser;
-
-    if (user == null) {
-      _showError('Usuário não está logado');
-      return;
-    }
-
-    // Obtenha apenas os livros do usuário atual
-    final QuerySnapshot snapshot = await FirebaseFirestore.instance
-        .collection('books')
-        .where('userId', isEqualTo: user.uid)
-        .get();
-
-    final List<Book> books = snapshot.docs.map((doc) {
-      final data = doc.data() as Map<String, dynamic>;
-
-      // Pegando a data de publicação do Firestore (se disponível)
-      final Timestamp timestamp = data['timestamp'] ?? Timestamp.now();
-      final DateTime publishedDate = timestamp.toDate();
-
-      return Book(
-        uid: user.uid,
-        id: doc.id,
-        title: data['title'] ?? '',
-        author: data['author'] ?? '',
-        imageUrl: data['imageUrl'] ?? 'https://via.placeholder.com/100',
-        publishedDate: publishedDate,
-        postedBy: null, // Se necessário, adicione mais campos relacionados ao usuário
-        profileImageUrl: null,
-        rating: null,
-      );
-    }).toList();
-
-    setState(() {
-      _books.clear();
-      _books.addAll(books);
-      _isLoading = false;
-    });
-  }
-
-  // Função para mostrar um erro
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
@@ -77,6 +31,36 @@ class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
     setState(() {
       _isLoading = false;
     });
+  }
+
+  // Função para buscar os livros do usuário logado
+  Future<void> _fetchBooks() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    // Obtém o usuario logado
+    final userId = user.uid;
+
+    if (userId.isEmpty) {
+      _showError('Usuário não está logado');
+      return;
+    }
+
+    try {
+      // Chama a função do controller para carregar os livros
+      List<BookModel> books = await booksController.loadBooks();
+
+      // Filtra os livros para obter apenas os do usuário atual
+      List<BookModel> userBooks = books.where((book) => book.userId == userId).toList();
+
+      setState(() {
+        _books = userBooks;
+        _isLoading = false;
+      });
+    } catch (e) {
+      _showError('Erro ao carregar livros: $e');
+    }
   }
 
   // Função para excluir um livro
@@ -141,85 +125,87 @@ class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
           style: TextStyle(color: Colors.black),
         ),
       ),
-      body: _isLoading 
-          ? const Center(child: CircularProgressIndicator()) // Indicador de carregamento
+      body: _isLoading
+          ? const Center(
+        child: CircularProgressIndicator(), // Indicador de carregamento
+      )
           : _books.isEmpty
-              ? const Center(child: Text('Nenhum livro publicado.'))
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16.0),
-                  itemCount: _books.length,
-                  itemBuilder: (context, index) {
-                    final book = _books[index];
-                    return GestureDetector(
-                      onTap: () {
-                        // Navega para a DeleteBookPage e passa o livro como argumento
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => DeleteBookPage(book: book),
-                          ),
-                        );
-                      },
-                      child: Card(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10.0),
-                        ),
-                        margin: const EdgeInsets.only(bottom: 16.0),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Row(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(8.0),
-                                child: Image.network(
-                                  book.imageUrl,
-                                  height: 100,
-                                  width: 80,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      book.title,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    Text(
-                                      'De ${book.author}',
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'Postado em: ${book.publishedDate != null ? DateFormat.yMMMd().format(book.publishedDate!) : 'Data não disponível'}',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              IconButton(
-                                onPressed: () {
-                                  _confirmDelete(context, book.id); // Confirmação antes de excluir
-                                },
-                                icon: const Icon(Icons.delete, color: Colors.red),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
+          ? const Center(child: Text('Nenhum livro publicado.'))
+          : ListView.builder(
+        padding: const EdgeInsets.all(16.0),
+        itemCount: _books.length,
+        itemBuilder: (context, index) {
+          final book = _books[index];
+          return GestureDetector(
+            onTap: () {
+              // Navega para a DeleteBookPage e passa o livro como argumento
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DeleteBookPage(book: book),
                 ),
+              );
+            },
+            child: Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.0),
+              ),
+              margin: const EdgeInsets.only(bottom: 16.0),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8.0),
+                      child: Image.network(
+                        book.imageUserUrl,
+                        height: 100,
+                        width: 80,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            book.title,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'De ${book.author}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Postado em: ${DateFormat.yMMMd().format(book.publishedDate)}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        _confirmDelete(context, book.id); // Confirmação antes de excluir
+                      },
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }

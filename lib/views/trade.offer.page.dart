@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/book.dart'; // Importe o modelo Book
 
 class TradeOfferPage extends StatelessWidget {
-  final Book book; // Receber o livro como argumento
+  final BookModel book; // Receber o livro como argumento
 
   const TradeOfferPage({super.key, required this.book});
 
@@ -29,7 +29,7 @@ class TradeOfferPage extends StatelessWidget {
               height: 200,
               child: PageView(
                 children: [
-                  _buildBookImage(book.imageUrl), // Imagem do livro
+                  _buildBookImage(book.imageUserUrl), // Imagem do livro
                 ],
               ),
             ),
