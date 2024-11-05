@@ -5,16 +5,15 @@ import 'package:intl/intl.dart';
 import '../controller/books.controller.dart';
 import '../models/book.model.dart';
 import '../user.dart';
-import 'delete.book.page.dart';
 
-class PublicatedBooksPage extends StatefulWidget {
-  const PublicatedBooksPage({super.key});
+class SelectedBookPage extends StatefulWidget {
+  const SelectedBookPage({super.key});
 
   @override
-  _PublicatedBooksPageState createState() => _PublicatedBooksPageState();
+  _SelectedBookPageState createState() => _SelectedBookPageState();
 }
 
-class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
+class _SelectedBookPageState extends State<SelectedBookPage> {
   List<BookModel> _books = [];
   final BooksController booksController = BooksController();
   bool _isLoading = true;
@@ -22,6 +21,13 @@ class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
   @override
   void initState() {
     super.initState();
+    // Remover a chamada de _fetchBooks() daqui
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Mover a chamada de _fetchBooks() para cá
     _fetchBooks();
   }
 
@@ -122,7 +128,7 @@ class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
           },
         ),
         title: const Text(
-          'Livros publicados',
+          'Escolha o livro que deseja ser trocado.',
           style: TextStyle(color: Colors.black),
         ),
       ),
@@ -139,13 +145,7 @@ class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
           final book = _books[index];
           return GestureDetector(
             onTap: () {
-              // Navega para a DeleteBookPage e passa o livro como argumento
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => DeleteBookPage(book: book),
-                ),
-              );
+              //Função de solicitar livro
             },
             child: Card(
               shape: RoundedRectangleBorder(
@@ -207,12 +207,6 @@ class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
                           ),
                         ],
                       ),
-                    ),
-                    IconButton(
-                      onPressed: () {
-                        _confirmDelete(context, book.id); // Confirmação antes de excluir
-                      },
-                      icon: const Icon(Icons.delete, color: Colors.red),
                     ),
                   ],
                 ),

@@ -1,21 +1,24 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'book.exchange.page.dart';
 import 'chat.page.dart';
 import 'chats.page.dart';
 import 'edit.profile.page.dart';
 import 'favorite.books.page.dart';
+import 'favorite.genres.page.dart';
 import 'home.page.dart';
 import 'new.book.page.dart';
 import 'notifications.page.dart';
 import 'publicated.books.page.dart';
 import 'login.page.dart';
 import 'register.page.dart';
+import 'selected.book.page.dart';
 import 'trade.history.page.dart';
 import 'trade.status.page.dart';
 import 'notification.detail.page.dart'; // Importe a tela de detalhes de notificação
 
 class BookTradeApp extends StatelessWidget {
+  const BookTradeApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -26,6 +29,7 @@ class BookTradeApp extends StatelessWidget {
         "/home": (context) => HomePage(),
         "/favoriteBooks": (context) => FavoriteBooksPage(),
         "/publicatedBooks": (context) => PublicatedBooksPage(),
+        "/selectedBook": (context) => SelectedBookPage(),
         "/editProfile": (context) => EditProfilePage(),
         // Remova a rota nomeada para `TradeOfferPage`, pois ela requer um argumento:
         // "/tradeOffer": (context) => TradeOfferPage(),
@@ -36,9 +40,7 @@ class BookTradeApp extends StatelessWidget {
         "/tradeStatus": (context) => TradeStatusPage(),
         "/chats": (context) => const ChatsPage(),
         "/chat": (context) => const ChatPage(),
-        "/bookExchange": (context) => BookExchangePage(
-          bookDetails: ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>,
-        ),
+        "/favoriteGenres": (context) => FavoriteGenresPage(),
       },
       home: StreamBuilder(
         stream: FirebaseAuth.instance.authStateChanges(),
@@ -71,6 +73,8 @@ class BookTradeApp extends StatelessWidget {
 }
 
 class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
   @override
   _SplashScreenState createState() => _SplashScreenState();
 }

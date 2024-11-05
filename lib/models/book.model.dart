@@ -1,22 +1,22 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'user_info.dart';
-
+import 'package:myapp/models/user.info.model.dart';
 
 class BookModel {
-  final String userId; // Id de quem postou o livro
-  final String id; // Id do livro
-  final String title; // Titulo do livro
-  final String author; // Autor do livro
-  final String imageUserUrl; // URL da imagem do livro colocado pelo Usuário
-  final String? imageApiUrl; // URL da Imagem do Livro da API
-  final DateTime publishedDate; // Data de publicação do livro no app
-  final String condition; // Condição do livro
-  final String edition; // Edição do livro
-  final List<String>? genres; // Gêneros do livro
-  final String? isbn; // ISBN do livro
-  final String publicationYear; // Ano de publicação
-  final String publisher; // Editora do livro
-  final UInfo userInfo; // Informações do Usuário que postou o livro
+  final String userId;
+  final String id;
+  final String title;
+  final String author;
+  final String imageUserUrl;
+  final String? imageApiUrl;
+  final DateTime publishedDate;
+  final String condition;
+  final String edition;
+  final List<String>? genres;
+  final String? isbn;
+  final String publicationYear;
+  final String publisher;
+  final String? description; // Novo campo para a sinopse
+  final UInfo userInfo;
 
   BookModel({
     required this.userId,
@@ -32,6 +32,7 @@ class BookModel {
     this.isbn,
     required this.publicationYear,
     required this.publisher,
+    this.description, // Inicialização do novo campo
     required this.userInfo,
   });
 
@@ -50,6 +51,7 @@ class BookModel {
       'isbn': isbn,
       'publicationYear': publicationYear,
       'publisher': publisher,
+      'description': description, // Mapeamento da sinopse
       'userInfo': userInfo.toMap(),
     };
   }
@@ -71,6 +73,7 @@ class BookModel {
       isbn: data['isbn'],
       publicationYear: data['publicationYear'] ?? 'Ano de publicação não disponível',
       publisher: data['publisher'] ?? 'Editora não disponível',
+      description: data['description'], // Carrega a sinopse
       userInfo: UInfo.fromMap(data['userInfo']),
     );
   }

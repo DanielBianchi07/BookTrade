@@ -12,6 +12,7 @@ class RegisterController {
     required String passwordConfirm,
     required String name,
     required String phone,
+    String? address
   }) async {
     try {
       // Criação do usuário no Firebase Auth
@@ -19,6 +20,8 @@ class RegisterController {
         email: email,
         password: password,
       );
+      await userCredential.user?.updateDisplayName(name);
+      await userCredential.user?.reload();
       User? user = userCredential.user;
       if (user != null) {
         // Armazenamento das informações do usuário no Firestore
@@ -26,8 +29,9 @@ class RegisterController {
           'email': email,
           'name': name,
           'phone': phone,
-          'address': '',
+          'address': address,
           'customerRating': 0.0,
+          'favoriteGenres': [],
           'profileImageUrl': '',
         });
         // Criação da subcoleção "favorites" no Firestore

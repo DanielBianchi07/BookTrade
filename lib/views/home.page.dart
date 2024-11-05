@@ -4,9 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:myapp/controller/login.controller.dart';
 import 'package:myapp/views/trade.offer.page.dart';
-import '../controller/book.controller.dart';
-import '../models/book.dart';
-import '../models/user_info.dart';
+import '../controller/books.controller.dart';
+import '../models/book.model.dart';
+import '../models/user.info.model.dart';
+import '../user.dart';
 import '../widgets/bookcard.widget.dart';
 import 'login.page.dart';
 
@@ -285,19 +286,19 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    const Text(
-                      'Fulano da Silva',
+                    Text(
+                      user.value.name,
                       style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 5),
-                    const Text(
-                      'Address',
+                    Text(
+                      user.value.address ?? 'Endereço não cadastrado',
                       style: TextStyle(fontSize: 14),
                     ),
                     const SizedBox(height: 10),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(5, (index) {
+                      children: List.generate(user.value.customerRating as int, (index) {
                         return const Icon(Icons.star, color: Colors.amber, size: 18);
                       }),
                     ),
@@ -369,6 +370,13 @@ class _HomePageState extends State<HomePage> {
             title: const Text('Chat'),
             onTap: () {
               Navigator.pushNamed(context, '/chats');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.star, color: Colors.black),
+            title: const Text('Gêneros Favoritos'),
+            onTap: () {
+              Navigator.pushNamed(context, '/favoriteGenres');
             },
           ),
           const Spacer(),
