@@ -1,8 +1,43 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/book.model.dart';
-import '../models/user.info.model.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import '../models/book.dart';
+import '../models/user_info.dart';
 
 class BooksController {
+  bool validateFields({
+    required String title,
+    required String author,
+    required String edition,
+    required String publicationYear,
+    required String publisher,
+    bool noIsbn = false,
+    String? isbn,
+    String? genre,
+  }) {
+    if (title.isEmpty) {
+      throw Exception('O campo "Nome do Livro" é obrigatório.');
+    }
+    if (author.isEmpty) {
+      throw Exception('O campo "Nome do Autor" é obrigatório.');
+    }
+    if (edition.isEmpty) {
+      throw Exception('O campo "Edição" é obrigatório.');
+    }
+    if (!noIsbn && (isbn == null || isbn.isEmpty)) {
+      throw Exception('O campo "ISBN" é obrigatório quando "Não possui ISBN" não está marcado.');
+    }
+    if (publicationYear.isEmpty) {
+      throw Exception('O campo "Ano de publicação" é obrigatório.');
+    }
+    if (publisher.isEmpty) {
+      throw Exception('O campo "Editora" é obrigatório.');
+    }
+    if (noIsbn && (genre == null || genre.isEmpty)) {
+      throw Exception('O campo "Gênero" é obrigatório quando "Não possui ISBN" está marcado.');
+    }
+    return true;
+  }
+
   Future<List<BookModel>> loadBooks() async {
     try {
       QuerySnapshot snapshot = await FirebaseFirestore.instance.collection('books').get();
@@ -42,12 +77,13 @@ class BooksController {
 
       return books;
     } catch (e) {
-      print('Erro ao carregar livros: $e');
+      Fluttertoast.showToast(
+        msg: "Erro ao carregar os livros: $e",
+        toastLength: Toast.LENGTH_LONG,
+      );
       return [];
     }
   }
-
-
 
   Future<List<BookModel>> loadFavoriteBooks(String userId) async {
     try {
@@ -67,8 +103,103 @@ class BooksController {
 
       return favoriteBooks;
     } catch (e) {
-      print('Erro ao carregar livros favoritos: $e');
+      Fluttertoast.showToast(
+        msg: "Erro ao carregar os livros favoritos: $e",
+        toastLength: Toast.LENGTH_LONG,
+      );
       return [];
     }
   }
+
+  // Validação e Criação do Livro
+  // Future<BookModel> prepareBook({
+  //   required String title,
+  //   required String author,
+  //   required String edition,
+  //   required String publicationYear,
+  //   required String publisher,
+  //   required String condition,
+  //   required bool noIsbn,
+  //   String? isbn,
+  //   String? genre,
+  //   List<String>? genres,
+  //   String? imageUrl,
+  // }) async {
+  //   // Validação dos campos
+  //   validateFields(
+  //     title: title,
+  //     author: author,
+  //     edition: edition,
+  //     publicationYear: publicationYear,
+  //     publisher: publisher,
+  //     noIsbn: noIsbn,
+  //     isbn: isbn,
+  //     genre: genre,
+  //   );
+  //
+  //   // Obter o ID do usuário autenticado
+  //   User? currentUser = FirebaseAuth.instance.currentUser;
+  //   if (currentUser == null) {
+  //     throw Exception('Erro: Usuário não autenticado.');
+  //   }
+  //
+  //   // Buscar informações do usuário a partir do Firestore
+  //   DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(currentUser.uid).get();
+  //   if (!userDoc.exists) {
+  //     throw Exception('Erro: Dados do usuário não encontrados.');
+  //   }
+  //
+  //   // Criar objeto UserInfo a partir dos dados do Firestore
+  //   UserInfo userInfo = UserInfo.fromMap(userDoc.data() as Map<String, dynamic>);
+  //
+  //   // Criar e retornar o modelo do livro
+  //   return createBook(
+  //     userId: currentUser.uid,
+  //     title: title,
+  //     author: author,
+  //     edition: edition,
+  //     publicationYear: publicationYear,
+  //     publisher: publisher,
+  //     condition: condition,
+  //     isbn: noIsbn ? null : isbn?.trim(),
+  //     genres: noIsbn ? [genre!] : genres,
+  //     imageUrl: imageUrl,
+  //     userInfo: userInfo,
+  //   );
+  // }
+  //
+  // // Cria uma instância de BookModel com os dados coletados
+  // BookModel createBook({
+  //   required String userId,
+  //   required String title,
+  //   required String author,
+  //   required String edition,
+  //   required String publicationYear,
+  //   required String publisher,
+  //   required String condition,
+  //   String? isbn,
+  //   String? genre,
+  //   List<String>? genres,
+  //   String? imageUrl,
+  //   String? imageApi,
+  //   required UserInfo userInfo,
+  // }) {
+  //   return BookModel(
+  //     uid: userId,
+  //     id: '', // O ID será gerado automaticamente pelo Firestore
+  //     title: title,
+  //     author: author,
+  //     imageUrl: imageUrl ?? '',
+  //     imageApi: imageApi,
+  //     publishedDate: DateTime.now(),
+  //     condition: condition,
+  //     edition: edition,
+  //     genres: genres,
+  //     selectedGenres: genres ?? [],
+  //     isbn: isbn,
+  //     publicationYear: publicationYear,
+  //     publisher: publisher,
+  //     userInfo: userInfo,
+  //   );
+  // }
 }

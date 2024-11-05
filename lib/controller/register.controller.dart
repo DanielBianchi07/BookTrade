@@ -19,6 +19,8 @@ class RegisterController {
         email: email,
         password: password,
       );
+      await userCredential.user?.updateDisplayName(name);
+      await userCredential.user?.reload();
       User? user = userCredential.user;
       if (user != null) {
         // Armazenamento das informações do usuário no Firestore

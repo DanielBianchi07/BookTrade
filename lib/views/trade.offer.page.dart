@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/book.model.dart'; // Importe o modelo Book
+import '../models/book.dart'; // Importe o modelo Book
 
 class TradeOfferPage extends StatelessWidget {
   final BookModel book; // Receber o livro como argumento
@@ -45,7 +45,7 @@ class TradeOfferPage extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              'Autor: ${book.author}\nPublicado em: ${book.publicationYear ?? 'N/A'}',
+              'Autor: ${book.author}\nPublicado em: ${book.publicationYear}',
               style: const TextStyle(
                 fontSize: 14,
                 height: 1.5,
@@ -63,12 +63,12 @@ class TradeOfferPage extends StatelessWidget {
             ),
             const SizedBox(height: 0),
             Text(
-              'Gêneros: ${book.genres}',
+              'Gêneros: ${book.genres?.join(', ') ?? 'N/A'}',
               style: const TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 0),
             Text(
-              'ISBN: ${book.isbn ?? ''}',
+              'ISBN: ${book.isbn ?? 'N/A'}',
               style: const TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 0),

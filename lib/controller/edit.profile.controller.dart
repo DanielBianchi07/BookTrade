@@ -23,13 +23,13 @@ class EditProfileController {
   Future uploadImage(File? selectedImage, BuildContext context) async {
     try {
       if (selectedImage != null) {
-        final storageref = Firebasestorage.ref().child('profile_images').child(user.uid);
+        final storageref = Firebasestorage.ref().child('profileImageUrl').child(user.value.uid);
         final uploadTask = storageref.putFile(selectedImage);
         final snapshot = await uploadTask.whenComplete(() => null);
         final downloadUrl = await snapshot.ref.getDownloadURL();
 
         // Atualiza a URL da imagem no Firestore
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+        await FirebaseFirestore.instance.collection('users').doc(user.value.uid).update({
           'profileImageUrl': downloadUrl,
         });
 
@@ -75,13 +75,13 @@ class EditProfileController {
 
     try {
         // Atualiza o Firestore com os novos dados do usuário
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+        await FirebaseFirestore.instance.collection('users').doc(user.value.uid).update({
           'name': name,
           'phone': phone,
         });
 
         // Atualiza o email se necessário
-        if (email != user.email) {
+        if (email != user.value.email) {
           await currentUser!.verifyBeforeUpdateEmail(email);
         }
 

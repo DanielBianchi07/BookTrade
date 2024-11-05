@@ -6,7 +6,6 @@ import 'package:myapp/controller/login.controller.dart';
 import 'package:myapp/views/trade.offer.page.dart';
 import '../models/book.dart';
 import '../models/user_info.dart';
-import '../user.dart';
 import '../widgets/bookcard.widget.dart';
 import 'login.page.dart';
 

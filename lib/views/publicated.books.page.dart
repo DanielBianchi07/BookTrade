@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
-import '../controller/book.controller.dart';
+import '../controller/books.controller.dart';
 import '../models/book.dart';
 import '../user.dart';
 import 'delete.book.page.dart';
@@ -40,7 +40,7 @@ class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
     });
 
     // Obtém o usuario logado
-    final userId = user.uid;
+    final userId = user.value.uid;
 
     if (userId.isEmpty) {
       _showError('Usuário não está logado');

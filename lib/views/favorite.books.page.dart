@@ -2,11 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import '../controller/book.controller.dart';
+import 'package:myapp/views/trade.offer.page.dart';
+import '../controller/books.controller.dart';
 import '../models/book.dart';
 import '../user.dart';
 import '../widgets/bookcard.widget.dart';
-import 'trade.offer.page.dart';
 
 class FavoriteBooksPage extends StatefulWidget {
   const FavoriteBooksPage({super.key});
@@ -17,7 +17,7 @@ class FavoriteBooksPage extends StatefulWidget {
 
 class FavoriteBooksPageState extends State<FavoriteBooksPage> {
   // Chave global para acessar o Scaffold
-  bool _isLoading = false;
+  late bool _isLoading = false;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   List<BookModel> books = []; // Lista para armazenar livros favoritos
   List<bool> favoriteStatus = []; // Lista para gerenciar o estado dos favoritos
@@ -26,7 +26,7 @@ class FavoriteBooksPageState extends State<FavoriteBooksPage> {
   @override
   void initState() {
     super.initState();
-    booksController.loadFavoriteBooks(user.uid); // Carrega os livros favoritos ao inicializar
+    booksController.loadFavoriteBooks(user.value.uid); // Carrega os livros favoritos ao inicializar
   }
 
   void _showError(String message) {

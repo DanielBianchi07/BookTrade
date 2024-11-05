@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:myapp/controller/edit.profile.controller.dart';
 
+import '../user.dart';
+
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
 
@@ -21,39 +23,49 @@ class _EditProfilePageState extends State<EditProfilePage> {
   File? selectedImage;
   var busy = false;
 
-hanfleEditProfile() {
-  setState(() {
-    busy = true;
-  });
-  controller.updateUserProfile(context, currentPassword.text.trim(), name.text.trim(), phone.text.trim(), email.text.trim(), currentPassword.text.trim(), newPassword.text.trim(), confirmNewPassword.text.trim()).then((data) {
-    onSuccess();
-  }).catchError((err) {
-    onError();
-  }).whenComplete(() {
-    onComplete();
-  });
-}
+  @override
+  void initState() {
+    super.initState();
+    // Atribuir os valores iniciais dos controladores com os dados do usuário
+    name.text = user.value.name;
+    phone.text = user.value.telephone;
+    email.text = user.value.email;
+  }
 
-onSuccess() {
-
-}
-
-onError() {
-
-}
-
-onComplete() {
-
-}
-
-selectImage() async {
-  final selectedImage = await controller.pickImage(); // Espera o resultado
-  if (selectedImage != null) {
+  hanfleEditProfile() {
     setState(() {
-      this.selectedImage = selectedImage; // Atualiza o estado aqui
+      busy = true;
+    });
+      controller.updateUserProfile(context, currentPassword.text.trim(), name.text.trim(), phone.text.trim(), email.text.trim(), currentPassword.text.trim(), newPassword.text.trim(), confirmNewPassword.text.trim()).then((data) {
+      onSuccess();
+    }).catchError((err) {
+      onError();
+    }).whenComplete(() {
+      onComplete();
     });
   }
-}
+
+  onSuccess() {
+
+  }
+
+  onError() {
+
+  }
+
+  onComplete() {
+
+  }
+
+  Future<GestureTapCallback?> selectImage() async {
+    final selectedImage = await controller.pickImage(); // Espera o resultado
+    if (selectedImage != null) {
+      setState(() {
+        this.selectedImage = selectedImage; // Atualiza o estado aqui
+      });
+    }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -84,13 +96,13 @@ selectImage() async {
                             ? FileImage(selectedImage!)
                             : (profileImageUrl != null && profileImageUrl!.isNotEmpty
                             ? NetworkImage(profileImageUrl!)
-                            : const NetworkImage('https://via.placeholder.com/150')) as ImageProvider<Object>,
+                            : const NetworkImage('')),
                       ),
                       Positioned(
                         bottom: 0,
                         right: 0,
                         child: GestureDetector(
-                          onTap: selectImage(), // Selecionar nova imagem
+                          onTap: selectImage, // Selecionar nova imagem
                           child: Container(
                             decoration: const BoxDecoration(
                               shape: BoxShape.circle,
@@ -107,7 +119,7 @@ selectImage() async {
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    name.text,
+                    user.value.name,
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,

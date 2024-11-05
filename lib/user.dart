@@ -1,3 +1,5 @@
+import 'package:flutter/cupertino.dart';
+
 class IUser {
   String uid = "";
   String name = "";
@@ -6,4 +8,4 @@ class IUser {
   String telephone = "";
 }
 
-IUser user = IUser();
+ValueNotifier<IUser> user = ValueNotifier(IUser());
