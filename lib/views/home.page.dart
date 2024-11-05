@@ -5,8 +5,10 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:myapp/controller/login.controller.dart';
 import 'package:myapp/views/trade.offer.page.dart';
 import '../models/book.dart';
-import 'login.page.dart';
+import '../models/user_info.dart';
+import '../user.dart';
 import '../widgets/bookcard.widget.dart';
+import 'login.page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,9 +20,9 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   // Chave global para acessar o Scaffold
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  final loginController = new LoginController();
+  final loginController = LoginController();
   var busy = false;
-  List<Book> books = [];
+  List<BookModel> books = [];
   List<bool> favoriteStatus = [];
 
   handleSignOut() {
@@ -43,9 +45,9 @@ class _HomePageState extends State<HomePage> {
 
   onSuccess() {
     Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => LoginPage(),
-        ),
+      context,
+      MaterialPageRoute(builder: (context) => LoginPage(),
+      ),
     );
   }
 
@@ -73,36 +75,43 @@ class _HomePageState extends State<HomePage> {
       QuerySnapshot snapshot = await FirebaseFirestore.instance.collection('books').get();
       final userId = FirebaseAuth.instance.currentUser?.uid;
 
-    // Inicialize uma lista de favoritos
-    List<String> favoriteBooks = [];
+      // Inicialize uma lista de favoritos
+      List<String> favoriteBooks = [];
 
-    // Se o usuário estiver logado, busque os livros favoritados
-    if (userId != null) {
-      QuerySnapshot favoritesSnapshot = await FirebaseFirestore.instance.collection('favorites')
-          .doc(userId)
-          .collection('userFavorites')
-          .get();
+      // Se o usuário estiver logado, busque os livros favoritados
+      if (userId != null) {
+        QuerySnapshot favoritesSnapshot = await FirebaseFirestore.instance
+            .collection('favorites')
+            .doc(userId)
+            .collection('userFavorites')
+            .get();
 
-      favoriteBooks = favoritesSnapshot.docs.map((doc) => doc.id).toList();
-    }
+        favoriteBooks = favoritesSnapshot.docs.map((doc) => doc.id).toList();
+      }
 
       setState(() {
-        books = snapshot.docs.where((doc) => (doc.data() as Map<String, dynamic>)['userId'] != userId)
-          .map((doc) {
+        books = snapshot.docs
+            .where((doc) => (doc.data() as Map<String, dynamic>)['userId'] != userId)
+            .map((doc) {
           final data = doc.data() as Map<String, dynamic>;
-          return Book(
-            uid: data['userId'] ?? '',
+          return BookModel(
+            userId: data['userId'] ?? '', // Adiciona valor padrão se for null
             id: doc.id,
-            title: data['title'] ?? '',
-            author: data['author'] ?? '',
-            imageUrl: data['imageUrl'] ?? 'https://via.placeholder.com/100',
-            publishedDate: DateTime.now(),
-            postedBy: data['postedBy'],
-            profileImageUrl: data['profileImageUrl'],
-            rating: data['rating'],
-            isFavorite: data['isFavorite'] ?? false,
+            title: data['title'] ?? 'Título não disponível', // Valor padrão
+            author: data['author'] ?? 'Autor desconhecido', // Valor padrão
+            imageUserUrl: data['imageUserUrl'] ?? '', // Valor padrão
+            imageApiUrl: data['imageApiUrl'],
+            publishedDate: (data['publishedDate'] as Timestamp?)?.toDate() ?? DateTime.now(), // Valor padrão para publishedDate
+            condition: data['condition'] ?? 'Condição não disponível', // Valor padrão
+            edition: data['edition'] ?? 'Edição não disponível', // Valor padrão
+            genres: data['genres'] != null ? List<String>.from(data['genres']) : [], // Lista vazia se null
+            isbn: data['isbn'],
+            publicationYear: data['publicationYear'] ?? 'Ano de publicação não disponível', // Valor padrão
+            publisher: data['publisher'] ?? 'Editora não disponível', // Valor padrão
+            userInfo: UInfo.fromMap(data['userInfo'] ?? {}), // Constrói userInfo com um map vazio se null
           );
         }).toList();
+
         favoriteStatus = List.generate(books.length, (index) => favoriteBooks.contains(books[index].id));
       });
     } catch (e) {
@@ -111,43 +120,43 @@ class _HomePageState extends State<HomePage> {
   }
 
   void toggleFavoriteStatus(String bookId, int index) async {
-  final userId = FirebaseAuth.instance.currentUser?.uid;
-  if (userId == null) return; // Certifique-se de que o usuário está logado
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return; // Certifique-se de que o usuário está logado
 
-  // Alterna o estado local
-  setState(() {
-    favoriteStatus[index] = !favoriteStatus[index];
-  });
-
-  try {
-    if (favoriteStatus[index]) {
-      // Adiciona aos favoritos
-      await FirebaseFirestore.instance
-          .collection('favorites')
-          .doc(userId)
-          .collection('userFavorites')
-          .doc(bookId)
-          .set({
-        'isFavorite': true,
-      });
-    } else {
-      // Remove dos favoritos
-      await FirebaseFirestore.instance
-          .collection('favorites')
-          .doc(userId)
-          .collection('userFavorites')
-          .doc(bookId)
-          .delete();
-    }
-
-  } catch (e) {
-    print('Erro ao atualizar favoritos: $e');
-    // Reverte a mudança em caso de erro
+    // Alterna o estado local
     setState(() {
-      favoriteStatus[index] = !favoriteStatus[index]; // Reverte o estado local
+      favoriteStatus[index] = !favoriteStatus[index];
     });
+
+    try {
+      if (favoriteStatus[index]) {
+        // Adiciona aos favoritos
+        await FirebaseFirestore.instance
+            .collection('favorites')
+            .doc(userId)
+            .collection('userFavorites')
+            .doc(bookId)
+            .set({
+          'isFavorite': true,
+        });
+      } else {
+        // Remove dos favoritos
+        await FirebaseFirestore.instance
+            .collection('favorites')
+            .doc(userId)
+            .collection('userFavorites')
+            .doc(bookId)
+            .delete();
+      }
+
+    } catch (e) {
+      print('Erro ao atualizar favoritos: $e');
+      // Reverte a mudança em caso de erro
+      setState(() {
+        favoriteStatus[index] = !favoriteStatus[index]; // Reverte o estado local
+      });
+    }
   }
-}
 
 
   @override
@@ -354,14 +363,15 @@ class _HomePageState extends State<HomePage> {
                     );
                   },
                   child: BookCard(
-                    bookId: book.id,
+                    id: book.id,
+                    userId: book.userId,
                     title: book.title,
                     author: book.author,
-                    postedBy: book.postedBy ?? 'Desconhecido',
-                    imageUrl: book.imageUrl,
-                    profileImageUrl: book.profileImageUrl ?? 'https://via.placeholder.com/50',
+                    imageUserUrl: book.imageUserUrl,
+                    postedBy: book.userInfo.name,
+                    profileImageUrl: book.userInfo.profileImageUrl,
+                    customerRating: book.userInfo.customerRating,
                     isFavorite: favoriteStatus[index],
-                    rating: book.rating ?? 0.0,
                     onFavoritePressed: () => toggleFavoriteStatus(book.id, index),
                   ),
                 );

@@ -29,48 +29,67 @@ class _RegistrationPageState extends State<RegistrationPage> {
   late String passwordConfirm;
   var busy = false;
 
-  handleRegister(){
-    setState(() {
-      name = _name.text.trim();
-      phone = _phone.text.trim();
-      email = _email.text.trim();
-      password = _password.text.trim();
-      passwordConfirm = _passwordConfirm.text.trim();
-    });
+  handleRegister() {
+    name = _name.text.trim();
+    phone = _phone.text.trim();
+    email = _email.text.trim();
+    password = _password.text.trim();
+    passwordConfirm = _passwordConfirm.text.trim();
+
     if (name.isEmpty || phone.isEmpty || email.isEmpty || password.isEmpty || passwordConfirm.isEmpty) {
       Fluttertoast.showToast(
         msg: "Por favor, preencha todos os campos",
         toastLength: Toast.LENGTH_LONG,
       );
-    }
-    else {
-      if (password == passwordConfirm) {
-        busy = true;
-        final user = controller.registerWithEmail(email: email, password: password, passwordConfirm: passwordConfirm, name: name, phone: phone).then((data) {
-          onSuccess();
-        }).catchError((e) {
-          onError(e);
-        }).whenComplete(() {
-          onComplete();
-        });
-      }
-      else {
-        Fluttertoast.showToast(
+    } else if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$').hasMatch(email)) {
+      Fluttertoast.showToast(
+        msg: "Email inválido",
+        toastLength: Toast.LENGTH_LONG,
+      );
+    } else if (password.length < 6) {
+      Fluttertoast.showToast(
+        msg: "A senha deve ter pelo menos 6 caracteres",
+        toastLength: Toast.LENGTH_LONG,
+      );
+    } else if (password != passwordConfirm) {
+      Fluttertoast.showToast(
         msg: "As senhas devem coincidir",
         toastLength: Toast.LENGTH_LONG,
-        );
-      }
+      );
+    } else {
+      setState(() {
+        busy = true;
+      });
+      controller.registerWithEmail(
+        email: email,
+        password: password,
+        passwordConfirm: passwordConfirm,
+        name: name,
+        phone: phone,
+      ).then((data) {
+        if (data != null) {
+          onSuccess();
+        } else {
+          Fluttertoast.showToast(
+            msg: "Erro ao registrar usuário",
+            toastLength: Toast.LENGTH_LONG,
+          );
+        }
+      }).catchError((e) {
+        onError(e);
+      }).whenComplete(() {
+        onComplete();
+      });
     }
   }
 
   onSuccess() {
-    loginController.loginWithEmail(email, password);
-    Navigator.push(
+    Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => HomePage(),
-      ),
+      MaterialPageRoute(builder: (context) => HomePage()),
     );
   }
+
 
   onError(e) {
     Fluttertoast.showToast(
@@ -80,11 +99,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
   }
 
   onComplete() {
-    _name = TextEditingController();
-    _phone = TextEditingController();
-    _email = TextEditingController();
-    _password = TextEditingController();
-    _passwordConfirm = TextEditingController();
+    _name.clear();
+    _phone.clear();
+    _email.clear();
+    _password.clear();
+    _passwordConfirm.clear();
     setState(() {
       busy = false;
     });
