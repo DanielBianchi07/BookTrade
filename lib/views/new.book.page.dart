@@ -140,7 +140,7 @@ class _NewBookPageState extends State<NewBookPage> {
           'userInfo': {
             'profileImageUrl': userData['profileImageUrl'] ?? '',
             'address': userData['address'] ?? '',
-            'customerRating': userData['customerRating'] ?? 0,
+            'customerRating': userData['customerRating'] ?? 0.0,
             'name': userData['name'] ?? '',
             'userId': userId,
           },

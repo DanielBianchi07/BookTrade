@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/book.model.dart'; // Importe o modelo Book
+import '../models/book.dart'; // Importe o modelo Book
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -55,12 +55,7 @@ class DeleteBookPage extends StatelessWidget {
             ),
             const SizedBox(height: 0),
             Text(
-              '''Condição: ${book.condition}\n
-                 Edição: ${book.edition}\n
-                 Gêneros: ${book.genres}\n
-                 ISBN: ${book.isbn ?? 'N/A'}\n
-                 Ano de publicação: ${book.publicationYear}\n
-                 Editora: ${book.publisher}''',
+              'Condição: ${book.condition ?? 'N/A'}\nEdição: ${book.edition ?? 'N/A'}\nGêneros: ${book.genres?.join(', ') ?? 'N/A'}\nISBN: ${book.isbn ?? 'N/A'}\nAno de publicação: ${book.publicationYear ?? 'N/A'}\nEditora: ${book.publisher ?? 'N/A'}',
               style: const TextStyle(
                 fontSize: 14,
                 height: 1.5,

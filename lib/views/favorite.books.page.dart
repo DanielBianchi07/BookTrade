@@ -2,8 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:myapp/controller/books.controller.dart';
-import '../models/book.model.dart';
+import '../controller/book.controller.dart';
+import '../models/book.dart';
 import '../user.dart';
 import '../widgets/bookcard.widget.dart';
 import 'trade.offer.page.dart';
@@ -130,36 +130,36 @@ class FavoriteBooksPageState extends State<FavoriteBooksPage> {
             books.isEmpty
                 ? const Center(child: Text('Nenhum livro favorito encontrado.')) // Mensagem se não houver favoritos
                 : ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: books.length,
-                    itemBuilder: (context, index) {
-                      final book = books[index];
-                      return InkWell(
-                        onTap: () {
-                          // Navegando para a TradeOfferPage e passando o livro selecionado
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => TradeOfferPage(book: book),
-                            ),
-                          );
-                        },
-                        child: BookCard(
-                          id: book.id,
-                          userId: book.userInfo.id,
-                          title: book.title,
-                          author: book.author,
-                          postedBy: book.userInfo.name,
-                          imageUserUrl: book.imageUserUrl,
-                          profileImageUrl: book.userInfo.profileImageUrl,
-                          isFavorite: favoriteStatus[index],
-                          customerRating: book.userInfo.customerRating,
-                          onFavoritePressed: () => toggleFavoriteStatus(book.id, index),
-                        ),
-                      );
-                    },
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: books.length,
+              itemBuilder: (context, index) {
+                final book = books[index];
+                return InkWell(
+                  onTap: () {
+                    // Navegando para a TradeOfferPage e passando o livro selecionado
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => TradeOfferPage(book: book),
+                      ),
+                    );
+                  },
+                  child: BookCard(
+                    id: book.id,
+                    userId: book.userInfo.id,
+                    title: book.title,
+                    author: book.author,
+                    postedBy: book.userInfo.name,
+                    imageUserUrl: book.imageUserUrl,
+                    profileImageUrl: book.userInfo.profileImageUrl,
+                    isFavorite: favoriteStatus[index],
+                    customerRating: book.userInfo.customerRating ?? 0.0,
+                    onFavoritePressed: () => toggleFavoriteStatus(book.id, index),
                   ),
+                );
+              },
+            ),
           ],
         ),
       ),

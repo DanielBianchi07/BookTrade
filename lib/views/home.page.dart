@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:myapp/controller/login.controller.dart';
 import 'package:myapp/views/trade.offer.page.dart';
-import '../models/book.model.dart';
+import '../models/book.dart';
+import '../models/user_info.dart';
+import '../user.dart';
 import '../widgets/bookcard.widget.dart';
 import 'login.page.dart';
 
@@ -87,31 +89,31 @@ class _HomePageState extends State<HomePage> {
         favoriteBooks = favoritesSnapshot.docs.map((doc) => doc.id).toList();
       }
 
-      // setState(() {
-      //   books = snapshot.docs
-      //       .where((doc) => (doc.data() as Map<String, dynamic>)['userId'] != userId)
-      //       .map((doc) {
-      //     final data = doc.data() as Map<String, dynamic>;
-      //     return BookModel(
-      //       userId: data['userId'] ?? '', // Adiciona valor padrão se for null
-      //       id: doc.id,
-      //       title: '', // Valor padrão
-      //       author: '', // Valor padrão
-      //       imageUserUrl: '', // Valor padrão
-      //       imageApiUrl: '',
-      //       publishedDate: '', // Valor padrão para publishedDate
-      //       condition: '', // Valor padrão
-      //       edition: '', // Valor padrão
-      //       genres: '', // Lista vazia se null
-      //       isbn: '',
-      //       publicationYear: '', // Valor padrão
-      //       publisher: '', // Valor padrão
-      //       userInfo: '',), // Constrói userInfo com um map vazio se null
-      //     );
-      //   }).toList();
-      //
-      //   favoriteStatus = List.generate(books.length, (index) => favoriteBooks.contains(books[index].id));
-      // });
+      setState(() {
+        books = snapshot.docs
+            .where((doc) => (doc.data() as Map<String, dynamic>)['userId'] != userId)
+            .map((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          return BookModel(
+            userId: data['userId'] ?? '', // Adiciona valor padrão se for null
+            id: doc.id,
+            title: data['title'] ?? 'Título não disponível', // Valor padrão
+            author: data['author'] ?? 'Autor desconhecido', // Valor padrão
+            imageUserUrl: data['imageUserUrl'] ?? '', // Valor padrão
+            imageApiUrl: data['imageApiUrl'],
+            publishedDate: (data['publishedDate'] as Timestamp?)?.toDate() ?? DateTime.now(), // Valor padrão para publishedDate
+            condition: data['condition'] ?? 'Condição não disponível', // Valor padrão
+            edition: data['edition'] ?? 'Edição não disponível', // Valor padrão
+            genres: data['genres'] != null ? List<String>.from(data['genres']) : [], // Lista vazia se null
+            isbn: data['isbn'],
+            publicationYear: data['publicationYear'] ?? 'Ano de publicação não disponível', // Valor padrão
+            publisher: data['publisher'] ?? 'Editora não disponível', // Valor padrão
+            userInfo: UInfo.fromMap(data['userInfo'] ?? {}), // Constrói userInfo com um map vazio se null
+          );
+        }).toList();
+
+        favoriteStatus = List.generate(books.length, (index) => favoriteBooks.contains(books[index].id));
+      });
     } catch (e) {
       print('Erro ao carregar livros: $e');
     }

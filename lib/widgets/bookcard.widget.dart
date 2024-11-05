@@ -7,7 +7,7 @@ class BookCard extends StatelessWidget {
   final String title;
   final String author;
   final String postedBy;
-  final String imageUserUrl;
+  final String? imageUserUrl;
   final String? profileImageUrl;
   final bool isFavorite;
   final double? customerRating;
@@ -19,11 +19,11 @@ class BookCard extends StatelessWidget {
     required this.title,
     required this.author,
     required this.postedBy,
-    required this.imageUserUrl,
-    required this.isFavorite,
-    required this.onFavoritePressed,
+    this.imageUserUrl,
     this.profileImageUrl,
+    required this.isFavorite,
     this.customerRating,
+    required this.onFavoritePressed,
   });
   @override
   Widget build(BuildContext context) {
@@ -44,7 +44,7 @@ class BookCard extends StatelessWidget {
               children: [
                 // Imagem do livro
                 Image.network(
-                  imageUserUrl,
+                  imageUserUrl ?? '',
                   height: 100,
                   width: 80,
                   fit: BoxFit.cover,

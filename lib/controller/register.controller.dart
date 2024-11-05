@@ -22,7 +22,7 @@ class RegisterController {
       User? user = userCredential.user;
       if (user != null) {
         // Armazenamento das informações do usuário no Firestore
-        await _firestore.collection('users').doc(user!.uid).set({
+        await _firestore.collection('users').doc(user.uid).set({
           'email': email,
           'name': name,
           'phone': phone,
@@ -39,44 +39,25 @@ class RegisterController {
             .set({});
 
         return user;
-      }
-      else {
+      } else {
         Fluttertoast.showToast(
           msg: "Erro ao criar usuário.",
           toastLength: Toast.LENGTH_LONG,
         );
+        return null;
       }
+    } on FirebaseAuthException catch (e) {
+      Fluttertoast.showToast(
+        msg: "Erro de autenticação: ${e.message}",
+        toastLength: Toast.LENGTH_LONG,
+      );
+      return null;
     } catch (e) {
-      return null; // Pode ser interessante retornar o erro para tratamento adicional
-    }
-  }
-
-  // Função para alternar o status de favorito
-  Future<void> toggleFavoriteStatus(String bookId) async {
-    try {
-      final user = _auth.currentUser;
-      if (user == null) return; // Verifique se o usuário está autenticado
-
-      final userFavorites = _firestore
-          .collection('users')
-          .doc(user.uid)
-          .collection('favorites')
-          .doc(bookId);
-
-      final favoriteExists = await userFavorites.get();
-
-      if (favoriteExists.exists) {
-        // Se o livro já é favorito, remove
-        await userFavorites.delete();
-      } else {
-        // Caso contrário, adiciona o livro aos favoritos
-        await userFavorites.set({
-          'addedAt': FieldValue.serverTimestamp(),
-          // Adicione outros campos se necessário
-        });
-      }
-    } catch (e) {
-      print("Erro ao alternar favorito: $e");
+      Fluttertoast.showToast(
+        msg: "Erro inesperado: $e",
+        toastLength: Toast.LENGTH_LONG,
+      );
+      return null;
     }
   }
 }
