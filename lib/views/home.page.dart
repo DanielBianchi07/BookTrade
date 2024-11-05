@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:myapp/controller/login.controller.dart';
 import 'package:myapp/views/trade.offer.page.dart';
+import '../controller/book.controller.dart';
 import '../models/book.dart';
 import '../models/user_info.dart';
-import '../user.dart';
 import '../widgets/bookcard.widget.dart';
 import 'login.page.dart';
 
@@ -21,9 +21,16 @@ class _HomePageState extends State<HomePage> {
   // Chave global para acessar o Scaffold
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final loginController = LoginController();
-  var busy = false;
+  final booksController = BooksController(); // Instância do BooksController
+  bool busy = false;
   List<BookModel> books = [];
   List<bool> favoriteStatus = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBooks(); // Carrega os livros quando a página é inicializada
+  }
 
   handleSignOut() {
     setState(() {
@@ -44,10 +51,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   onSuccess() {
-    Navigator.push(
+    Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => LoginPage(),
-      ),
+      MaterialPageRoute(builder: (context) => const LoginPage()),
     );
   }
 
@@ -64,30 +70,19 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _loadBooks(); // Carrega os livros quando a página é inicializada
-  }
-
   Future<void> _loadBooks() async {
     try {
-      QuerySnapshot snapshot = await FirebaseFirestore.instance.collection('books').get();
       final userId = FirebaseAuth.instance.currentUser?.uid;
 
-      // Inicialize uma lista de favoritos
+      // Inicializa uma lista de favoritos vazia
       List<String> favoriteBooks = [];
 
-      // Se o usuário estiver logado, busque os livros favoritados
+      // Se o usuário estiver logado, busca os livros favoritados
       if (userId != null) {
-        QuerySnapshot favoritesSnapshot = await FirebaseFirestore.instance
-            .collection('favorites')
-            .doc(userId)
-            .collection('userFavorites')
-            .get();
-
-        favoriteBooks = favoritesSnapshot.docs.map((doc) => doc.id).toList();
+        favoriteBooks = await booksController.getFavoriteBookIds(userId);
       }
+
+      QuerySnapshot snapshot = await FirebaseFirestore.instance.collection('books').get();
 
       setState(() {
         books = snapshot.docs
@@ -131,24 +126,11 @@ class _HomePageState extends State<HomePage> {
     try {
       if (favoriteStatus[index]) {
         // Adiciona aos favoritos
-        await FirebaseFirestore.instance
-            .collection('favorites')
-            .doc(userId)
-            .collection('userFavorites')
-            .doc(bookId)
-            .set({
-          'isFavorite': true,
-        });
+        await booksController.addBookToFavorites(userId, bookId);
       } else {
         // Remove dos favoritos
-        await FirebaseFirestore.instance
-            .collection('favorites')
-            .doc(userId)
-            .collection('userFavorites')
-            .doc(bookId)
-            .delete();
+        await booksController.removeBookFromFavorites(userId, bookId);
       }
-
     } catch (e) {
       print('Erro ao atualizar favoritos: $e');
       // Reverte a mudança em caso de erro
@@ -157,7 +139,6 @@ class _HomePageState extends State<HomePage> {
       });
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -217,123 +198,7 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-      drawer: Drawer(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              color: const Color(0xFFD8D5B3),
-              padding: const EdgeInsets.symmetric(vertical: 30.0, horizontal: 16.0),
-              child: Stack(
-                children: [
-                  Column(
-                    children: [
-                      const Center(
-                        child: CircleAvatar(
-                          backgroundImage: NetworkImage('https://i.pravatar.cc/300'),
-                          radius: 40,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      const Text(
-                        'Fulano da Silva',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 5),
-                      const Text(
-                        'Address',
-                        style: TextStyle(fontSize: 14),
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(5, (index) {
-                          return const Icon(Icons.star, color: Colors.amber, size: 18);
-                        }),
-                      ),
-                    ],
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      height: 30,
-                      width: 30,
-                      decoration: BoxDecoration(
-                        color: Colors.green,
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        icon: const Icon(
-                          Icons.edit,
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/editProfile');
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.book, color: Colors.black),
-              title: const Text('Meus livros'),
-              onTap: () {
-                Navigator.pushNamed(context, '/publicatedBooks');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.history, color: Colors.black),
-              title: const Text('Histórico de trocas'),
-              onTap: () {
-                Navigator.pushNamed(context, '/tradeHistory');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.notifications, color: Colors.black),
-              title: const Text('Notificações'),
-              onTap: () {
-                Navigator.pushNamed(context, '/notifications');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.swap_horiz, color: Colors.black),
-              title: const Text('Status de trocas'),
-              onTap: () {
-                Navigator.pushNamed(context, '/tradeStatus');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.favorite, color: Colors.black),
-              title: const Text('Lista de desejos'),
-              onTap: () {
-                Navigator.pushNamed(context, '/favoriteBooks');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.chat, color: Colors.black),
-              title: const Text('Chat'),
-              onTap: () {
-                Navigator.pushNamed(context, '/chats');
-              },
-            ),
-            const Spacer(),
-            ListTile(
-              title: const Text(
-                'Sair',
-                style: TextStyle(color: Colors.red),
-              ),
-              onTap: () {
-                Navigator.pushNamed(context, '/login');
-              },
-            ),
-          ],
-        ),
-      ),
+      drawer: _buildDrawer(),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -372,7 +237,11 @@ class _HomePageState extends State<HomePage> {
                     profileImageUrl: book.userInfo.profileImageUrl,
                     customerRating: book.userInfo.customerRating,
                     isFavorite: favoriteStatus[index],
-                    onFavoritePressed: () => toggleFavoriteStatus(book.id, index),
+                    onFavoritePressed: () async {
+                      toggleFavoriteStatus(book.id, index);
+                      // Atualiza os livros após a alteração do favorito
+                      await _loadBooks();
+                    },
                   ),
                 );
               },
@@ -393,6 +262,126 @@ class _HomePageState extends State<HomePage> {
         },
         backgroundColor: const Color(0xFF77C593),
         child: const Icon(Icons.add, color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _buildDrawer() {
+    return Drawer(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            color: const Color(0xFFD8D5B3),
+            padding: const EdgeInsets.symmetric(vertical: 30.0, horizontal: 16.0),
+            child: Stack(
+              children: [
+                Column(
+                  children: [
+                    const Center(
+                      child: CircleAvatar(
+                        backgroundImage: NetworkImage('https://i.pravatar.cc/300'),
+                        radius: 40,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'Fulano da Silva',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 5),
+                    const Text(
+                      'Address',
+                      style: TextStyle(fontSize: 14),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(5, (index) {
+                        return const Icon(Icons.star, color: Colors.amber, size: 18);
+                      }),
+                    ),
+                  ],
+                ),
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: Container(
+                    height: 30,
+                    width: 30,
+                    decoration: BoxDecoration(
+                      color: Colors.green,
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      icon: const Icon(
+                        Icons.edit,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/editProfile');
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.book, color: Colors.black),
+            title: const Text('Meus livros'),
+            onTap: () {
+              Navigator.pushNamed(context, '/publicatedBooks');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.history, color: Colors.black),
+            title: const Text('Histórico de trocas'),
+            onTap: () {
+              Navigator.pushNamed(context, '/tradeHistory');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.notifications, color: Colors.black),
+            title: const Text('Notificações'),
+            onTap: () {
+              Navigator.pushNamed(context, '/notifications');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.swap_horiz, color: Colors.black),
+            title: const Text('Status de trocas'),
+            onTap: () {
+              Navigator.pushNamed(context, '/tradeStatus');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.favorite, color: Colors.black),
+            title: const Text('Lista de desejos'),
+            onTap: () {
+              Navigator.pushNamed(context, '/favoriteBooks');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.chat, color: Colors.black),
+            title: const Text('Chat'),
+            onTap: () {
+              Navigator.pushNamed(context, '/chats');
+            },
+          ),
+          const Spacer(),
+          ListTile(
+            title: const Text(
+              'Sair',
+              style: TextStyle(color: Colors.red),
+            ),
+            onTap: () {
+              handleSignOut();
+            },
+          ),
+        ],
       ),
     );
   }
