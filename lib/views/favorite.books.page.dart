@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:myapp/controller/books.controller.dart';
 import 'package:myapp/user.dart';
-import '../controller/book.controller.dart';
 import '../models/book.dart';
 import '../widgets/bookcard.widget.dart';
 import 'trade.offer.page.dart';
@@ -41,7 +41,7 @@ class FavoriteBooksPageState extends State<FavoriteBooksPage> {
 
     try {
       // Utiliza o método do controller para carregar os livros favoritos
-      List<BookModel> favoriteBooks = await booksController.loadFavoriteBooks(user.uid);
+      List<BookModel> favoriteBooks = await booksController.loadFavoriteBooks(user.value.uid);
 
       setState(() {
         books = favoriteBooks;
@@ -62,7 +62,7 @@ class FavoriteBooksPageState extends State<FavoriteBooksPage> {
   void toggleFavoriteStatus(String bookId, int index) async {
     // Utiliza o método do controller para alternar o status do favorito
     try {
-      await booksController.toggleFavoriteStatus(user.uid, bookId);
+      await booksController.toggleFavoriteStatus(user.value.uid, bookId);
 
       setState(() {
         books.removeAt(index);
