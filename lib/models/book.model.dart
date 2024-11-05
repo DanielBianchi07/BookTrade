@@ -1,21 +1,22 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'user.info.model.dart';
+import 'package:myapp/models/user.info.model.dart';
 
 class BookModel {
-  final String userId; // Id de quem postou o livro
-  final String id; // Id do livro
-  final String title; // Titulo do livro
-  final String author; // Autor do livro
-  final String imageUserUrl; // URL da imagem do livro colocado pelo Usuário
-  final String? imageApiUrl; // URL da Imagem do Livro da API
-  final DateTime publishedDate; // Data de publicação do livro no app
-  final String condition; // Condição do livro
-  final String edition; // Edição do livro
-  final List<String>? genres; // Gêneros do livro
-  final String? isbn; // ISBN do livro
-  final String publicationYear; // Ano de publicação
-  final String publisher; // Editora do livro
-  final UInfo userInfo; // Informações do Usuário que postou o livro
+  final String userId;
+  final String id;
+  final String title;
+  final String author;
+  final String imageUserUrl;
+  final String? imageApiUrl;
+  final DateTime publishedDate;
+  final String condition;
+  final String edition;
+  final List<String>? genres;
+  final String? isbn;
+  final String publicationYear;
+  final String publisher;
+  final String? description; // Novo campo para a sinopse
+  final UInfo userInfo;
 
   BookModel({
     required this.userId,
@@ -31,6 +32,7 @@ class BookModel {
     this.isbn,
     required this.publicationYear,
     required this.publisher,
+    this.description, // Inicialização do novo campo
     required this.userInfo,
   });
 
@@ -40,8 +42,8 @@ class BookModel {
       'id': id,
       'title': title,
       'author': author,
-      'imageUrl': imageUserUrl,
-      'imageApi': imageApiUrl,
+      'imageUserUrl': imageUserUrl,
+      'imageApiUrl': imageApiUrl,
       'publishedDate': publishedDate.toIso8601String(),
       'condition': condition,
       'edition': edition,
@@ -49,26 +51,29 @@ class BookModel {
       'isbn': isbn,
       'publicationYear': publicationYear,
       'publisher': publisher,
+      'description': description, // Mapeamento da sinopse
       'userInfo': userInfo.toMap(),
     };
   }
 
+  // Método para criar uma instância de Book a partir de um documento do Firestore
   factory BookModel.fromDocument(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return BookModel(
-      userId: data['userId'],
+      userId: data['userId'] ?? '',
       id: doc.id,
-      title: data['title'],
-      author: data['author'],
-      imageUserUrl: data['imageUrl'],
-      imageApiUrl: data['imageApi'] ?? '',
+      title: data['title'] ?? 'Título não disponível',
+      author: data['author'] ?? 'Autor desconhecido',
+      imageUserUrl: data['imageUserUrl'] ?? '',
+      imageApiUrl: data['imageApiUrl'],
       publishedDate: (data['publishedDate'] as Timestamp).toDate(),
-      condition: data['condition'],
-      edition: data['edition'],
+      condition: data['condition'] ?? 'Condição não disponível',
+      edition: data['edition'] ?? 'Edição não disponível',
       genres: List<String>.from(data['genres'] ?? []),
-      isbn: data['isbn'] ?? '',
-      publicationYear: data['publicationYear'],
-      publisher: data['publisher'],
+      isbn: data['isbn'],
+      publicationYear: data['publicationYear'] ?? 'Ano de publicação não disponível',
+      publisher: data['publisher'] ?? 'Editora não disponível',
+      description: data['description'], // Carrega a sinopse
       userInfo: UInfo.fromMap(data['userInfo']),
     );
   }

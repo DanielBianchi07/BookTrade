@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/book.dart'; // Importe o modelo Book
+import '../models/book.model.dart'; // Importe o modelo Book
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 

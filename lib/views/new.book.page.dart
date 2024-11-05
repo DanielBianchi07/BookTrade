@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'book.exchange.page.dart';
+import 'package:myapp/views/publicated.books.page.dart';
 import 'package:image/image.dart' as img;
 
 class NewBookPage extends StatefulWidget {
@@ -30,6 +30,7 @@ class _NewBookPageState extends State<NewBookPage> {
   List<String> _genres = [];
   File? _selectedImage;
   File? _apiImage;
+  String _description = '';
 
   // Método para buscar informações do livro pelo ISBN
   Future<void> _fetchBookData(String isbn) async {
@@ -48,6 +49,7 @@ class _NewBookPageState extends State<NewBookPage> {
             _publicationYearController.text = volumeInfo['publishedDate']?.split('-')[0] ?? '';
             _publisherController.text = volumeInfo['publisher'] ?? '';
             _genres = List<String>.from(volumeInfo['categories'] ?? []);
+            _description = volumeInfo['descripion'] ?? '';
 
             // Carregar imagem do livro da API
             if (volumeInfo['imageLinks']?['thumbnail'] != null) {
@@ -175,6 +177,7 @@ class _NewBookPageState extends State<NewBookPage> {
           'publicationYear': _publicationYearController.text.trim(),
           'publisher': _publisherController.text.trim(),
           'condition': _condition,
+          'description': _description,
           'genres': _noIsbn ? [_genreController.text] : _genres,
           'imageUserUrl': userImageUrl ?? '',
           'imageApiUrl': apiImageUrl ?? '',
@@ -193,7 +196,7 @@ class _NewBookPageState extends State<NewBookPage> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => BookExchangePage(bookDetails: bookData),
+            builder: (context) => PublicatedBooksPage(),
           ),
         );
       } else {

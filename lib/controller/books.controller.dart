@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import '../models/book.dart';
-import '../models/user_info.dart';
+import '../models/book.model.dart';
+import '../models/user.info.model.dart';
 
 class BooksController {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
   bool validateFields({
     required String title,
     required String author,
@@ -88,12 +90,7 @@ class BooksController {
   Future<List<BookModel>> loadFavoriteBooks(String userId) async {
     try {
       // Busca os livros favoritados do Firebase
-      QuerySnapshot favoritesSnapshot = await FirebaseFirestore.instance
-          .collection('favorites')
-          .doc(userId)
-          .collection('userFavorites')
-          .get();
-      List<String> favoriteBookIds = favoritesSnapshot.docs.map((doc) => doc.id).toList();
+      List<String> favoriteBookIds = await getFavoriteBookIds(userId);
 
       // Carregar todos os livros da coleção 'books' do Firestore
       List<BookModel> allBooks = await loadBooks();
@@ -103,103 +100,76 @@ class BooksController {
 
       return favoriteBooks;
     } catch (e) {
-      Fluttertoast.showToast(
-        msg: "Erro ao carregar os livros favoritos: $e",
-        toastLength: Toast.LENGTH_LONG,
-      );
+      print('Erro ao carregar livros favoritos: $e');
       return [];
     }
   }
 
-  // Validação e Criação do Livro
-  // Future<BookModel> prepareBook({
-  //   required String title,
-  //   required String author,
-  //   required String edition,
-  //   required String publicationYear,
-  //   required String publisher,
-  //   required String condition,
-  //   required bool noIsbn,
-  //   String? isbn,
-  //   String? genre,
-  //   List<String>? genres,
-  //   String? imageUrl,
-  // }) async {
-  //   // Validação dos campos
-  //   validateFields(
-  //     title: title,
-  //     author: author,
-  //     edition: edition,
-  //     publicationYear: publicationYear,
-  //     publisher: publisher,
-  //     noIsbn: noIsbn,
-  //     isbn: isbn,
-  //     genre: genre,
-  //   );
-  //
-  //   // Obter o ID do usuário autenticado
-  //   User? currentUser = FirebaseAuth.instance.currentUser;
-  //   if (currentUser == null) {
-  //     throw Exception('Erro: Usuário não autenticado.');
-  //   }
-  //
-  //   // Buscar informações do usuário a partir do Firestore
-  //   DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(currentUser.uid).get();
-  //   if (!userDoc.exists) {
-  //     throw Exception('Erro: Dados do usuário não encontrados.');
-  //   }
-  //
-  //   // Criar objeto UserInfo a partir dos dados do Firestore
-  //   UserInfo userInfo = UserInfo.fromMap(userDoc.data() as Map<String, dynamic>);
-  //
-  //   // Criar e retornar o modelo do livro
-  //   return createBook(
-  //     userId: currentUser.uid,
-  //     title: title,
-  //     author: author,
-  //     edition: edition,
-  //     publicationYear: publicationYear,
-  //     publisher: publisher,
-  //     condition: condition,
-  //     isbn: noIsbn ? null : isbn?.trim(),
-  //     genres: noIsbn ? [genre!] : genres,
-  //     imageUrl: imageUrl,
-  //     userInfo: userInfo,
-  //   );
-  // }
-  //
-  // // Cria uma instância de BookModel com os dados coletados
-  // BookModel createBook({
-  //   required String userId,
-  //   required String title,
-  //   required String author,
-  //   required String edition,
-  //   required String publicationYear,
-  //   required String publisher,
-  //   required String condition,
-  //   String? isbn,
-  //   String? genre,
-  //   List<String>? genres,
-  //   String? imageUrl,
-  //   String? imageApi,
-  //   required UserInfo userInfo,
-  // }) {
-  //   return BookModel(
-  //     uid: userId,
-  //     id: '', // O ID será gerado automaticamente pelo Firestore
-  //     title: title,
-  //     author: author,
-  //     imageUrl: imageUrl ?? '',
-  //     imageApi: imageApi,
-  //     publishedDate: DateTime.now(),
-  //     condition: condition,
-  //     edition: edition,
-  //     genres: genres,
-  //     selectedGenres: genres ?? [],
-  //     isbn: isbn,
-  //     publicationYear: publicationYear,
-  //     publisher: publisher,
-  //     userInfo: userInfo,
-  //   );
-  // }
+
+  Future<List<String>> getFavoriteBookIds(String userId) async {
+    try {
+      // Busca os livros favoritados do Firebase
+      QuerySnapshot favoritesSnapshot = await _firestore
+          .collection('favorites')
+          .doc(userId)
+          .collection('userFavorites')
+          .get();
+      List<String> favoriteBookIds = favoritesSnapshot.docs.map((doc) => doc.id).toList();
+
+      return favoriteBookIds;
+    } catch (e) {
+      print('Erro ao carregar IDs dos livros favoritos: $e');
+      return [];
+    }
+  }
+
+  Future<void> addBookToFavorites(String userId, String bookId) async {
+    try {
+      await _firestore
+          .collection('favorites')
+          .doc(userId)
+          .collection('userFavorites')
+          .doc(bookId)
+          .set({'isFavorite': true});
+    } catch (e) {
+      print('Erro ao adicionar livro aos favoritos: $e');
+    }
+  }
+
+  Future<void> removeBookFromFavorites(String userId, String bookId) async {
+    try {
+      await _firestore
+          .collection('favorites')
+          .doc(userId)
+          .collection('userFavorites')
+          .doc(bookId)
+          .delete();
+    } catch (e) {
+      print('Erro ao remover livro dos favoritos: $e');
+    }
+  }
+
+  Future<void> toggleFavoriteStatus(String userId, String bookId) async {
+    try {
+      final favoriteDoc = _firestore
+          .collection('favorites')
+          .doc(userId)
+          .collection('userFavorites')
+          .doc(bookId);
+
+      final favoriteExists = await favoriteDoc.get();
+
+      if (favoriteExists.exists) {
+        // Se o livro já é favorito, remove
+        await favoriteDoc.delete();
+      } else {
+        // Caso contrário, adiciona o livro aos favoritos
+        await favoriteDoc.set({
+          'addedAt': FieldValue.serverTimestamp(),
+        });
+      }
+    } catch (e) {
+      print("Erro ao alternar favorito: $e");
+    }
+  }
 }

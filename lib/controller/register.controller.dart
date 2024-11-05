@@ -12,6 +12,7 @@ class RegisterController {
     required String passwordConfirm,
     required String name,
     required String phone,
+    String? address
   }) async {
     try {
       // Criação do usuário no Firebase Auth
@@ -28,8 +29,9 @@ class RegisterController {
           'email': email,
           'name': name,
           'phone': phone,
-          'address': '',
+          'address': address,
           'customerRating': 0.0,
+          'favoriteGenres': [],
           'profileImageUrl': '',
         });
         // Criação da subcoleção "favorites" no Firestore

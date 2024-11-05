@@ -3,27 +3,27 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:myapp/views/home.page.dart';
 
-class BookExchangePage extends StatefulWidget {
-  final Map<String, dynamic> bookDetails;
-
-  const BookExchangePage({super.key, required this.bookDetails});
+class FavoriteGenresPage extends StatefulWidget {
+  const FavoriteGenresPage({Key? key}) : super(key: key);
 
   @override
-  _BookExchangePageState createState() => _BookExchangePageState();
+  _FavoriteGenresPageState createState() => _FavoriteGenresPageState();
 }
 
-class _BookExchangePageState extends State<BookExchangePage> {
-  final List<String> _selectedGenres = [];
+class _FavoriteGenresPageState extends State<FavoriteGenresPage> {
+  List<String> _selectedGenres = [];
   List<String> _searchResults = [];
-  final TextEditingController _searchController = TextEditingController();
+  TextEditingController _searchController = TextEditingController();
   User? currentUser;
 
   @override
   void initState() {
     super.initState();
     _searchController.addListener(_onSearchChanged);
-    currentUser = FirebaseAuth.instance.currentUser; // Obter o usuário autenticado
+    currentUser = FirebaseAuth.instance.currentUser;
+    _loadUserGenres(); // Carregar os gêneros favoritos do usuário ao iniciar a página
   }
 
   @override
@@ -31,6 +31,26 @@ class _BookExchangePageState extends State<BookExchangePage> {
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     super.dispose();
+  }
+
+  // Função para carregar os gêneros favoritos do usuário
+  Future<void> _loadUserGenres() async {
+    if (currentUser != null) {
+      try {
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser!.uid)
+            .get();
+
+        setState(() {
+          _selectedGenres = List<String>.from(userDoc['favoriteGenres'] ?? []);
+        });
+      } catch (e) {
+        _showError('Erro ao carregar gêneros favoritos: $e');
+      }
+    } else {
+      _showError('Usuário não autenticado.');
+    }
   }
 
   // Função chamada sempre que o texto de busca muda
@@ -85,26 +105,24 @@ class _BookExchangePageState extends State<BookExchangePage> {
     );
   }
 
-  // Função para salvar as informações na coleção 'books' e redirecionar para a HomePage
-  Future<void> _saveSelectedGenres() async {
+  // Função para salvar os gêneros favoritos do usuário
+  Future<void> _saveFavoriteGenres() async {
     if (currentUser != null) {
       try {
-        // Salvar as informações na coleção 'books'
-        await FirebaseFirestore.instance.collection('books').add({
-          'userId': currentUser!.uid, // Salvar o ID do usuário autenticado
-          ...widget.bookDetails,       // Inclui todos os detalhes do livro
-          'selectedGenres': _selectedGenres, // Inclui os gêneros selecionados
-          'publicationDate': Timestamp.now(), // Data de publicação
+        await FirebaseFirestore.instance.collection('users').doc(currentUser!.uid).update({
+          'favoriteGenres': _selectedGenres,
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Livro publicado com sucesso!')),
+          SnackBar(content: Text('Gêneros favoritos salvos com sucesso!')),
         );
-
-        // Redirecionar para a página inicial
-        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage(),
+          ),
+        );
       } catch (e) {
-        _showError('Erro ao salvar os gêneros: $e');
+        _showError('Erro ao salvar os gêneros favoritos: $e');
       }
     } else {
       _showError('Usuário não autenticado.');
@@ -113,21 +131,9 @@ class _BookExchangePageState extends State<BookExchangePage> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.bookDetails.isEmpty) {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('Erro'),
-          backgroundColor: const Color(0xFFD8D5B3),
-        ),
-        body: Center(
-          child: const Text('Erro: Detalhes do livro estão ausentes.'),
-        ),
-      );
-    }
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Escolha gêneros de troca'),
+        title: const Text('Gêneros Favoritos'),
         backgroundColor: const Color(0xFFD8D5B3),
       ),
       body: Padding(
@@ -136,7 +142,7 @@ class _BookExchangePageState extends State<BookExchangePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Digite o gênero que você gostaria de receber em troca:',
+              'Digite para buscar novos gêneros:',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
@@ -150,7 +156,7 @@ class _BookExchangePageState extends State<BookExchangePage> {
             ),
             const SizedBox(height: 10),
 
-            // Exibição de gêneros recomendados em um espaço compacto
+            // Exibição de gêneros buscados
             Wrap(
               spacing: 8.0,
               runSpacing: 4.0,
@@ -179,7 +185,7 @@ class _BookExchangePageState extends State<BookExchangePage> {
             ),
             const SizedBox(height: 10),
 
-            // Exibição de gêneros selecionados com opção de remoção
+            // Exibição de gêneros favoritos com opção de remoção
             Wrap(
               spacing: 8.0,
               runSpacing: 4.0,
@@ -196,12 +202,12 @@ class _BookExchangePageState extends State<BookExchangePage> {
               }).toList(),
             ),
 
-            // Botão de Confirmar
+            // Botão de salvar os gêneros
             Spacer(),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _saveSelectedGenres, // Função para salvar os gêneros
+                onPressed: _saveFavoriteGenres, // Salva os gêneros favoritos
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF77C593),
                   shape: RoundedRectangleBorder(
@@ -211,7 +217,7 @@ class _BookExchangePageState extends State<BookExchangePage> {
                 child: const Padding(
                   padding: EdgeInsets.all(15.0),
                   child: Text(
-                    'Confirmar',
+                    'Salvar Gêneros',
                     style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
                   ),
                 ),

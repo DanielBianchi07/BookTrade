@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:myapp/controller/edit.profile.controller.dart';
-
 import '../user.dart';
 
 class EditProfilePage extends StatefulWidget {

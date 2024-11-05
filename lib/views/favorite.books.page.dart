@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:myapp/controller/books.controller.dart';
 import 'package:myapp/user.dart';
-import '../models/book.dart';
+import '../models/book.model.dart';
 import '../widgets/bookcard.widget.dart';
 import 'trade.offer.page.dart';
 
@@ -23,15 +23,6 @@ class FavoriteBooksPageState extends State<FavoriteBooksPage> {
   void initState() {
     super.initState();
     loadFavoriteBooks(); // Carrega os livros favoritos ao inicializar
-  }
-
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
-    setState(() {
-      _isLoading = false;
-    });
   }
 
   Future<void> loadFavoriteBooks() async {

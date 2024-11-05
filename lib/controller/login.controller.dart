@@ -38,7 +38,7 @@ class LoginController {
         ..telephone = userDoc.get('phone') ?? "";
         user.notifyListeners();
       } else {
-          print("Usuário não encontrado!");
+        Fluttertoast.showToast(msg: "Usuário não encontrado.", toastLength: Toast.LENGTH_SHORT);
         return null;
       }
   }

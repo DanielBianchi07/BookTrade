@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/book.dart'; // Importe o modelo Book
+import '../models/book.model.dart'; // Importe o modelo Book
 
 class TradeOfferPage extends StatelessWidget {
   final BookModel book; // Receber o livro como argumento
@@ -126,7 +126,7 @@ class TradeOfferPage extends StatelessWidget {
               children: [
                 ElevatedButton(
                   onPressed: () {
-                    // Lógica para solicitar troca
+                    Navigator.pushNamed(context, '/selectedBook');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF77C593),
