@@ -1,4 +1,5 @@
-class UserInfo {
+class UInfo {
+  final String id;
   final String name;
   final String address;
   final double customerRating;
@@ -6,7 +7,8 @@ class UserInfo {
   final String email;
   final String phone;
 
-  UserInfo({
+  UInfo({
+    required this.id,
     required this.name,
     required this.email,
     required this.phone,
@@ -17,6 +19,7 @@ class UserInfo {
 
   Map<String, dynamic> toMap() {
     return {
+      'userId': id,
       'profileImageUrl': profileImageUrl,
       'address': address,
       'customerRating':customerRating,
@@ -26,10 +29,11 @@ class UserInfo {
     };
   }
 
-  factory UserInfo.fromMap(Map<String, dynamic> map) {
-    return UserInfo(
+  factory UInfo.fromMap(Map<String, dynamic> map) {
+    return UInfo(
+      id: map['userId'],
       profileImageUrl: map['profileImageUrl'] ?? '',
-      address: map['adress'] ?? '',
+      address: map['address'] ?? '',
       customerRating: map['customerRating']?.toDouble() ?? 0.0,
       name: map['name'] ?? '',
       email: map['email'] ?? '',

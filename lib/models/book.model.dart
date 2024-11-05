@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'user.info.dart';
+import 'user.info.model.dart';
 
 class BookModel {
   final String userId; // Id de quem postou o livro
@@ -12,11 +12,10 @@ class BookModel {
   final String condition; // Condição do livro
   final String edition; // Edição do livro
   final List<String>? genres; // Gêneros do livro
-  final List<String> selectedExchangeGenres; // Gêneros de troca
   final String? isbn; // ISBN do livro
   final String publicationYear; // Ano de publicação
   final String publisher; // Editora do livro
-  final UserInfo userInfo; // Informações do Usuário que postou o livro
+  final UInfo userInfo; // Informações do Usuário que postou o livro
 
   BookModel({
     required this.userId,
@@ -29,7 +28,6 @@ class BookModel {
     required this.condition,
     required this.edition,
     this.genres,
-    required this.selectedExchangeGenres,
     this.isbn,
     required this.publicationYear,
     required this.publisher,
@@ -38,7 +36,7 @@ class BookModel {
 
   Map<String, dynamic> toMap() {
     return {
-      'uid': userId,
+      'userId': userId,
       'id': id,
       'title': title,
       'author': author,
@@ -48,7 +46,6 @@ class BookModel {
       'condition': condition,
       'edition': edition,
       'genres': genres,
-      'selectedGenres': selectedExchangeGenres,
       'isbn': isbn,
       'publicationYear': publicationYear,
       'publisher': publisher,
@@ -59,7 +56,7 @@ class BookModel {
   factory BookModel.fromDocument(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return BookModel(
-      userId: data['uid'],
+      userId: data['userId'],
       id: doc.id,
       title: data['title'],
       author: data['author'],
@@ -69,11 +66,10 @@ class BookModel {
       condition: data['condition'],
       edition: data['edition'],
       genres: List<String>.from(data['genres'] ?? []),
-      selectedExchangeGenres: List<String>.from(data['selectedGenres'] ?? []),
       isbn: data['isbn'] ?? '',
       publicationYear: data['publicationYear'],
       publisher: data['publisher'],
-      userInfo: UserInfo.fromMap(data['userInfo']),
+      userInfo: UInfo.fromMap(data['userInfo']),
     );
   }
 }

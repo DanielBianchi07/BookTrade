@@ -44,9 +44,21 @@ class _RegistrationPageState extends State<RegistrationPage> {
       );
     }
     else {
+      if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,4}$').hasMatch(email)) {
+        Fluttertoast.showToast(
+          msg: "Email inválido",
+          toastLength: Toast.LENGTH_LONG,
+        );
+      }
+      if (password.length < 6) {
+        Fluttertoast.showToast(
+          msg: "A senha deve ter pelo menos 6 caracteres",
+          toastLength: Toast.LENGTH_LONG,
+        );
+      }
       if (password == passwordConfirm) {
         busy = true;
-        final user = controller.registerWithEmail(email: email, password: password, passwordConfirm: passwordConfirm, name: name, phone: phone).then((data) {
+        controller.registerWithEmail(email: email, password: password, passwordConfirm: passwordConfirm, name: name, phone: phone).then((data) {
           onSuccess();
         }).catchError((e) {
           onError(e);

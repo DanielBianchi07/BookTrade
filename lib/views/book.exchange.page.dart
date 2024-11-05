@@ -14,9 +14,9 @@ class BookExchangePage extends StatefulWidget {
 }
 
 class _BookExchangePageState extends State<BookExchangePage> {
-  List<String> _selectedGenres = [];
+  final List<String> _selectedGenres = [];
   List<String> _searchResults = [];
-  TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
   User? currentUser;
 
   @override

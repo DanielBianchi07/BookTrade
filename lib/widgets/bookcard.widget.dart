@@ -2,25 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 class BookCard extends StatelessWidget {
-  final String bookId; // Identificador único do livro
+  final String id;
+  final String userId; // Identificador único do livro
   final String title;
   final String author;
   final String postedBy;
-  final String imageUrl;
-  final String profileImageUrl;
+  final String imageUserUrl;
+  final String? profileImageUrl;
   final bool isFavorite;
-  final double userRating;
+  final double? customerRating;
   final VoidCallback onFavoritePressed;
 
   const BookCard({super.key,
+    required this.id,
+    required this.userId,
     required this.title,
     required this.author,
     required this.postedBy,
-    required this.imageUrl,
-    required this.profileImageUrl,
+    required this.imageUserUrl,
     required this.isFavorite,
-    required this.userRating,
     required this.onFavoritePressed,
+    this.profileImageUrl,
+    this.customerRating,
   });
   @override
   Widget build(BuildContext context) {
@@ -41,7 +44,7 @@ class BookCard extends StatelessWidget {
               children: [
                 // Imagem do livro
                 Image.network(
-                  imageUrl,
+                  imageUserUrl,
                   height: 100,
                   width: 80,
                   fit: BoxFit.cover,
@@ -72,7 +75,7 @@ class BookCard extends StatelessWidget {
                       Row(
                         children: [
                           CircleAvatar(
-                            backgroundImage: NetworkImage(profileImageUrl),
+                            backgroundImage: NetworkImage(profileImageUrl ?? ''),
                             radius: 15,
                           ),
                           const SizedBox(width: 8),
@@ -85,7 +88,7 @@ class BookCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       // Estrelas de avaliação
                       RatingBarIndicator(
-                        rating: userRating,
+                        rating: customerRating ?? 0.0,
                         itemBuilder: (context, index) => const Icon(
                           Icons.star,
                           color: Colors.amber,

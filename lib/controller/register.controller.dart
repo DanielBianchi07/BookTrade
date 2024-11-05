@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class RegisterController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -19,24 +20,32 @@ class RegisterController {
         password: password,
       );
       User? user = userCredential.user;
+      if (user != null) {
+        // Armazenamento das informações do usuário no Firestore
+        await _firestore.collection('users').doc(user!.uid).set({
+          'email': email,
+          'name': name,
+          'phone': phone,
+          'address': '',
+          'customerRating': 0.0,
+          'profileImageUrl': '',
+        });
+        // Criação da subcoleção "favorites" no Firestore
+        await _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('favorites')
+            .doc('dummyDoc') // Documento vazio para inicializar a coleção
+            .set({});
 
-      // Armazenamento das informações do usuário no Firestore
-      await _firestore.collection('users').doc(user!.uid).set({
-        'name': name,
-        'phone': phone,
-        'email': email,
-        'profileImageUrl': '',
-      });
-
-      // Criação da subcoleção "favorites" no Firestore
-      await _firestore
-          .collection('users')
-          .doc(user.uid)
-          .collection('favorites')
-          .doc('dummyDoc') // Documento vazio para inicializar a coleção
-          .set({});
-
-      return user;
+        return user;
+      }
+      else {
+        Fluttertoast.showToast(
+          msg: "Erro ao criar usuário.",
+          toastLength: Toast.LENGTH_LONG,
+        );
+      }
     } catch (e) {
       return null; // Pode ser interessante retornar o erro para tratamento adicional
     }

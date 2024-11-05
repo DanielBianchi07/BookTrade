@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:myapp/controller/books.controller.dart';
 import 'package:intl/intl.dart';
-import '../models/book.dart';
+import '../models/book.model.dart';
 import '../user.dart';
 import 'delete.book.page.dart';
 
@@ -24,7 +24,6 @@ class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
     _fetchBooks();
   }
 
-  // Função para mostrar um erro
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
