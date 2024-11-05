@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -14,20 +13,16 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final controller = new LoginController();
+  final controller = LoginController();
   late TextEditingController _password = TextEditingController();
   late TextEditingController _email = TextEditingController();
-  late String email;
-  late String password;
   var busy = false;
 
   handleSignIn() {
     setState(() {
       busy = true;
-      email = _email.text.trim();
-      password = _password.text.trim();
     });
-    controller.loginWithEmail(email, password).then((data) {
+    controller.loginWithEmail(_email.text.trim(), _password.text.trim()).then((data) {
       onSuccess();
     }).catchError((e) {
       onError(e);
@@ -37,11 +32,8 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   onSuccess() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => HomePage(),
-      ),
-    );
+    _email = TextEditingController();
+    _password = TextEditingController();
   }
 
   onError(e) {
@@ -56,11 +48,14 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   onComplete() {
-    _email = TextEditingController();
-    _password = TextEditingController();
     setState(() {
       busy = false;
     });
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => HomePage(),
+      ),
+    );
   }
 
   //============================================================================

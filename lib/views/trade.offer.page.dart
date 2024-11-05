@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/book.dart'; // Importe o modelo Book
+import '../models/book.model.dart'; // Importe o modelo Book
 
 class TradeOfferPage extends StatelessWidget {
   final BookModel book; // Receber o livro como argumento
@@ -45,7 +45,7 @@ class TradeOfferPage extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              'Autor: ${book.author}\nPublicado em: ${book.publicationYear ?? 'N/A'}',
+              'Autor: ${book.author}\nPublicado em: ${book.publicationYear}',
               style: const TextStyle(
                 fontSize: 14,
                 height: 1.5,
@@ -53,12 +53,12 @@ class TradeOfferPage extends StatelessWidget {
             ),
             const SizedBox(height: 0),
             Text(
-              'Condição: ${book.condition ?? 'N/A'}',
+              'Condição: ${book.condition}',
               style: const TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 0),
             Text(
-              'Edição: ${book.edition ?? 'N/A'}',
+              'Edição: ${book.edition}',
               style: const TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 0),
@@ -73,7 +73,7 @@ class TradeOfferPage extends StatelessWidget {
             ),
             const SizedBox(height: 0),
             Text(
-              'Editora: ${book.publisher ?? 'N/A'}',
+              'Editora: ${book.publisher}',
               style: const TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 20),
@@ -126,7 +126,7 @@ class TradeOfferPage extends StatelessWidget {
               children: [
                 ElevatedButton(
                   onPressed: () {
-                    // Lógica para solicitar troca
+                    Navigator.pushNamed(context, '/selectedBook');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF77C593),
