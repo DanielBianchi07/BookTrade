@@ -34,6 +34,11 @@ class _LoginPageState extends State<LoginPage> {
   onSuccess() {
     _email = TextEditingController();
     _password = TextEditingController();
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => HomePage(),
+      ),
+    );
   }
 
   onError(e) {
@@ -51,11 +56,6 @@ class _LoginPageState extends State<LoginPage> {
     setState(() {
       busy = false;
     });
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => HomePage(),
-      ),
-    );
   }
 
   //============================================================================

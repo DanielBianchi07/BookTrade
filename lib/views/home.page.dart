@@ -30,14 +30,16 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    loginController.AssignUserData(context);
     _loadBooks(); // Carrega os livros quando a página é inicializada
+    print('-----====Valor estrelas-----==== ${user.value.customerRating}');
   }
 
   handleSignOut() {
     setState(() {
       busy = true;
     });
-    loginController.logout().then((data) {
+    loginController.logout(context).then((data) {
       onSuccess();
     }).catchError((err) {
       // Verifica o tipo da exceção para tratá-la corretamente
@@ -166,19 +168,14 @@ class _HomePageState extends State<HomePage> {
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: Colors.green, width: 1.5),
               ),
-              child: const Row(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.search, color: Colors.grey, size: 18),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Buscar...',
-                        hintStyle: TextStyle(fontSize: 14),
-                        border: InputBorder.none,
-                      ),
-                    ),
-                  ),
+                  ...List.generate(user.value.customerRating.floor(), (index) {
+                    return const Icon(Icons.star, color: Colors.amber, size: 18);
+                  }),
+                  if (user.value.customerRating - user.value.customerRating.floor() >= 0.5)
+                    const Icon(Icons.star_half, color: Colors.amber, size: 18),
                 ],
               ),
             ),

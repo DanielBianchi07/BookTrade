@@ -1,10 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import '../controller/books.controller.dart';
+import '../controller/login.controller.dart';
 import '../models/book.model.dart';
-import '../user.dart';
 import 'delete.book.page.dart';
 
 class PublicatedBooksPage extends StatefulWidget {
@@ -15,8 +16,10 @@ class PublicatedBooksPage extends StatefulWidget {
 }
 
 class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
+  final loginController = LoginController();
+  final booksController = BooksController();
+  late final String userId;
   List<BookModel> _books = [];
-  final BooksController booksController = BooksController();
   bool _isLoading = true;
 
   @override
@@ -25,42 +28,31 @@ class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
     _fetchBooks();
   }
 
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
-    setState(() {
-      _isLoading = false;
-    });
-  }
-
   // Função para buscar os livros do usuário logado
   Future<void> _fetchBooks() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    // Obtém o usuario logado
-    final userId = user.value.uid;
-
-    if (userId.isEmpty) {
-      _showError('Usuário não está logado');
-      return;
-    }
-
-    try {
-      // Chama a função do controller para carregar os livros
-      List<BookModel> books = await booksController.loadBooks();
-
-      // Filtra os livros para obter apenas os do usuário atual
-      List<BookModel> userBooks = books.where((book) => book.userId == userId).toList();
-
+    final userCredential = FirebaseAuth.instance.currentUser;
+    if (userCredential != null) {
       setState(() {
-        _books = userBooks;
-        _isLoading = false;
+        _isLoading = true;
       });
-    } catch (e) {
-      _showError('Erro ao carregar livros: $e');
+
+      try {
+        // Carregando livros
+        List<BookModel> books = await booksController.loadBooks();
+        List<BookModel> userBooks = books.where((book) => book.userId == userCredential.uid).toList();
+
+        setState(() {
+          _books = userBooks;
+        });
+      } catch (e) {
+        print('Erro ao carregar livros: $e');
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
+    }
+    } else {
+      print('Não existe usuário');
     }
   }
 
@@ -165,7 +157,7 @@ class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
                         color: Colors.grey[200],
                       ),
                       child: CachedNetworkImage(
-                        imageUrl: book.imageUserUrl ?? '',
+                        imageUrl: book.imageUserUrl,
                         placeholder: (context, url) => const Center(
                           child: CircularProgressIndicator(),
                         ),
