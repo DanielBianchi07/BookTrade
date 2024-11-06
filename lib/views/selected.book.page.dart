@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import '../controller/books.controller.dart';
+import '../controller/login.controller.dart';
 import '../models/book.model.dart';
 import '../user.dart';
 
@@ -17,9 +18,11 @@ class _SelectedBookPageState extends State<SelectedBookPage> {
   List<BookModel> _books = [];
   final BooksController booksController = BooksController();
   bool _isLoading = true;
+  final loginController = LoginController();
 
   @override
   void initState() {
+    loginController.AssignUserData(context);
     super.initState();
     // Remover a chamada de _fetchBooks() daqui
   }

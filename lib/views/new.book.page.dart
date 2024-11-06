@@ -9,6 +9,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:myapp/views/publicated.books.page.dart';
 import 'package:image/image.dart' as img;
 
+import '../controller/login.controller.dart';
+import '../user.dart';
+import 'login.page.dart';
+
 class NewBookPage extends StatefulWidget {
   const NewBookPage({super.key});
 
@@ -32,7 +36,15 @@ class _NewBookPageState extends State<NewBookPage> {
   File? _apiImage;
   String _description = '';
 
+  final loginController = LoginController();
   // Método para buscar informações do livro pelo ISBN
+
+  @override
+  void initState() {
+    super.initState();
+    loginController.AssignUserData(context);
+  }
+
   Future<void> _fetchBookData(String isbn) async {
     final url = 'https://www.googleapis.com/books/v1/volumes?q=isbn:$isbn';
 
