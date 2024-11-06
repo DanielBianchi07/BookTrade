@@ -1,10 +1,12 @@
+// lib/pages/trade_offer_page.dart
 import 'package:flutter/material.dart';
-import '../models/book.model.dart'; // Importe o modelo Book
+import '../models/book.model.dart';
+
 
 class TradeOfferPage extends StatelessWidget {
-  final BookModel book; // Receber o livro como argumento
+  final BookModel book;
 
-  const TradeOfferPage({super.key, required this.book});
+  const TradeOfferPage({Key? key, required this.book}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +31,9 @@ class TradeOfferPage extends StatelessWidget {
               height: 200,
               child: PageView(
                 children: [
-                  _buildBookImage(book.imageUserUrl), // Imagem do livro
+                  _buildBookImage(book.imageUserUrl),
+                  if (book.imageApiUrl != null && book.imageApiUrl!.isNotEmpty)
+                    _buildBookImage(book.imageApiUrl!),
                 ],
               ),
             ),
@@ -46,73 +50,53 @@ class TradeOfferPage extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               'Autor: ${book.author}\nPublicado em: ${book.publicationYear}',
-              style: const TextStyle(
-                fontSize: 14,
-                height: 1.5,
-              ),
+              style: const TextStyle(fontSize: 14, height: 1.5),
             ),
-            const SizedBox(height: 0),
-            Text(
-              'Condição: ${book.condition}',
-              style: const TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 0),
-            Text(
-              'Edição: ${book.edition}',
-              style: const TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 0),
-            Text(
-              'Gêneros: ${book.genres?.join(', ') ?? 'N/A'}',
-              style: const TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 0),
-            Text(
-              'ISBN: ${book.isbn ?? 'N/A'}',
-              style: const TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 0),
-            Text(
-              'Editora: ${book.publisher}',
-              style: const TextStyle(fontSize: 14),
-            ),
+            const SizedBox(height: 5),
+            Text('Condição: ${book.condition}', style: const TextStyle(fontSize: 14)),
+            Text('Edição: ${book.edition}', style: const TextStyle(fontSize: 14)),
+            Text('Gêneros: ${book.genres?.join(', ') ?? 'N/A'}', style: const TextStyle(fontSize: 14)),
+            Text('ISBN: ${book.isbn ?? 'N/A'}', style: const TextStyle(fontSize: 14)),
+            Text('Editora: ${book.publisher}', style: const TextStyle(fontSize: 14)),
             const SizedBox(height: 20),
 
             // Sinopse do Livro
             const Text(
               'Sinopse',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 5),
-            const Text(
-              'Aqui você pode adicionar uma sinopse se estiver disponível...',
-              style: TextStyle(fontSize: 16),
-            ),
+            Text(book.description ?? 'Sinopse não disponível', style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 20),
 
-            // Informação do Usuário
+            // Informação do Usuário e Avaliação com Estrelas
             Row(
               children: [
-                const CircleAvatar(
-                  backgroundImage: NetworkImage('https://via.placeholder.com/150'),
+                CircleAvatar(
+                  backgroundImage: NetworkImage(book.userInfo.profileImageUrl),
                   radius: 25,
                 ),
                 const SizedBox(width: 10),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'José Almeida',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    Text(
+                      book.userInfo.name,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 5),
                     Row(
-                      children: List.generate(5, (index) {
-                        return const Icon(Icons.star, color: Colors.amber, size: 16);
-                      }),
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ...List.generate(book.userInfo.customerRating.floor(), (index) {
+                          return const Icon(Icons.star, color: Colors.amber, size: 18);
+                        }),
+                        if (book.userInfo.customerRating - book.userInfo.customerRating.floor() >= 0.5)
+                          const Icon(Icons.star_half, color: Colors.amber, size: 18),
+                        ...List.generate((5 - book.userInfo.customerRating.ceil()) as int, (index) {
+                          return const Icon(Icons.star_border, color: Colors.amber, size: 18);
+                        }),
+                      ],
                     ),
                   ],
                 ),
@@ -138,7 +122,11 @@ class TradeOfferPage extends StatelessWidget {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.pushNamed(context, '/chat');
+                    Navigator.pushNamed(
+                      context,
+                      '/chat',
+                      arguments: {'recipientUserId': book.userInfo.id},
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
