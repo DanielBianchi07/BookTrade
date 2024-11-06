@@ -10,18 +10,18 @@ class MessageService {
   Future<void> sendMessage({
     required String senderId,
     required String receiverId,
-    required String senderName,
-    required String senderProfileUrl,
+    required String receiverName,
+    required String receiverProfileUrl,
     required String content,
     required List<String> participants,
     required FieldValue timestamp,
   }) async {
     await messagesCollection.add({
       'senderId': senderId,
-      'senderName': senderName,
-      'senderProfileUrl': senderProfileUrl,
-      'content': content,
       'receiverId': receiverId,
+      'receiverName': receiverName,
+      'receiverProfileUrl': receiverProfileUrl,
+      'content': content,
       'participants': participants,
       'timestamp': FieldValue.serverTimestamp(),
     });
