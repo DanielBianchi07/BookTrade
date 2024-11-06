@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:myapp/views/home.page.dart';
+import '../utils/books.genres.dart';
 
 class FavoriteGenresPage extends StatefulWidget {
   const FavoriteGenresPage({Key? key}) : super(key: key);
@@ -56,7 +55,7 @@ class _FavoriteGenresPageState extends State<FavoriteGenresPage> {
   // Função chamada sempre que o texto de busca muda
   void _onSearchChanged() {
     if (_searchController.text.isNotEmpty) {
-      _fetchGenresFromGoogleBooksAPI(_searchController.text);
+      _fetchGenresFromList(_searchController.text);
     } else {
       setState(() {
         _searchResults.clear();
@@ -65,38 +64,21 @@ class _FavoriteGenresPageState extends State<FavoriteGenresPage> {
   }
 
   // Função para buscar gêneros com base na entrada do usuário
-  Future<void> _fetchGenresFromGoogleBooksAPI(String query) async {
-    final url = 'https://www.googleapis.com/books/v1/volumes?q=subject:$query';
+  Future<void> _fetchGenresFromList(String query) async {
+    // Filtra os gêneros que contêm a string de consulta
+    final filteredGenres = BookGenres.genres
+        .where((genre) => genre.toLowerCase().contains(query.toLowerCase()))
+        .toList();
 
-    try {
-      final response = await http.get(Uri.parse(url));
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-
-        if (data['items'] != null && data['items'].isNotEmpty) {
-          Set<String> genres = {};
-          for (var item in data['items']) {
-            if (item['volumeInfo']['categories'] != null) {
-              genres.addAll(List<String>.from(item['volumeInfo']['categories']));
-            }
-          }
-
-          setState(() {
-            _searchResults = genres.toList();
-          });
-        } else {
-          setState(() {
-            _searchResults.clear();
-          });
-          _showError('Nenhum gênero encontrado para "$query".');
-        }
+    // Atualiza o estado com os gêneros encontrados ou exibe uma mensagem de erro
+    setState(() {
+      if (filteredGenres.isNotEmpty) {
+        _searchResults = filteredGenres;
       } else {
-        _showError('Erro ao buscar gêneros.');
+        _searchResults.clear();
+        _showError('Nenhum gênero encontrado para "$query".');
       }
-    } catch (e) {
-      _showError('Erro ao buscar dados: $e');
-    }
+    });
   }
 
   void _showError(String message) {
@@ -156,54 +138,61 @@ class _FavoriteGenresPageState extends State<FavoriteGenresPage> {
             ),
             const SizedBox(height: 10),
 
-            // Exibição de gêneros buscados
-            Wrap(
-              spacing: 8.0,
-              runSpacing: 4.0,
-              children: _searchResults.map((genre) {
-                final isSelected = _selectedGenres.contains(genre);
-                return ChoiceChip(
-                  label: Text(genre),
-                  selected: isSelected,
-                  onSelected: (selected) {
-                    setState(() {
-                      if (selected && !isSelected) {
-                        _selectedGenres.add(genre);
-                      } else {
-                        _selectedGenres.remove(genre);
-                      }
-                    });
-                  },
-                );
-              }).toList(),
+            // Conteúdo expansível que ajusta a posição de "Gêneros Selecionados"
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Wrap(
+                      spacing: 8.0,
+                      runSpacing: 4.0,
+                      children: _searchResults.map((genre) {
+                        final isSelected = _selectedGenres.contains(genre);
+                        return ChoiceChip(
+                          label: Text(genre),
+                          selected: isSelected,
+                          onSelected: (selected) {
+                            setState(() {
+                              if (selected && !isSelected) {
+                                _selectedGenres.add(genre);
+                              } else {
+                                _selectedGenres.remove(genre);
+                              }
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Gêneros Selecionados:',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Exibição de gêneros favoritos com opção de remoção
+                    Wrap(
+                      spacing: 8.0,
+                      runSpacing: 4.0,
+                      children: _selectedGenres.map((genre) {
+                        return Chip(
+                          label: Text(genre),
+                          deleteIcon: Icon(Icons.close),
+                          onDeleted: () {
+                            setState(() {
+                              _selectedGenres.remove(genre);
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
             ),
 
-            const SizedBox(height: 20),
-            const Text(
-              'Gêneros selecionados:',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-
-            // Exibição de gêneros favoritos com opção de remoção
-            Wrap(
-              spacing: 8.0,
-              runSpacing: 4.0,
-              children: _selectedGenres.map((genre) {
-                return Chip(
-                  label: Text(genre),
-                  deleteIcon: Icon(Icons.close),
-                  onDeleted: () {
-                    setState(() {
-                      _selectedGenres.remove(genre);
-                    });
-                  },
-                );
-              }).toList(),
-            ),
-
-            // Botão de salvar os gêneros
-            Spacer(),
+            // Botão de salvar fixo na parte inferior
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -228,4 +217,5 @@ class _FavoriteGenresPageState extends State<FavoriteGenresPage> {
       ),
     );
   }
+
 }

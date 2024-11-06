@@ -298,9 +298,13 @@ class _HomePageState extends State<HomePage> {
                     const SizedBox(height: 10),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(user.value.customerRating as int, (index) {
-                        return const Icon(Icons.star, color: Colors.amber, size: 18);
-                      }),
+                      children: [
+                        ...List.generate(user.value.customerRating.floor(), (index) {
+                          return const Icon(Icons.star, color: Colors.amber, size: 18);
+                        }),
+                        if (user.value.customerRating - user.value.customerRating.floor() >= 0.5)
+                          const Icon(Icons.star_half, color: Colors.amber, size: 18),
+                      ],
                     ),
                   ],
                 ),
