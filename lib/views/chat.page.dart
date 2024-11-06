@@ -155,8 +155,8 @@ class _ChatPageState extends State<ChatPage> {
       if (user != null) {
         _messageService.sendMessage(
           senderId: user.uid,
-          senderName: user.displayName ?? 'Usuário',
-          senderProfileUrl: user.photoURL ?? 'https://via.placeholder.com/150',
+          receiverName: _receiverName, // Nome do destinatário
+          receiverProfileUrl: _receiverProfileImageUrl, // URL da imagem do destinatário
           content: _messageController.text.trim(),
           receiverId: widget.otherUserId,
           participants: [user.uid, widget.otherUserId],
