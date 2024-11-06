@@ -1,46 +1,57 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:myapp/controller/login.controller.dart';
+
+import '../user.dart';
 
 
 class TradeHistoryPage extends StatelessWidget {
   const TradeHistoryPage({super.key});
 
+  Future<void> _checkUser(BuildContext context, LoginController loginController) async {
+    loginController.AssignUserData(context);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFD8D5B3), // Cor amarelada
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            Navigator.pop(context); // Ação para voltar
-          },
-        ),
-        title: const Text(
-          'Histórico de trocas',
-          style: TextStyle(color: Colors.black),
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ListView.builder(
-          itemCount: 3, // Número de itens na lista
-          itemBuilder: (context, index) {
-            return TradeHistoryCard(
-              title: '1984',
-              author: 'De George Orwell',
-              postedBy: 'José Almeida',
-              deliveryDate: index == 0 ? null : '30/09/2024', // Exemplo: "Em andamento" para o primeiro item
-              rating: 4.0,
-              profileImageUrl: 'https://via.placeholder.com/50',
-              bookImageUrl: 'https://via.placeholder.com/150',
-              inProgress: index == 0, // Se `index` for 0, a troca está em andamento
-            );
-          },
-        ),
-      ),
-    );
+  final LoginController loginController = LoginController();
+    return 
+      FutureBuilder(future: _checkUser(context, loginController), builder: (context, snapshot) {
+        return Scaffold(
+          appBar: AppBar(
+            backgroundColor: const Color(0xFFD8D5B3), // Cor amarelada
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.black),
+              onPressed: () {
+                Navigator.pop(context); // Ação para voltar
+              },
+            ),
+            title: const Text(
+              'Histórico de trocas',
+              style: TextStyle(color: Colors.black),
+            ),
+          ),
+          body: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ListView.builder(
+              itemCount: 3, // Número de itens na lista
+              itemBuilder: (context, index) {
+                return TradeHistoryCard(
+                  title: '1984',
+                  author: 'De George Orwell',
+                  postedBy: 'José Almeida',
+                  deliveryDate: index == 0 ? null : '30/09/2024', // Exemplo: "Em andamento" para o primeiro item
+                  rating: 4.0,
+                  profileImageUrl: 'https://via.placeholder.com/50',
+                  bookImageUrl: 'https://via.placeholder.com/150',
+                  inProgress: index == 0, // Se `index` for 0, a troca está em andamento
+                );
+              },
+            ),
+          ),
+        );
+      });
   }
 }
 
