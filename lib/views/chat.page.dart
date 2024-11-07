@@ -66,7 +66,6 @@ class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
     final conversationId = _generateConversationId(user.value.uid, widget.otherUserId);
-    print('Conversation ID: $conversationId'); // Temporário para verificar o ID da conversa
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFFD8D5B3),
