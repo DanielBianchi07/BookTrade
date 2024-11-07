@@ -171,11 +171,17 @@ class _HomePageState extends State<HomePage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  ...List.generate(user.value.customerRating.floor(), (index) {
-                    return const Icon(Icons.star, color: Colors.amber, size: 18);
-                  }),
-                  if (user.value.customerRating - user.value.customerRating.floor() >= 0.5)
-                    const Icon(Icons.star_half, color: Colors.amber, size: 18),
+                  Icon(Icons.search, color: Colors.grey, size: 18),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: 'Buscar...',
+                        hintStyle: TextStyle(fontSize: 14),
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),

@@ -1,7 +1,13 @@
 import 'dart:io';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:myapp/controller/edit.profile.controller.dart';
+import '../controller/login.controller.dart';
 import '../user.dart';
+import 'change.email.page.dart';
+import 'change.password.page.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -11,49 +17,75 @@ class EditProfilePage extends StatefulWidget {
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
+  final loginController = LoginController();
   final controller = EditProfileController();
   final TextEditingController name = TextEditingController();
   final TextEditingController phone = TextEditingController();
   final TextEditingController email = TextEditingController();
+  final TextEditingController address = TextEditingController();
   final TextEditingController currentPassword = TextEditingController();
   final TextEditingController newPassword = TextEditingController();
   final TextEditingController confirmNewPassword = TextEditingController();
   String? profileImageUrl;
   File? selectedImage;
   var busy = false;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    // Atribuir os valores iniciais dos controladores com os dados do usuário
-    name.text = user.value.name;
-    phone.text = user.value.telephone;
-    email.text = user.value.email;
+    _inicializarDados();
   }
 
-  hanfleEditProfile() {
+  _inicializarDados() async {
+    // Aguarda a execução de uma função assíncrona antes de prosseguir
+    await loginController.AssignUserData(context);
+    setState(() {
+      _isLoading = false;
+    });
+    // Outra ação a ser realizada após a função assíncrona
+    print('Função assíncrona executada');
+
+    if (_isLoading == false) {
+      name.text = user.value.name;
+      phone.text = user.value.telephone;
+      if (user.value.address != null) {
+        address.text = user.value.address!;
+      } else {
+        address.text = '';
+      }
+      email.text = user.value.email;
+      print('dados carregados aos labels');
+    }
+  }
+
+  handleEditProfile() {
     setState(() {
       busy = true;
     });
-      controller.updateUserProfile(context, currentPassword.text.trim(), name.text.trim(), phone.text.trim(), email.text.trim(), currentPassword.text.trim(), newPassword.text.trim(), confirmNewPassword.text.trim()).then((data) {
-      onSuccess();
+      controller.updateUserProfile(context, name.text.trim(), phone.text.trim(), address.text.trim()).then((data) {
     }).catchError((err) {
-      onError();
+      onError(err);
     }).whenComplete(() {
       onComplete();
     });
   }
 
-  onSuccess() {
-
-  }
-
-  onError() {
-
+  onError(err) {
+    if (err is FirebaseAuthException) {
+      loginController.handleFirebaseAuthError(err);
+    } else {
+      Fluttertoast.showToast(
+        msg: "Erro inesperado: $err",
+        toastLength: Toast.LENGTH_LONG,
+      );
+    }
   }
 
   onComplete() {
-
+    setState(() {
+      busy = false;
+    });
   }
 
   Future<GestureTapCallback?> selectImage() async {
@@ -78,6 +110,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
             Navigator.of(context).pop();
           },
         ),
+        title: const Text(
+            'Editar Perfil',
+            style: TextStyle(color: Colors.black)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(10.0),
@@ -143,43 +178,96 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
             const SizedBox(height: 5),
 
-            // Campo de E-mail Editável
             _buildEditableField(
-              label: 'E-mail:',
-              controller: email,
+              label: 'Endereço:',
+              controller: address,
             ),
             const SizedBox(height: 5),
-
-            // Campo de Senha Atual
-            _buildEditableField(
-              label: 'Senha Atual:',
-              controller: currentPassword,
-              obscureText: true,
+            // Campo de E-mail NÃO Editável
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+              Text(
+                'E-mail',
+                style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                  ),
+                ),
+      const SizedBox(height: 5),
+      TextFormField(
+        controller: email,
+        obscureText: false,
+        readOnly: true,
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: Colors.grey.shade200,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide.none,
             ),
-            const SizedBox(height: 5),
-
-            // Campo de Nova Senha
-            _buildEditableField(
-              label: 'Nova Senha:',
-              controller: newPassword,
-              obscureText: true,
+          ),
+      ),],
+    ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center, // Centraliza os botões horizontalmente
+              children: [
+                // Botão Alterar E-mail
+                SizedBox(
+                  width: 150, // Largura fixa do botão
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => ChangeEmailPage()));
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFD8D5B3),
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: const Padding(
+                      padding: EdgeInsets.all(10.0), // Ajusta o padding do botão
+                      child: Text(
+                        'Alterar e-mail',
+                        style: TextStyle(fontSize: 12), // Ajuste do tamanho do texto
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 20), // Espaçamento entre os botões (ajuste conforme necessário)
+                // Botão Alterar Senha
+                SizedBox(
+                  width: 150, // Largura fixa do botão
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => ChangePasswordPage()));
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFD8D5B3),
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: const Padding(
+                      padding: EdgeInsets.all(10.0), // Ajusta o padding do botão
+                      child: Text(
+                        'Alterar senha',
+                        style: TextStyle(fontSize: 12), // Ajuste do tamanho do texto
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 5),
-
-            // Campo de Confirmar Nova Senha
-            _buildEditableField(
-              label: 'Confirmar Nova Senha:',
-              controller: confirmNewPassword,
-              obscureText: true,
-            ),
-            const SizedBox(height: 20),
-
+            const SizedBox(height: 50),
             // Botão Salvar
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  hanfleEditProfile();
+                  handleEditProfile();
                   controller.uploadImage(selectedImage, context); // Faz o upload da nova imagem de perfil
                 },
                 style: ElevatedButton.styleFrom(
