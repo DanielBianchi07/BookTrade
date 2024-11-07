@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 //import 'package:google_sign_in/google_sign_in.dart';
 import 'package:myapp/user.dart';
@@ -29,23 +28,27 @@ class LoginController {
 
   Future loginWithEmail(String email, String password) async {
       final userCredential = await _auth.signInWithEmailAndPassword(email: email, password: password);
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userCredential.user?.uid)
-          .get();
-      if (userDoc.exists) {
-        user.value = IUser()
-        ..uid = userCredential.user!.uid
-        ..name = userDoc.get('name') ?? ""
-        ..email = userCredential.user!.email ?? ""
-        ..picture = userDoc.get('profileImageUrl') ?? ""
-        ..address = userDoc.get('address')
-        ..customerRating = userDoc.get('customerRating') ?? 0.0
-        ..telephone = userDoc.get('phone') ?? "";
-        user.notifyListeners();
+      if (userCredential.user != null) {
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(userCredential.user!.uid)
+              .get();
+        if (userDoc.exists) {
+          user.value = IUser()
+          ..uid = userCredential.user!.uid
+          ..name = userDoc.get('name') ?? ""
+          ..email = userCredential.user!.email ?? ""
+          ..picture = userDoc.get('profileImageUrl') ?? ""
+          ..address = userDoc.get('address')
+          ..customerRating = userDoc.get('customerRating') ?? 0.0
+          ..telephone = userDoc.get('phone') ?? "";
+          user.notifyListeners();
+        } else {
+          Fluttertoast.showToast(msg: "Usuário não encontrado.", toastLength: Toast.LENGTH_SHORT);
+          return null;
+        }
       } else {
         Fluttertoast.showToast(msg: "Usuário não encontrado.", toastLength: Toast.LENGTH_SHORT);
-        return null;
       }
   }
 
