@@ -44,7 +44,8 @@ class MessageService {
       'receiverName': receiverName,
       'receiverProfileUrl': receiverProfileUrl,
       'content': content,
-      'timestamp': timestamp,
+      'timestamp': FieldValue.serverTimestamp(),
+
     });
 
     // Atualiza ou cria o documento na coleção `conversations`
