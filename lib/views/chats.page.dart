@@ -1,100 +1,140 @@
-// lib/pages/chats_page.dart
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
-import 'package:myapp/services/chats.service.dart';
+import '../user.dart';
+import '../widgets/chat.tile.widget.dart';
+import '../services/chats.service.dart';
 import 'chat.page.dart';
+import '../controller/login.controller.dart';
+import '../models/message.model.dart';
 
 class ChatsPage extends StatelessWidget {
   final ChatsService _chatsService = ChatsService();
-  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   ChatsPage({Key? key}) : super(key: key);
 
+  Future<void> _checkUser(BuildContext context, LoginController loginController) async {
+    loginController.AssignUserData(context);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final currentUser = _auth.currentUser;
+    final LoginController loginController = LoginController();
 
-    if (currentUser == null) {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('Conversas'),
-          backgroundColor: const Color(0xFFD8D5B3),
-        ),
-        body: const Center(child: Text('Nenhum usuário autenticado.')),
-      );
-    }
+    return FutureBuilder(
+      future: _checkUser(context, loginController),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return const Center(child: Text("Erro ao carregar usuário"));
+        }
 
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFD8D5B3),
-        elevation: 0,
-        title: const Text('Conversas', style: TextStyle(color: Colors.black)),
-      ),
-      body: StreamBuilder<List<QueryDocumentSnapshot>>(
-        stream: _chatsService.getLastMessagesStream(currentUser.uid),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
+        return Scaffold(
+          appBar: AppBar(
+            backgroundColor: const Color(0xFFD8D5B3),
+            elevation: 0,
+            title: const Text('Conversas', style: TextStyle(color: Colors.black)),
+          ),
+          body: StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('conversations')
+                .where('participants', arrayContains: user.value.uid)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return const Center(child: Text("Erro ao carregar conversas"));
+              }
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                return const Center(child: Text('Nenhuma conversa encontrada.'));
+              }
 
-          final conversations = snapshot.data!;
+              final conversationDocs = snapshot.data!.docs;
 
-          if (conversations.isEmpty) {
-            return const Center(child: Text('Nenhuma conversa encontrada.'));
-          }
+              return ListView.builder(
+                itemCount: conversationDocs.length,
+                itemBuilder: (context, index) {
+                  final conversationDoc = conversationDocs[index];
+                  final conversationId = conversationDoc.id;
 
-          return ListView.builder(
-            itemCount: conversations.length,
-            itemBuilder: (context, index) {
-              final messageData = conversations[index];
-              final otherUserId = messageData['senderId'] == currentUser.uid
-                  ? messageData['receiverId']
-                  : messageData['senderId'];
-              final lastMessage = messageData['content'] ?? '';
-              final timestamp = messageData['timestamp'] as Timestamp?;
-              final formattedTime = timestamp != null
-                  ? DateFormat('HH:mm').format(timestamp.toDate())
-                  : '';
+                  return FutureBuilder<MessageModel?>(
+                    future: _chatsService.getLastMessage(conversationId),
+                    builder: (context, messageSnapshot) {
+                      if (messageSnapshot.connectionState == ConnectionState.waiting) {
+                        return const ListTile(
+                          title: Text('Carregando...'),
+                        );
+                      }
+                      if (messageSnapshot.hasError || !messageSnapshot.hasData) {
+                        return const ListTile(
+                          title: Text('Erro ao carregar mensagem'),
+                        );
+                      }
 
-              return StreamBuilder<DocumentSnapshot>(
-                stream: FirebaseFirestore.instance.collection('users').doc(otherUserId).snapshots(),
-                builder: (context, userSnapshot) {
-                  if (!userSnapshot.hasData) {
-                    return const ListTile(
-                      title: Text('Carregando...'),
-                    );
-                  }
+                      final message = messageSnapshot.data;
+                      if (message == null) {
+                        return const ListTile(
+                          title: Text('Nenhuma mensagem encontrada'),
+                        );
+                      }
 
-                  final userDoc = userSnapshot.data!;
-                  final otherUserName = userDoc['name'] ?? 'Usuário';
-                  final otherUserImage = userDoc['profileImageUrl'] ?? '';
+                      final otherUserId = message.senderId == user.value.uid
+                          ? message.receiverId
+                          : message.senderId;
+                      final lastMessage = message.content;
+                      final formattedTime = DateFormat('HH:mm').format(message.timestamp.toDate());
 
-                  return ListTile(
-                    leading: CircleAvatar(
-                      backgroundImage: NetworkImage(otherUserImage),
-                    ),
-                    title: Text(otherUserName),
-                    subtitle: Text(lastMessage),
-                    trailing: Text(formattedTime),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ChatPage(
-                            otherUserId: otherUserId,
-                          ),
-                        ),
+                      return FutureBuilder<DocumentSnapshot>(
+                        future: FirebaseFirestore.instance
+                            .collection('users')
+                            .doc(otherUserId)
+                            .get(),
+                        builder: (context, userSnapshot) {
+                          if (userSnapshot.connectionState == ConnectionState.waiting) {
+                            return const ListTile(
+                              title: Text('Carregando...'),
+                            );
+                          }
+                          if (userSnapshot.hasError || !userSnapshot.hasData) {
+                            return const ListTile(
+                              title: Text('Erro ao carregar usuário'),
+                            );
+                          }
+
+                          final userDoc = userSnapshot.data!;
+                          final otherUserName = userDoc['name'] ?? 'Usuário';
+                          final otherUserImage = userDoc['profileImageUrl'] ?? '';
+
+                          return ChatTile(
+                            contactName: otherUserName,
+                            lastMessage: lastMessage,
+                            time: formattedTime,
+                            avatarUrl: otherUserImage,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ChatPage(
+                                    otherUserId: otherUserId,
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
                       );
                     },
                   );
                 },
               );
             },
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }
