@@ -100,7 +100,6 @@ class BooksController {
 
       return favoriteBooks;
     } catch (e) {
-      print('Erro ao carregar livros favoritos: $e');
       return [];
     }
   }

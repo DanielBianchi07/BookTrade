@@ -1,26 +1,25 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'firebase.service.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import '../models/message.model.dart';
 
 class ChatsService {
   final CollectionReference messagesCollection = FirebaseFirestore.instance.collection('messages');
+  final CollectionReference conversationsCollection = FirebaseFirestore.instance.collection('conversations');
 
-  // Obter as últimas mensagens únicas de cada conversa
-  Stream<List<QueryDocumentSnapshot>> getLastMessagesStream(String userId) {
-    return messagesCollection
-        .where('participants', arrayContains: userId)
-        .orderBy('timestamp', descending: true)
-        .snapshots()
-        .map((snapshot) {
-      final uniqueConversations = <String, QueryDocumentSnapshot>{};
-
-      for (var doc in snapshot.docs) {
-        final otherUserId = doc['senderId'] == userId ? doc['receiverId'] : doc['senderId'];
-        if (!uniqueConversations.containsKey(otherUserId)) {
-          uniqueConversations[otherUserId] = doc;
-        }
+  // Obter a última mensagem de uma conversa específica
+  Future<MessageModel?> getLastMessage(String conversationId) async {
+    try {
+      final conversationDoc = await conversationsCollection.doc(conversationId).get();
+      if (conversationDoc.exists) {
+        final lastMessageId = conversationDoc.get('lastMessageId');
+        final lastMessageDoc = await messagesCollection.doc(lastMessageId).get();
+        return lastMessageDoc.exists ? MessageModel.fromDocument(lastMessageDoc) : null;
+      } else {
+        return null;
       }
-
-      return uniqueConversations.values.toList();
-    });
+    } catch (e) {
+      Fluttertoast.showToast(msg: 'Erro ao obter a última mensagem.');
+      return null;
+    }
   }
 }

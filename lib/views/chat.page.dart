@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'package:myapp/user.dart';
 import '../services/message.service.dart';
 import '../widgets/message.bubble.widget.dart';
 
@@ -48,12 +49,23 @@ class _ChatPageState extends State<ChatPage> {
       }
     } catch (e) {
       // Caso ocorra algum erro, exibir mensagem de erro
-      print("Erro ao carregar dados do destinatário: $e");
+      _showErrorSnackBar("Erro ao carregar dados do destinatário.");
     }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 3),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final conversationId = _generateConversationId(user.value.uid, widget.otherUserId);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFFD8D5B3),
@@ -77,10 +89,21 @@ class _ChatPageState extends State<ChatPage> {
           // Exibição de mensagens em tempo real
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              stream: _messageService.getMessagesStream(),
+              stream: _messageService.getMessagesStream(conversationId),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
                   return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  _showErrorSnackBar("Erro ao carregar mensagens.");
+                  return const Center(
+                    child: Text("Erro ao carregar mensagens"),
+                  );
+                }
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Center(
+                    child: Text("Nenhuma mensagem encontrada"),
+                  );
                 }
 
                 final messages = snapshot.data!.docs;
@@ -155,15 +178,17 @@ class _ChatPageState extends State<ChatPage> {
       if (user != null) {
         _messageService.sendMessage(
           senderId: user.uid,
-          senderName: user.displayName ?? 'Usuário',
-          senderProfileUrl: user.photoURL ?? 'https://via.placeholder.com/150',
+          receiverName: _receiverName, // Nome do destinatário
+          receiverProfileUrl: _receiverProfileImageUrl, // URL da imagem do destinatário
           content: _messageController.text.trim(),
           receiverId: widget.otherUserId,
-          participants: [user.uid, widget.otherUserId],
           timestamp: FieldValue.serverTimestamp(), // Adiciona o timestamp
         );
         _messageController.clear();
       }
     }
+  }
+  String _generateConversationId(String user1, String user2) {
+    return user1.hashCode <= user2.hashCode ? '$user1\_$user2' : '$user2\_$user1';
   }
 }
