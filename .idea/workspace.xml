@@ -5,20 +5,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4e9ea88f-7afb-495a-8062-f1ce7860c332" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/controller/book.controller.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/controller/books.controller.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/controller/books.controller.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/controller/edit.profile.controller.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/controller/edit.profile.controller.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/controller/login.controller.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/controller/login.controller.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/models/book.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/models/book.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/models/bookcard.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/widgets/bookcard.widget.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/controller/register.controller.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/controller/register.controller.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/user.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/user.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/views/app.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/app.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/views/book.exchange.page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/book.exchange.page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/views/delete.book.page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/delete.book.page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/views/edit.profile.page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/edit.profile.page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/views/favorite.books.page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/favorite.books.page.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/views/home.page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/home.page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/views/login.page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/login.page.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/views/publicated.books.page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/publicated.books.page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/views/trade.offer.page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/trade.offer.page.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -27,6 +26,13 @@
   </component>
   <component name="ClangdSettings">
     <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Dart File" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
@@ -40,6 +46,9 @@
   &quot;associatedIndex&quot;: 3
 }</component>
   <component name="ProjectId" id="2n1U10mxzFDJsgyouuoLTh0HZfo" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -50,11 +59,14 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.cidr.known.project.marker": "true",
     "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "ToolWindowRunning Devices.ShowToolbar": "false",
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
+    "com.android.tools.idea.streaming.emulator.frame.visible": "false",
+    "com.android.tools.idea.streaming.zoom.toolbar.visible": "false",
     "com.google.services.firebase.aqiPopupShown": "true",
     "dart.analysis.tool.window.visible": "false",
-    "git-widget-placeholder": "Merging main",
+    "git-widget-placeholder": "Daniel",
     "ignore.virus.scanning.warn.message": "true",
     "io.flutter.reload.alreadyRun": "true",
     "kotlin-language-version-configured": "true",
@@ -62,7 +74,7 @@
     "project.structure.last.edited": "Project",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.2",
-    "settings.editor.selected.configurable": "preferences.updates",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
     "show.migrate.to.gradle.popup": "false"
   }
 }]]></component>
@@ -87,5 +99,16 @@
       <updated>1728139856324</updated>
     </task>
     <servers />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="Dart">
+          <url>file://$PROJECT_DIR$/lib/views/edit.profile.page.dart</url>
+          <line>121</line>
+          <option name="timeStamp" value="3" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

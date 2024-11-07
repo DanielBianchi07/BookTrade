@@ -1,3 +1,4 @@
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -5,9 +6,16 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'book.exchange.page.dart';
+import 'package:myapp/views/publicated.books.page.dart';
+import 'package:image/image.dart' as img;
+
+import '../controller/login.controller.dart';
+import '../user.dart';
+import 'login.page.dart';
 
 class NewBookPage extends StatefulWidget {
+  const NewBookPage({super.key});
+
   @override
   _NewBookPageState createState() => _NewBookPageState();
 }
@@ -23,12 +31,20 @@ class _NewBookPageState extends State<NewBookPage> {
   final TextEditingController _genreController = TextEditingController();
   String _condition = 'Novo';
   bool _noIsbn = false;
-
   List<String> _genres = [];
   File? _selectedImage;
   File? _apiImage;
+  String _description = '';
 
+  final loginController = LoginController();
   // Método para buscar informações do livro pelo ISBN
+
+  @override
+  void initState() {
+    super.initState();
+    loginController.AssignUserData(context);
+  }
+
   Future<void> _fetchBookData(String isbn) async {
     final url = 'https://www.googleapis.com/books/v1/volumes?q=isbn:$isbn';
 
@@ -45,6 +61,7 @@ class _NewBookPageState extends State<NewBookPage> {
             _publicationYearController.text = volumeInfo['publishedDate']?.split('-')[0] ?? '';
             _publisherController.text = volumeInfo['publisher'] ?? '';
             _genres = List<String>.from(volumeInfo['categories'] ?? []);
+            _description = volumeInfo['descripion'] ?? '';
 
             // Carregar imagem do livro da API
             if (volumeInfo['imageLinks']?['thumbnail'] != null) {
@@ -107,23 +124,63 @@ class _NewBookPageState extends State<NewBookPage> {
     return true;
   }
 
+  Future<File> _resizeImage(File imageFile, int width, int height) async {
+    final imageBytes = await imageFile.readAsBytes();
+    final decodedImage = img.decodeImage(imageBytes);
+
+    if (decodedImage == null) {
+      throw Exception("Erro ao decodificar a imagem");
+    }
+
+    final resizedImage = img.copyResize(decodedImage, width: width, height: height);
+    final resizedBytes = img.encodeJpg(resizedImage);
+
+    // Salva a imagem redimensionada em um novo arquivo temporário
+    final resizedFile = File(imageFile.path)..writeAsBytesSync(resizedBytes);
+    return resizedFile;
+  }
+
+  Future<String?> _uploadImage(File imageFile, String path) async {
+    try {
+      // Redimensiona a imagem para 300x400 pixels antes do upload
+      final resizedImage = await _resizeImage(imageFile, 80, 100);
+
+      final storageRef = FirebaseStorage.instance.ref().child(path);
+      final uploadTask = await storageRef.putFile(resizedImage);
+      final downloadUrl = await uploadTask.ref.getDownloadURL();
+      return downloadUrl;
+    } catch (e) {
+      _showError('Erro ao fazer upload da imagem: $e');
+      return null;
+    }
+  }
+
   Future<void> _onConfirm() async {
     if (!_validateFields()) {
       return; // Parar se a validação falhar
     }
 
     User? currentUser = FirebaseAuth.instance.currentUser;
-
     if (currentUser != null) {
       String userId = currentUser.uid;
 
-      // Pega dados adicionais do usuário
       DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
-
       if (userDoc.exists && userDoc.data() != null) {
         Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
 
-        // Criar esboço de dados do livro sem salvar no Firestore
+        String? userImageUrl;
+        String? apiImageUrl;
+
+        // Upload da imagem do usuário, se selecionada
+        if (_selectedImage != null) {
+          userImageUrl = await _uploadImage(_selectedImage!, 'userImages/$userId/${DateTime.now().millisecondsSinceEpoch}.jpg');
+        }
+
+        // Upload da imagem da API, se disponível
+        if (_apiImage != null) {
+          apiImageUrl = await _uploadImage(_apiImage!, 'apiImages/$userId/${DateTime.now().millisecondsSinceEpoch}.jpg');
+        }
+
         final bookData = {
           'title': _titleController.text.trim(),
           'author': _authorController.text.trim(),
@@ -132,24 +189,26 @@ class _NewBookPageState extends State<NewBookPage> {
           'publicationYear': _publicationYearController.text.trim(),
           'publisher': _publisherController.text.trim(),
           'condition': _condition,
+          'description': _description,
           'genres': _noIsbn ? [_genreController.text] : _genres,
-          'imageUser': _selectedImage != null ? _selectedImage!.path : '',
-          'imageApi': _apiImage != null ? _apiImage!.path : '',
+          'imageUserUrl': userImageUrl ?? '',
+          'imageApiUrl': apiImageUrl ?? '',
           'userId': userId,
           'userInfo': {
             'profileImageUrl': userData['profileImageUrl'] ?? '',
             'address': userData['address'] ?? '',
-            'customerRating': userData['customerRating'] ?? 0,
+            'customerRating': userData['customerRating'] ?? 0.0,
             'name': userData['name'] ?? '',
             'userId': userId,
           },
         };
 
-        // Redirecionar para a página BookExchangePage com o esboço do livro (sem salvar no Firestore ainda)
+        await FirebaseFirestore.instance.collection('books').add(bookData);
+
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => BookExchangePage(bookDetails: bookData),
+            builder: (context) => PublicatedBooksPage(),
           ),
         );
       } else {

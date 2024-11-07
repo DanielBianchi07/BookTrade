@@ -1,8 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import '../models/book.dart';
+import 'package:myapp/controller/books.controller.dart';
+import 'package:myapp/user.dart';
+import '../models/book.model.dart';
 import '../widgets/bookcard.widget.dart';
 import 'trade.offer.page.dart';
 
@@ -14,53 +14,29 @@ class FavoriteBooksPage extends StatefulWidget {
 }
 
 class FavoriteBooksPageState extends State<FavoriteBooksPage> {
-  // Chave global para acessar o Scaffold
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  List<Book> books = []; // Lista para armazenar livros favoritos
-  List<bool> favoriteStatus = []; // Lista para gerenciar o estado dos favoritos
+  bool _isLoading = false;
+  List<BookModel> books = []; // Lista para armazenar livros favoritos
+  final BooksController booksController = BooksController();
 
   @override
   void initState() {
     super.initState();
-    _loadBooks(); // Carrega os livros favoritos ao inicializar
+    loadFavoriteBooks(); // Carrega os livros favoritos ao inicializar
   }
 
-  Future<void> _loadBooks() async {
-    final userId = FirebaseAuth.instance.currentUser?.uid;
-
-    if (userId == null) return; // Retorna se o usuário não estiver logado
+  Future<void> loadFavoriteBooks() async {
+    setState(() {
+      _isLoading = true;
+    });
 
     try {
-      // Busca os livros favoritados do Firebase
-      QuerySnapshot favoritesSnapshot = await FirebaseFirestore.instance
-          .collection('favorites')
-          .doc(userId)
-          .collection('userFavorites')
-          .get();
-
-      List<String> favoriteBooks = favoritesSnapshot.docs.map((doc) => doc.id).toList();
-
-      // Agora busca os dados dos livros usando os IDs
-      for (String bookId in favoriteBooks) {
-        DocumentSnapshot bookDoc = await FirebaseFirestore.instance.collection('books').doc(bookId).get();
-        if (bookDoc.exists) {
-          final data = bookDoc.data() as Map<String, dynamic>;
-          books.add(Book(
-            uid: data['userId'] ?? '',
-            id: bookId,
-            title: data['title'] ?? '',
-            author: data['author'] ?? '',
-            imageUrl: data['imageUrl'] ?? 'https://via.placeholder.com/100',
-            postedBy: data['postedBy'],
-            profileImageUrl: data['profileImageUrl'],
-            rating: data['rating'],
-            isFavorite: true, // Todos os livros aqui são favoritos
-          ));
-        }
-      }
+      // Utiliza o método do controller para carregar os livros favoritos
+      List<BookModel> favoriteBooks = await booksController.loadFavoriteBooks(user.value.uid);
 
       setState(() {
-        favoriteStatus = List.generate(books.length, (index) => true); // Todos são favoritos
+        books = favoriteBooks;
+        _isLoading = false;
       });
     } catch (e) {
       print('Erro ao carregar livros favoritos: $e');
@@ -68,43 +44,26 @@ class FavoriteBooksPageState extends State<FavoriteBooksPage> {
         msg: "Erro ao carregar livros favoritos",
         toastLength: Toast.LENGTH_SHORT,
       );
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
   void toggleFavoriteStatus(String bookId, int index) async {
-    final userId = FirebaseAuth.instance.currentUser?.uid;
-    if (userId == null) return; // Certifique-se de que o usuário está logado
-
-    // Alterna o estado local
-    setState(() {
-      favoriteStatus[index] = !favoriteStatus[index];
-    });
-
+    // Utiliza o método do controller para alternar o status do favorito
     try {
-      if (favoriteStatus[index]) {
-        // Adiciona aos favoritos (não deve acontecer aqui, já está na lista)
-        // Código omitido porque não é necessário
-      } else {
-        // Remove dos favoritos
-        await FirebaseFirestore.instance
-            .collection('favorites')
-            .doc(userId)
-            .collection('userFavorites')
-            .doc(bookId)
-            .delete();
+      await booksController.toggleFavoriteStatus(user.value.uid, bookId);
 
-        // Remove o livro da lista de favoritos localmente
-        setState(() {
-          books.removeAt(index);
-          favoriteStatus.removeAt(index);
-        });
-      }
+      setState(() {
+        books.removeAt(index);
+      });
     } catch (e) {
       print('Erro ao atualizar favoritos: $e');
-      // Reverte a mudança em caso de erro
-      setState(() {
-        favoriteStatus[index] = !favoriteStatus[index]; // Reverte o estado local
-      });
+      Fluttertoast.showToast(
+        msg: "Erro ao atualizar favoritos",
+        toastLength: Toast.LENGTH_SHORT,
+      );
     }
   }
 
@@ -127,46 +86,39 @@ class FavoriteBooksPageState extends State<FavoriteBooksPage> {
           style: TextStyle(color: Colors.black),
         ),
       ),
-      body: SingleChildScrollView(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator()) // Exibe um indicador de carregamento enquanto os livros são carregados
+          : books.isEmpty
+          ? const Center(child: Text('Nenhum livro favorito encontrado.')) // Mensagem se não houver favoritos
+          : ListView.builder(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 16),
-            books.isEmpty
-                ? const Center(child: Text('Nenhum livro favorito encontrado.')) // Mensagem se não houver favoritos
-                : ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: books.length,
-                    itemBuilder: (context, index) {
-                      final book = books[index];
-                      return InkWell(
-                        onTap: () {
-                          // Navegando para a TradeOfferPage e passando o livro selecionado
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => TradeOfferPage(book: book),
-                            ),
-                          );
-                        },
-                        child: BookCard(
-                          bookId: book.id,
-                          title: book.title,
-                          author: book.author,
-                          postedBy: book.postedBy ?? 'Desconhecido',
-                          imageUrl: book.imageUrl,
-                          profileImageUrl: book.profileImageUrl ?? 'https://via.placeholder.com/50',
-                          isFavorite: favoriteStatus[index],
-                          rating: book.rating ?? 0.0,
-                          onFavoritePressed: () => toggleFavoriteStatus(book.id, index),
-                        ),
-                      );
-                    },
-                  ),
-          ],
-        ),
+        itemCount: books.length,
+        itemBuilder: (context, index) {
+          final book = books[index];
+          return InkWell(
+            onTap: () {
+              // Navegando para a TradeOfferPage e passando o livro selecionado
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => TradeOfferPage(book: book),
+                ),
+              );
+            },
+            child: BookCard(
+              id: book.id,
+              userId: book.userId,
+              title: book.title,
+              author: book.author,
+              imageUserUrl: book.imageUserUrl,
+              postedBy: book.userInfo.name,
+              profileImageUrl: book.userInfo.profileImageUrl,
+              customerRating: book.userInfo.customerRating,
+              isFavorite: true, // Sempre é favorito na página de favoritos
+              onFavoritePressed: () => toggleFavoriteStatus(book.id, index),
+            ),
+          );
+        },
       ),
     );
   }

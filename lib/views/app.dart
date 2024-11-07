@@ -1,10 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'book.exchange.page.dart';
 import 'chat.page.dart';
 import 'chats.page.dart';
 import 'edit.profile.page.dart';
 import 'favorite.books.page.dart';
+import 'favorite.genres.page.dart';
 import 'home.page.dart';
 import 'new.book.page.dart';
 import 'notifications.page.dart';
@@ -12,11 +12,14 @@ import 'publicated.books.page.dart';
 import 'selected.book.page.dart';
 import 'login.page.dart';
 import 'register.page.dart';
+import 'selected.book.page.dart';
 import 'trade.history.page.dart';
 import 'trade.status.page.dart';
 import 'notification.detail.page.dart'; // Importe a tela de detalhes de notificação
 
 class BookTradeApp extends StatelessWidget {
+  const BookTradeApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -36,16 +39,15 @@ class BookTradeApp extends StatelessWidget {
         "/newBook": (context) => NewBookPage(),
         "/notifications": (context) => NotificationsPage(),
         "/tradeStatus": (context) => TradeStatusPage(),
-        "/chats": (context) => const ChatsPage(),
-        "/chat": (context) => const ChatPage(),
-        "/bookExchange": (context) => BookExchangePage(
-          bookDetails: ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>,
-        ),
+        "/chats": (context) => ChatsPage(),
+        "/favoriteGenres": (context) => FavoriteGenresPage(),
       },
       home: StreamBuilder(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.active) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.connectionState == ConnectionState.active) {
             return snapshot.data == null ? LoginPage() : HomePage();
           } else {
             return SplashScreen();
@@ -66,6 +68,31 @@ class BookTradeApp extends StatelessWidget {
             },
           );
         }
+        if (settings.name == '/chat') {
+          final args = settings.arguments as Map<String, dynamic>?;
+          final recipientUserId = args?['recipientUserId'] as String?;
+
+          // Depuração: Exibe o recipientUserId no console
+          print('recipientUserId recebido: $recipientUserId');
+
+          // Verificação de null antes de navegar
+          if (recipientUserId != null) {
+            return MaterialPageRoute(
+              builder: (context) => ChatPage(
+                otherUserId: recipientUserId,
+              ),
+            );
+          } else {
+            // Caso o recipientUserId seja null
+            return MaterialPageRoute(
+              builder: (context) => Scaffold(
+                body: Center(
+                  child: Text("Usuário de destino não encontrado."),
+                ),
+              ),
+            );
+          }
+        }
         return null; // Adicione outras rotas dinâmicas aqui, se necessário
       },
     );
@@ -73,6 +100,8 @@ class BookTradeApp extends StatelessWidget {
 }
 
 class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
   @override
   _SplashScreenState createState() => _SplashScreenState();
 }

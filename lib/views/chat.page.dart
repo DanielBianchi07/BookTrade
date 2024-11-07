@@ -1,118 +1,169 @@
+// lib/pages/chat_page.dart
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
+import '../services/message.service.dart';
+import '../widgets/message.bubble.widget.dart';
 
-class ChatPage extends StatelessWidget {
-  const ChatPage({super.key});
+class ChatPage extends StatefulWidget {
+  final String otherUserId;
+
+  const ChatPage({
+    Key? key,
+    required this.otherUserId,
+  }) : super(key: key);
+
+  @override
+  _ChatPageState createState() => _ChatPageState();
+}
+
+class _ChatPageState extends State<ChatPage> {
+  final TextEditingController _messageController = TextEditingController();
+  final MessageService _messageService = MessageService();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  String _receiverName = 'Usuário';
+  String _receiverProfileImageUrl = 'https://via.placeholder.com/150';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadReceiverData();
+  }
+
+  // Função para carregar os dados do usuário destinatário
+  Future<void> _loadReceiverData() async {
+    try {
+      final receiverDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.otherUserId)
+          .get();
+      if (receiverDoc.exists) {
+        setState(() {
+          _receiverName = receiverDoc['name'] ?? 'Usuário';
+          _receiverProfileImageUrl =
+              receiverDoc['profileImageUrl'] ?? 'https://via.placeholder.com/150';
+        });
+      }
+    } catch (e) {
+      // Caso ocorra algum erro, exibir mensagem de erro
+      print("Erro ao carregar dados do destinatário: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFFD8D5B3), // Cor amarelada da barra superior
+        backgroundColor: const Color(0xFFD8D5B3),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            Navigator.of(context).pop(); // Voltar para a página anterior
-          },
+          onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Row(
+        title: Row(
           children: [
             CircleAvatar(
-              backgroundImage: NetworkImage('https://i.pravatar.cc/300'),
+              backgroundImage: NetworkImage(_receiverProfileImageUrl),
             ),
-            SizedBox(width: 10), // Espaço entre a foto e o título
-            Text(
-              'Victor',
-              style: TextStyle(color: Colors.black),
-            ),
+            const SizedBox(width: 10),
+            Text(_receiverName, style: const TextStyle(color: Colors.black)),
           ],
         ),
       ),
-      body: Container(
-        color: const Color(0xFFE8E8E8), // Cor de fundo da tela
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                children: [
-                  // Bolha usuário (verde claro)
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFD8D5B3),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Text('Daniel, eu ja disse para parar de jogar em aula'),
-                    ),
-                  ),
+      body: Column(
+        children: [
+          // Exibição de mensagens em tempo real
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: _messageService.getMessagesStream(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-                  const SizedBox(height: 8), // Espaço entre as mensagens
+                final messages = snapshot.data!.docs;
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    final messageData = messages[index];
+                    final messageContent = messageData['content'] ?? '';
+                    final isUser = messageData['senderId'] == _auth.currentUser?.uid;
 
-                  // Bolha do outro usuário (branca)
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF7ABC84),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Text('Sou burro uga uga'),
-                    ),
-                  ),
+                    // Obtenha o timestamp e formate a data
+                    Timestamp? timestamp = messageData['timestamp'] as Timestamp?;
+                    String formattedTime = '';
+                    if (timestamp != null) {
+                      DateTime date = timestamp.toDate();
+                      formattedTime = DateFormat('HH:mm').format(date);
+                    }
 
-                  const SizedBox(height: 8), // Espaço entre as mensagens
-
-                  // Bolha do outro usuário (verde claro)
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFD8D5B3), 
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Text('...'),
-                    ),
-                  ),
-                ],
-              ),
+                    return MessageBubble(
+                      message: messageContent,
+                      isUser: isUser,
+                      time: formattedTime,
+                    );
+                  },
+                );
+              },
             ),
-            // Campo de texto
-            Container(
-              color: const Color(0xFFFFFFFF),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.add),
-                    onPressed: () {},
-                  ),
-                  Expanded(
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Digite uma mensagem...',
-                        filled: true,
-                        fillColor: const Color(0xFFE8E8E8),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
+          ),
+
+          // Campo de texto para envio de mensagens
+          Container(
+            color: const Color(0xFFFFFFFF),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: () {},
+                ),
+                Expanded(
+                  child: TextField(
+                    controller: _messageController,
+                    decoration: InputDecoration(
+                      hintText: 'Digite uma mensagem...',
+                      filled: true,
+                      fillColor: const Color(0xFFE8E8E8),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.send),
-                    onPressed: () {},
-                  ),
-                ],
-              ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.send),
+                  onPressed: () {
+                    _sendMessage();
+                  },
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
+  }
+
+  // Função para enviar uma mensagem
+  void _sendMessage() {
+    if (_messageController.text.isNotEmpty) {
+      final user = _auth.currentUser;
+      if (user != null) {
+        _messageService.sendMessage(
+          senderId: user.uid,
+          receiverName: _receiverName, // Nome do destinatário
+          receiverProfileUrl: _receiverProfileImageUrl, // URL da imagem do destinatário
+          content: _messageController.text.trim(),
+          receiverId: widget.otherUserId,
+          participants: [user.uid, widget.otherUserId],
+          timestamp: FieldValue.serverTimestamp(), // Adiciona o timestamp
+        );
+        _messageController.clear();
+      }
+    }
   }
 }

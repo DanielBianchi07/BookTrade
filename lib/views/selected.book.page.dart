@@ -1,9 +1,11 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
-import '../models/book.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'delete.book.page.dart';
+import '../controller/books.controller.dart';
+import '../controller/login.controller.dart';
+import '../models/book.model.dart';
+import '../user.dart';
 
 class SelectedBookPage extends StatefulWidget {
   const SelectedBookPage({super.key});
@@ -13,13 +15,32 @@ class SelectedBookPage extends StatefulWidget {
 }
 
 class _SelectedBookPageState extends State<SelectedBookPage> {
-  final List<Book> _books = [];
+  List<BookModel> _books = [];
+  final BooksController booksController = BooksController();
   bool _isLoading = true;
+  final loginController = LoginController();
 
   @override
   void initState() {
+    loginController.AssignUserData(context);
     super.initState();
+    // Remover a chamada de _fetchBooks() daqui
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Mover a chamada de _fetchBooks() para cá
     _fetchBooks();
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   // Função para buscar os livros do usuário logado
@@ -28,55 +49,28 @@ class _SelectedBookPageState extends State<SelectedBookPage> {
       _isLoading = true;
     });
 
-    // Obtém o usuário logado
-    final user = FirebaseAuth.instance.currentUser;
+    // Obtém o usuario logado
+    final userId = user.value.uid;
 
-    if (user == null) {
+    if (userId.isEmpty) {
       _showError('Usuário não está logado');
       return;
     }
 
-    // Obtenha apenas os livros do usuário atual
-    final QuerySnapshot snapshot = await FirebaseFirestore.instance
-        .collection('books')
-        .where('userId', isEqualTo: user.uid)
-        .get();
+    try {
+      // Chama a função do controller para carregar os livros
+      List<BookModel> books = await booksController.loadBooks();
 
-    final List<Book> books = snapshot.docs.map((doc) {
-      final data = doc.data() as Map<String, dynamic>;
+      // Filtra os livros para obter apenas os do usuário atual
+      List<BookModel> userBooks = books.where((book) => book.userId == userId).toList();
 
-      // Pegando a data de publicação do Firestore (se disponível)
-      final Timestamp timestamp = data['timestamp'] ?? Timestamp.now();
-      final DateTime publishedDate = timestamp.toDate();
-
-      return Book(
-        uid: user.uid,
-        id: doc.id,
-        title: data['title'] ?? '',
-        author: data['author'] ?? '',
-        imageUrl: data['imageUrl'] ?? 'https://via.placeholder.com/100',
-        publishedDate: publishedDate,
-        postedBy: null, // Se necessário, adicione mais campos relacionados ao usuário
-        profileImageUrl: null,
-        rating: null,
-      );
-    }).toList();
-
-    setState(() {
-      _books.clear();
-      _books.addAll(books);
-      _isLoading = false;
-    });
-  }
-
-  // Função para mostrar um erro
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
-    setState(() {
-      _isLoading = false;
-    });
+      setState(() {
+        _books = userBooks;
+        _isLoading = false;
+      });
+    } catch (e) {
+      _showError('Erro ao carregar livros: $e');
+    }
   }
 
   // Função para excluir um livro
@@ -137,79 +131,93 @@ class _SelectedBookPageState extends State<SelectedBookPage> {
           },
         ),
         title: const Text(
-          'Selecione o livro a ser trocado',
+          'Escolha o livro que deseja ser trocado.',
           style: TextStyle(color: Colors.black),
         ),
       ),
-      body: _isLoading 
-          ? const Center(child: CircularProgressIndicator()) // Indicador de carregamento
+      body: _isLoading
+          ? const Center(
+        child: CircularProgressIndicator(), // Indicador de carregamento
+      )
           : _books.isEmpty
-              ? const Center(child: Text('Nenhum livro publicado.'))
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16.0),
-                  itemCount: _books.length,
-                  itemBuilder: (context, index) {
-                    final book = _books[index];
-                    return GestureDetector(
-                      onTap: () {
-                        //confirmar o livro que vai ser trocado
-                        //Navigator.pushNamed(context, '/página a ser redirecionada', arguments: book);
-                        //Ao fazer a função tem que passar o argmento "book" se não, vai falhar
-                      },
-                      child: Card(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10.0),
-                        ),
-                        margin: const EdgeInsets.only(bottom: 16.0),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Row(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(8.0),
-                                child: Image.network(
-                                  book.imageUrl,
-                                  height: 100,
-                                  width: 80,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      book.title,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    Text(
-                                      'De ${book.author}',
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'Postado em: ${book.publishedDate != null ? DateFormat.yMMMd().format(book.publishedDate!) : 'Data não disponível'}',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+          ? const Center(child: Text('Nenhum livro publicado.'))
+          : ListView.builder(
+        padding: const EdgeInsets.all(16.0),
+        itemCount: _books.length,
+        itemBuilder: (context, index) {
+          final book = _books[index];
+          return GestureDetector(
+            onTap: () {
+              //Função de solicitar livro
+            },
+            child: Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.0),
+              ),
+              margin: const EdgeInsets.only(bottom: 16.0),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  children: [
+                    // Imagem do livro com CachedNetworkImage, similar ao BookCard
+                    Container(
+                      height: 100,
+                      width: 80,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8.0),
+                        color: Colors.grey[200],
                       ),
-                    );
-                  },
+                      child: CachedNetworkImage(
+                        imageUrl: book.imageUserUrl ?? '',
+                        placeholder: (context, url) => const Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                        errorWidget: (context, url, error) => const Icon(
+                          Icons.image_not_supported,
+                          size: 50,
+                          color: Colors.grey,
+                        ),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+
+                    // Informações do livro
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            book.title,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'De ${book.author}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Postado em: ${DateFormat.yMMMd().format(book.publishedDate)}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }

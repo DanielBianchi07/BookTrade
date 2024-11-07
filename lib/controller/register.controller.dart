@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class RegisterController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -11,6 +12,7 @@ class RegisterController {
     required String passwordConfirm,
     required String name,
     required String phone,
+    String? address
   }) async {
     try {
       // Criação do usuário no Firebase Auth
@@ -18,56 +20,48 @@ class RegisterController {
         email: email,
         password: password,
       );
+      await userCredential.user?.updateDisplayName(name);
+      await userCredential.user?.reload();
       User? user = userCredential.user;
-
-      // Armazenamento das informações do usuário no Firestore
-      await _firestore.collection('users').doc(user!.uid).set({
-        'name': name,
-        'phone': phone,
-        'email': email,
-        'profileImageUrl': '',
-      });
-
-      // Criação da subcoleção "favorites" no Firestore
-      await _firestore
-          .collection('users')
-          .doc(user.uid)
-          .collection('favorites')
-          .doc('dummyDoc') // Documento vazio para inicializar a coleção
-          .set({});
-
-      return user;
-    } catch (e) {
-      return null; // Pode ser interessante retornar o erro para tratamento adicional
-    }
-  }
-
-  // Função para alternar o status de favorito
-  Future<void> toggleFavoriteStatus(String bookId) async {
-    try {
-      final user = _auth.currentUser;
-      if (user == null) return; // Verifique se o usuário está autenticado
-
-      final userFavorites = _firestore
-          .collection('users')
-          .doc(user.uid)
-          .collection('favorites')
-          .doc(bookId);
-
-      final favoriteExists = await userFavorites.get();
-
-      if (favoriteExists.exists) {
-        // Se o livro já é favorito, remove
-        await userFavorites.delete();
-      } else {
-        // Caso contrário, adiciona o livro aos favoritos
-        await userFavorites.set({
-          'addedAt': FieldValue.serverTimestamp(),
-          // Adicione outros campos se necessário
+      if (user != null) {
+        // Armazenamento das informações do usuário no Firestore
+        await _firestore.collection('users').doc(user.uid).set({
+          'email': email,
+          'name': name,
+          'phone': phone,
+          'address': address,
+          'customerRating': 0.0,
+          'favoriteGenres': [],
+          'profileImageUrl': '',
         });
+        // Criação da subcoleção "favorites" no Firestore
+        await _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('favorites')
+            .doc('dummyDoc') // Documento vazio para inicializar a coleção
+            .set({});
+
+        return user;
+      } else {
+        Fluttertoast.showToast(
+          msg: "Erro ao criar usuário.",
+          toastLength: Toast.LENGTH_LONG,
+        );
+        return null;
       }
+    } on FirebaseAuthException catch (e) {
+      Fluttertoast.showToast(
+        msg: "Erro de autenticação: ${e.message}",
+        toastLength: Toast.LENGTH_LONG,
+      );
+      return null;
     } catch (e) {
-      print("Erro ao alternar favorito: $e");
+      Fluttertoast.showToast(
+        msg: "Erro inesperado: $e",
+        toastLength: Toast.LENGTH_LONG,
+      );
+      return null;
     }
   }
 }

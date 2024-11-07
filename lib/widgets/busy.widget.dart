@@ -1,11 +1,10 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class TDBusy extends StatelessWidget {
   bool busy = false;
   Widget child;
 
-  TDBusy({
+  TDBusy({super.key, 
     required this.busy,
     required this.child,
 });
@@ -28,7 +27,7 @@ class TDBusyClear extends StatelessWidget {
   bool busy = false;
   Widget child;
 
-  TDBusyClear({
+  TDBusyClear({super.key, 
     required this.busy,
     required this.child,
 });

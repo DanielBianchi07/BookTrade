@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import '../models/book.dart'; // Importe o modelo Book
+import '../models/book.model.dart'; // Importe o modelo Book
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class DeleteBookPage extends StatelessWidget {
-  final Book book; // Receber o livro como argumento
+  final BookModel book; // Receber o livro como argumento
 
   const DeleteBookPage({super.key, required this.book});
 
@@ -31,7 +31,7 @@ class DeleteBookPage extends StatelessWidget {
               height: 200,
               child: PageView(
                 children: [
-                  _buildBookImage(book.imageUrl), // Imagem do livro
+                  _buildBookImage(book.imageUserUrl), // Imagem do livro
                 ],
               ),
             ),
@@ -47,7 +47,7 @@ class DeleteBookPage extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              'Autor: ${book.author}\nPublicado em: ${book.publishedDate?.year ?? 'N/A'}',
+              'Autor: ${book.author}\nPublicado em: ${book.publishedDate.year}',
               style: const TextStyle(
                 fontSize: 14,
                 height: 1.5,
@@ -55,7 +55,7 @@ class DeleteBookPage extends StatelessWidget {
             ),
             const SizedBox(height: 0),
             Text(
-              'Condição: ${book.condition ?? 'N/A'}\nEdição: ${book.edition ?? 'N/A'}\nGêneros de troca: ${book.exchangeGenres?.join(', ') ?? 'N/A'}\nGêneros: ${book.genres?.join(', ') ?? 'N/A'}\nISBN: ${book.isbn ?? 'N/A'}\nAno de publicação: ${book.publicationYear ?? 'N/A'}\nEditora: ${book.publisher ?? 'N/A'}',
+              'Condição: ${book.condition}\nEdição: ${book.edition}\nGêneros: ${book.genres?.join(', ') ?? 'N/A'}\nISBN: ${book.isbn ?? 'N/A'}\nAno de publicação: ${book.publicationYear}\nEditora: ${book.publisher}',
               style: const TextStyle(
                 fontSize: 14,
                 height: 1.5,
