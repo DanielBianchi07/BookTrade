@@ -125,7 +125,7 @@ class TradeOfferPage extends StatelessWidget {
                     Navigator.pushNamed(
                       context,
                       '/chat',
-                      arguments: {'recipientUserId': book.userInfo.id},
+                      arguments: {'receiverUserId': book.userInfo.id},
                     );
                   },
                   style: ElevatedButton.styleFrom(
