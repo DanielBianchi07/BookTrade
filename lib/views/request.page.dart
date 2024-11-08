@@ -1,6 +1,8 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../controller/books.controller.dart';
@@ -121,9 +123,60 @@ class _RequestPageState extends State<RequestPage> {
                   ),
                   child: const Text('Cancelar'),
                 ),
+
                 ElevatedButton(
-                  onPressed: () {
-                    // Lógica para enviar o pedido
+                  onPressed: () async {
+                     if (_books.isEmpty) {
+                      // Se a lista de livros oferecidos está vazia, exibe uma mensagem
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Adicione pelo menos um livro para troca.')),
+                      );
+                      return; // Sai da função sem enviar a solicitação
+                    }
+                    final userCredential = FirebaseAuth.instance.currentUser;
+                    if (userCredential == null) {
+                      // Verifica se o usuário está logado
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Usuário não autenticado.')),
+                      );
+                      return;
+                    }
+
+                    // Prepara a solicitação
+                    final requestData = {
+                      'requestedBook': {
+                        'id': widget.book.id,
+                        'title': widget.book.title,
+                        'author': widget.book.author,
+                        'imageUrl': widget.book.imageUserUrl,
+                      },
+                      'offeredBooks': _books.map((book) => {
+                        'id': book.id,
+                        'title': book.title,
+                        'author': book.author,
+                        'imageUrl': book.imageUserUrl,
+                      }).toList(),
+                      'requesterId': userCredential.uid,
+                      'ownerId': widget.book.userId,
+                      'status': 'pending', // Status inicial da solicitação
+                      'createdAt': Timestamp.now(),
+                    };
+
+                    // Salva a solicitação no Firestore
+                    try {
+                      await FirebaseFirestore.instance.collection('requests').add(requestData);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Solicitação enviada com sucesso!')),
+                      );
+
+                      // Navega de volta após o envio da solicitação
+                      Navigator.of(context).pop();
+                    } catch (e) {
+                      print('Erro ao enviar a solicitação: $e');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Erro ao enviar a solicitação. Tente novamente.')),
+                      );
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF77C593),
@@ -131,8 +184,8 @@ class _RequestPageState extends State<RequestPage> {
                       borderRadius: BorderRadius.circular(5),
                     ),
                   ),
-                  child: const Text('Enviar'),
-                ),
+                child: const Text('Enviar'),
+              ),
               ],
             ),
           ],
