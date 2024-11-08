@@ -31,7 +31,7 @@ class TradeOfferPage extends StatelessWidget {
               height: 200,
               child: PageView(
                 children: [
-                  _buildBookImage(book.imageUserUrl),
+                  _buildBookImage(book.bookImageUserUrls[0]),
                   if (book.imageApiUrl != null && book.imageApiUrl!.isNotEmpty)
                     _buildBookImage(book.imageApiUrl!),
                 ],

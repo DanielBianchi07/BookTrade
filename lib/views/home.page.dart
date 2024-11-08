@@ -92,12 +92,23 @@ class _HomePageState extends State<HomePage> {
             .where((doc) => (doc.data() as Map<String, dynamic>)['userId'] != userId)
             .map((doc) {
           final data = doc.data() as Map<String, dynamic>;
+
+          // Verificação e conversão de `bookImageUserUrls` para garantir que seja uma lista de strings
+          var bookImageUserUrls = data['bookImageUserUrls'];
+          if (bookImageUserUrls is String) {
+            bookImageUserUrls = [bookImageUserUrls];
+          } else if (bookImageUserUrls is List) {
+            bookImageUserUrls = bookImageUserUrls.map((item) => item.toString()).toList();
+          } else {
+            bookImageUserUrls = ['https://via.placeholder.com/100']; // Placeholder se estiver ausente ou nulo
+          }
+
           return BookModel(
             userId: data['userId'] ?? '', // Adiciona valor padrão se for null
             id: doc.id,
             title: data['title'] ?? 'Título não disponível', // Valor padrão
             author: data['author'] ?? 'Autor desconhecido', // Valor padrão
-            imageUserUrl: data['imageUserUrl'] ?? '', // Valor padrão
+            bookImageUserUrls: bookImageUserUrls,
             imageApiUrl: data['imageApiUrl'],
             publishedDate: (data['publishedDate'] as Timestamp?)?.toDate() ?? DateTime.now(), // Valor padrão para publishedDate
             condition: data['condition'] ?? 'Condição não disponível', // Valor padrão
@@ -230,7 +241,7 @@ class _HomePageState extends State<HomePage> {
                     userId: book.userId,
                     title: book.title,
                     author: book.author,
-                    imageUserUrl: book.imageUserUrl,
+                    imageUserUrl: book.bookImageUserUrls[0],
                     postedBy: book.userInfo.name,
                     profileImageUrl: book.userInfo.profileImageUrl,
                     customerRating: book.userInfo.customerRating,
@@ -276,9 +287,9 @@ class _HomePageState extends State<HomePage> {
               children: [
                 Column(
                   children: [
-                    const Center(
+                     Center(
                       child: CircleAvatar(
-                        backgroundImage: NetworkImage('https://i.pravatar.cc/300'),
+                        backgroundImage: NetworkImage(user.value.picture),
                         radius: 40,
                       ),
                     ),

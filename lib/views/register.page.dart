@@ -34,7 +34,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
     phone = _phone.text.trim();
     email = _email.text.trim();
     password = _password.text.trim();
-    passwordConfirm = _passwordConfirm.text.trim()
+    passwordConfirm = _passwordConfirm.text.trim();
 
     if (name.isEmpty || phone.isEmpty || email.isEmpty || password.isEmpty || passwordConfirm.isEmpty) {
       Fluttertoast.showToast(

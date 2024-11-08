@@ -31,7 +31,7 @@ class DeleteBookPage extends StatelessWidget {
               height: 200,
               child: PageView(
                 children: [
-                  _buildBookImage(book.imageUserUrl), // Imagem do livro
+                  _buildBookImage(book.bookImageUserUrls[0]), // Imagem do livro
                 ],
               ),
             ),
@@ -106,7 +106,8 @@ class DeleteBookPage extends StatelessWidget {
   Widget _buildBookImage(String imageUrl) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 10.0),
-      child: Image.network(
+      child:
+      Image.network(
         imageUrl,
         fit: BoxFit.cover,
       ),

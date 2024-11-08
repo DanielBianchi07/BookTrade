@@ -168,7 +168,7 @@ class _SelectedBookPageState extends State<SelectedBookPage> {
                         color: Colors.grey[200],
                       ),
                       child: CachedNetworkImage(
-                        imageUrl: book.imageUserUrl ?? '',
+                        imageUrl: book.bookImageUserUrls[0] ?? '',
                         placeholder: (context, url) => const Center(
                           child: CircularProgressIndicator(),
                         ),
