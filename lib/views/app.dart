@@ -9,6 +9,7 @@ import 'home.page.dart';
 import 'new.book.page.dart';
 import 'notifications.page.dart';
 import 'publicated.books.page.dart';
+import 'selected.book.page.dart';
 import 'login.page.dart';
 import 'register.page.dart';
 import 'selected.book.page.dart';

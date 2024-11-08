@@ -1,11 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import '../controller/books.controller.dart';
 import '../controller/login.controller.dart';
 import '../models/book.model.dart';
-import '../user.dart';
 
 class SelectedBookPage extends StatefulWidget {
   const SelectedBookPage({super.key});
@@ -15,106 +15,44 @@ class SelectedBookPage extends StatefulWidget {
 }
 
 class _SelectedBookPageState extends State<SelectedBookPage> {
-  List<BookModel> _books = [];
-  final BooksController booksController = BooksController();
-  bool _isLoading = true;
   final loginController = LoginController();
+  final booksController = BooksController();
+  late final String userId;
+  List<BookModel> _books = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
-    loginController.AssignUserData(context);
     super.initState();
-    // Remover a chamada de _fetchBooks() daqui
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Mover a chamada de _fetchBooks() para cá
     _fetchBooks();
-  }
-
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
-    setState(() {
-      _isLoading = false;
-    });
   }
 
   // Função para buscar os livros do usuário logado
   Future<void> _fetchBooks() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    // Obtém o usuario logado
-    final userId = user.value.uid;
-
-    if (userId.isEmpty) {
-      _showError('Usuário não está logado');
-      return;
-    }
-
-    try {
-      // Chama a função do controller para carregar os livros
-      List<BookModel> books = await booksController.loadBooks();
-
-      // Filtra os livros para obter apenas os do usuário atual
-      List<BookModel> userBooks = books.where((book) => book.userId == userId).toList();
-
+    final userCredential = FirebaseAuth.instance.currentUser;
+    if (userCredential != null) {
       setState(() {
-        _books = userBooks;
-        _isLoading = false;
+        _isLoading = true;
       });
-    } catch (e) {
-      _showError('Erro ao carregar livros: $e');
+
+      try {
+        // Carregando livros
+        List<BookModel> books = await booksController.loadBooks();
+        List<BookModel> userBooks = books.where((book) => book.userId == userCredential.uid).toList();
+
+        setState(() {
+          _books = userBooks;
+        });
+      } catch (e) {
+        print('Erro ao carregar livros: $e');
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
     }
-  }
-
-  // Função para excluir um livro
-  Future<void> _deleteBook(String bookId) async {
-    await FirebaseFirestore.instance.collection('books').doc(bookId).delete();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Livro removido com sucesso!')),
-    );
-    _fetchBooks(); // Atualiza a lista após a remoção
-  }
-
-  // Função para confirmar a exclusão do livro
-  Future<void> _confirmDelete(BuildContext context, String bookId) async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false, // O usuário deve tocar em um botão
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Confirmar exclusão'),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: const <Widget>[
-                Text('Você tem certeza que deseja excluir este livro?'),
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancelar'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('Excluir'),
-              onPressed: () {
-                Navigator.of(context).pop();
-                _deleteBook(bookId); // Chama a função de exclusão
-              },
-            ),
-          ],
-        );
-      },
-    );
+    } else {
+      print('Não existe usuário');
+    }
   }
 
   @override
@@ -131,7 +69,7 @@ class _SelectedBookPageState extends State<SelectedBookPage> {
           },
         ),
         title: const Text(
-          'Escolha o livro que deseja ser trocado.',
+          'Livros publicados',
           style: TextStyle(color: Colors.black),
         ),
       ),
@@ -148,7 +86,9 @@ class _SelectedBookPageState extends State<SelectedBookPage> {
           final book = _books[index];
           return GestureDetector(
             onTap: () {
-              //Função de solicitar livro
+              // Função de adicionar o livro escolhido para a tela anterior
+              // Retorna o livro selecionado
+              Navigator.pop(context, book);
             },
             child: Card(
               shape: RoundedRectangleBorder(

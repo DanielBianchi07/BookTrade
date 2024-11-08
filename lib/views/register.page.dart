@@ -17,41 +17,31 @@ class RegistrationPage extends StatefulWidget {
 class _RegistrationPageState extends State<RegistrationPage> {
   final controller = new RegisterController();
   final loginController = new LoginController();
-  var _name = TextEditingController();
-  var _phone = TextEditingController();
-  var _email = TextEditingController();
-  var _password = TextEditingController();
-  var _passwordConfirm = TextEditingController();
-  late String name;
-  late String phone;
-  late String email;
-  late String password;
-  late String passwordConfirm;
+  var name = TextEditingController();
+  var phone = TextEditingController();
+  var email = TextEditingController();
+  var password = TextEditingController();
+  var passwordConfirm = TextEditingController();
   var busy = false;
 
   handleRegister() {
-    name = _name.text.trim();
-    phone = _phone.text.trim();
-    email = _email.text.trim();
-    password = _password.text.trim();
-    passwordConfirm = _passwordConfirm.text.trim();
 
-    if (name.isEmpty || phone.isEmpty || email.isEmpty || password.isEmpty || passwordConfirm.isEmpty) {
+    if (name.text.isEmpty || phone.text.isEmpty || email.text.isEmpty || password.text.isEmpty || passwordConfirm.text.isEmpty) {
       Fluttertoast.showToast(
         msg: "Por favor, preencha todos os campos",
         toastLength: Toast.LENGTH_LONG,
       );
-    } else if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$').hasMatch(email)) {
+    } else if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$').hasMatch(email.text)) {
       Fluttertoast.showToast(
         msg: "Email inválido",
         toastLength: Toast.LENGTH_LONG,
       );
-    } else if (password.length < 6) {
+    } else if (password.text.length < 6) {
       Fluttertoast.showToast(
         msg: "A senha deve ter pelo menos 6 caracteres",
         toastLength: Toast.LENGTH_LONG,
       );
-    } else if (password != passwordConfirm) {
+    } else if (password.text != passwordConfirm.text) {
       Fluttertoast.showToast(
         msg: "As senhas devem coincidir",
         toastLength: Toast.LENGTH_LONG,
@@ -61,11 +51,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
         busy = true;
       });
       controller.registerWithEmail(
-        email: email,
-        password: password,
-        passwordConfirm: passwordConfirm,
-        name: name,
-        phone: phone,
+        email: email.text,
+        password: password.text,
+        passwordConfirm: passwordConfirm.text,
+        name: name.text,
+        phone: phone.text,
       ).then((data) {
         if (data != null) {
           onSuccess();
@@ -84,7 +74,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
   }
 
   onSuccess() {
-    loginController.loginWithEmail(email, password);
+    loginController.loginWithEmail(email.text, password.text);
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => HomePage()),
@@ -100,11 +90,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
   }
 
   onComplete() {
-    _name.clear();
-    _phone.clear();
-    _email.clear();
-    _password.clear();
-    _passwordConfirm.clear();
+    name.clear();
+    phone.clear();
+    email.clear();
+    password.clear();
+    passwordConfirm.clear();
     setState(() {
       busy = false;
     });
@@ -153,7 +143,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
               // Campo de Nome
               TextField(
-                controller: _name,
+                controller: name,
                 decoration: InputDecoration(
                   labelText: 'Nome',
                   border: OutlineInputBorder(
@@ -167,7 +157,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
               // Campo de Telefone
               TextField(
-                controller: _phone,
+                controller: phone,
                 decoration: InputDecoration(
                   labelText: 'Telefone',
                   border: OutlineInputBorder(
@@ -181,7 +171,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
               // Campo de Email
               TextField(
-                controller: _email,
+                controller: email,
                 decoration: InputDecoration(
                   labelText: 'Email',
                   border: OutlineInputBorder(
@@ -195,7 +185,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
               // Campo de Senha
               TextField(
-                controller: _password,
+                controller: password,
                 obscureText: true,
                 decoration: InputDecoration(
                   labelText: 'Senha',
@@ -210,7 +200,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
               // Campo de Confirmar Senha
               TextField(
-                controller: _passwordConfirm,
+                controller: passwordConfirm,
                 obscureText: true,
                 decoration: InputDecoration(
                   labelText: 'Confirme sua senha',

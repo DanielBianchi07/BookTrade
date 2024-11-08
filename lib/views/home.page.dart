@@ -342,67 +342,75 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
           ),
-          ListTile(
-            leading: const Icon(Icons.book, color: Colors.black),
-            title: const Text('Meus livros'),
-            onTap: () {
-              Navigator.pushNamed(context, '/publicatedBooks');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.history, color: Colors.black),
-            title: const Text('Histórico de trocas'),
-            onTap: () {
-              Navigator.pushNamed(context, '/tradeHistory');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.notifications, color: Colors.black),
-            title: const Text('Notificações'),
-            onTap: () {
-              Navigator.pushNamed(context, '/notifications');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.swap_horiz, color: Colors.black),
-            title: const Text('Status de trocas'),
-            onTap: () {
-              Navigator.pushNamed(context, '/tradeStatus');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.favorite, color: Colors.black),
-            title: const Text('Lista de desejos'),
-            onTap: () {
-              Navigator.pushNamed(context, '/favoriteBooks');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.chat, color: Colors.black),
-            title: const Text('Chat'),
-            onTap: () {
-              Navigator.pushNamed(context, '/chats');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.star, color: Colors.black),
-            title: const Text('Gêneros Favoritos'),
-            onTap: () {
-              Navigator.pushNamed(context, '/favoriteGenres');
-            },
-          ),
-          const Spacer(),
-          ListTile(
-            title: const Text(
-              'Sair',
-              style: TextStyle(color: Colors.red),
+          Expanded(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.book, color: Colors.black),
+                  title: const Text('Meus livros'),
+                  onTap: () {
+                    Navigator.pushNamed(context, '/publicatedBooks');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.history, color: Colors.black),
+                  title: const Text('Histórico de trocas'),
+                  onTap: () {
+                    Navigator.pushNamed(context, '/tradeHistory');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.notifications, color: Colors.black),
+                  title: const Text('Notificações'),
+                  onTap: () {
+                    Navigator.pushNamed(context, '/notifications');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.swap_horiz, color: Colors.black),
+                  title: const Text('Status de trocas'),
+                  onTap: () {
+                    Navigator.pushNamed(context, '/tradeStatus');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.favorite, color: Colors.black),
+                  title: const Text('Lista de desejos'),
+                  onTap: () {
+                    Navigator.pushNamed(context, '/favoriteBooks');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.chat, color: Colors.black),
+                  title: const Text('Chat'),
+                  onTap: () {
+                    Navigator.pushNamed(context, '/chats');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.star, color: Colors.black),
+                  title: const Text('Gêneros Favoritos'),
+                  onTap: () {
+                    Navigator.pushNamed(context, '/favoriteGenres');
+                  },
+                ),
+                const Divider(), // Adicione um divisor para separar os itens
+                ListTile(
+                  title: const Text(
+                    'Sair',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  onTap: () {
+                    handleSignOut();
+                  },
+                ),
+              ],
             ),
-            onTap: () {
-              handleSignOut();
-            },
           ),
         ],
       ),
     );
+
   }
 }

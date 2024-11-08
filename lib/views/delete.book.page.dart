@@ -88,7 +88,7 @@ class DeleteBookPage extends StatelessWidget {
                     _confirmDelete(context, book.id); // Chama a função de confirmação
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color.fromARGB(255, 255, 0, 0),
+                    backgroundColor: Color(0xFFDD585B),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
