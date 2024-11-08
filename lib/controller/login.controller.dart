@@ -112,8 +112,7 @@ class LoginController {
           ..picture = userDoc.get('profileImageUrl') ?? ""
           ..telephone = userDoc.get('phone') ?? "";
         user.notifyListeners();
-      }
-      else {
+      } else {
         logout(context);
       }
     }
