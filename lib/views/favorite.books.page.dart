@@ -110,7 +110,7 @@ class FavoriteBooksPageState extends State<FavoriteBooksPage> {
               userId: book.userId,
               title: book.title,
               author: book.author,
-              imageUserUrl: book.imageUserUrl,
+              imageUserUrl: book.bookImageUserUrls[0],
               postedBy: book.userInfo.name,
               profileImageUrl: book.userInfo.profileImageUrl,
               customerRating: book.userInfo.customerRating,

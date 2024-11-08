@@ -93,9 +93,9 @@ class BookCard extends StatelessWidget {
                         children: [
                           CircleAvatar(
                             radius: 15,
-                            backgroundImage: CachedNetworkImageProvider(
-                              profileImageUrl ?? '',
-                            ),
+                            backgroundImage: profileImageUrl != null && profileImageUrl!.isNotEmpty
+                                ? CachedNetworkImageProvider(profileImageUrl!)
+                                : null,
                             child: profileImageUrl == null || profileImageUrl!.isEmpty
                                 ? const Icon(Icons.person, color: Colors.grey)
                                 : null,

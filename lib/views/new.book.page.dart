@@ -8,10 +8,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:myapp/views/publicated.books.page.dart';
 import 'package:image/image.dart' as img;
-
 import '../controller/login.controller.dart';
-import '../user.dart';
-import 'login.page.dart';
+import '../services/image.service.dart';
 
 class NewBookPage extends StatefulWidget {
   const NewBookPage({super.key});
@@ -32,7 +30,8 @@ class _NewBookPageState extends State<NewBookPage> {
   String _condition = 'Novo';
   bool _noIsbn = false;
   List<String> _genres = [];
-  File? _selectedImage;
+  final ImageUploadService _imageUploadService = ImageUploadService();
+  List<File> _selectedImages = [];
   File? _apiImage;
   String _description = '';
 
@@ -83,11 +82,11 @@ class _NewBookPageState extends State<NewBookPage> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  Future<void> _pickImage() async {
-    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
+  Future<void> _addImage() async {
+    final selectedImage = await _imageUploadService.pickImage();
+    if (selectedImage != null) {
       setState(() {
-        _selectedImage = File(pickedFile.path);
+        _selectedImages.add(selectedImage);
       });
     }
   }
@@ -124,37 +123,6 @@ class _NewBookPageState extends State<NewBookPage> {
     return true;
   }
 
-  Future<File> _resizeImage(File imageFile, int width, int height) async {
-    final imageBytes = await imageFile.readAsBytes();
-    final decodedImage = img.decodeImage(imageBytes);
-
-    if (decodedImage == null) {
-      throw Exception("Erro ao decodificar a imagem");
-    }
-
-    final resizedImage = img.copyResize(decodedImage, width: width, height: height);
-    final resizedBytes = img.encodeJpg(resizedImage);
-
-    // Salva a imagem redimensionada em um novo arquivo temporário
-    final resizedFile = File(imageFile.path)..writeAsBytesSync(resizedBytes);
-    return resizedFile;
-  }
-
-  Future<String?> _uploadImage(File imageFile, String path) async {
-    try {
-      // Redimensiona a imagem para 300x400 pixels antes do upload
-      final resizedImage = await _resizeImage(imageFile, 80, 100);
-
-      final storageRef = FirebaseStorage.instance.ref().child(path);
-      final uploadTask = await storageRef.putFile(resizedImage);
-      final downloadUrl = await uploadTask.ref.getDownloadURL();
-      return downloadUrl;
-    } catch (e) {
-      _showError('Erro ao fazer upload da imagem: $e');
-      return null;
-    }
-  }
-
   Future<void> _onConfirm() async {
     if (!_validateFields()) {
       return; // Parar se a validação falhar
@@ -164,24 +132,21 @@ class _NewBookPageState extends State<NewBookPage> {
     if (currentUser != null) {
       String userId = currentUser.uid;
 
+      // Limite de 5 imagens para cada livro
+      if (_selectedImages.length > 5) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Você pode adicionar no máximo 5 fotos.')),
+        );
+        return; // Interrompe a execução se o limite for excedido
+      }
+
       DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+
       if (userDoc.exists && userDoc.data() != null) {
         Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
 
-        String? userImageUrl;
-        String? apiImageUrl;
-
-        // Upload da imagem do usuário, se selecionada
-        if (_selectedImage != null) {
-          userImageUrl = await _uploadImage(_selectedImage!, 'userImages/$userId/${DateTime.now().millisecondsSinceEpoch}.jpg');
-        }
-
-        // Upload da imagem da API, se disponível
-        if (_apiImage != null) {
-          apiImageUrl = await _uploadImage(_apiImage!, 'apiImages/$userId/${DateTime.now().millisecondsSinceEpoch}.jpg');
-        }
-
-        final bookData = {
+        // Cria o documento do livro no Firestore (sem imagens inicialmente)
+        DocumentReference bookDoc = await FirebaseFirestore.instance.collection('books').add({
           'title': _titleController.text.trim(),
           'author': _authorController.text.trim(),
           'edition': _editionController.text.trim(),
@@ -191,8 +156,8 @@ class _NewBookPageState extends State<NewBookPage> {
           'condition': _condition,
           'description': _description,
           'genres': _noIsbn ? [_genreController.text] : _genres,
-          'imageUserUrl': userImageUrl ?? '',
-          'imageApiUrl': apiImageUrl ?? '',
+          'bookImageUserUrls': [''], // Inicialmente uma lista vazia
+          'imageApiUrl': '', // Será atualizado se houver uma imagem da API
           'userId': userId,
           'userInfo': {
             'profileImageUrl': userData['profileImageUrl'] ?? '',
@@ -201,10 +166,36 @@ class _NewBookPageState extends State<NewBookPage> {
             'name': userData['name'] ?? '',
             'userId': userId,
           },
-        };
+        });
 
-        await FirebaseFirestore.instance.collection('books').add(bookData);
+        String bookId = bookDoc.id;
+        List<String> bookImageUserUrls = [];
 
+        // Faz o upload de cada imagem selecionada e armazena a URL
+        for (var image in _selectedImages) {
+          String? imageUrl = await _imageUploadService.uploadBookImage(image, userId, bookId);
+          if (imageUrl != null) {
+            bookImageUserUrls.add(imageUrl);
+          }
+        }
+
+        await FirebaseFirestore.instance.collection('books').doc(bookId).update({
+          'bookImageUserUrls': bookImageUserUrls,
+          // 'imageApiUrl': apiImageUrl ?? '',
+        });
+
+        // // Se houver uma imagem da API, você pode definir `apiImageUrl`
+        // if (_apiImage != null) {
+        //   apiImageUrl = await _imageUploadService.uploadBookImage(_apiImage!, userId, bookId);
+        // }
+        //
+        // // Atualiza o documento do livro com as URLs das imagens
+        // await FirebaseFirestore.instance.collection('books').doc(bookId).update({
+        //   'bookImageUserUrls': bookImageUserUrls,
+        //   'imageApiUrl': apiImageUrl ?? '',
+        // });
+
+        // Navega para a página de livros publicados
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -236,21 +227,59 @@ class _NewBookPageState extends State<NewBookPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Adicione uma foto:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Adicione fotos do livro:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
-            GestureDetector(
-              onTap: _pickImage,
-              child: Container(
-                height: 200,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black, width: 2),
-                  borderRadius: BorderRadius.circular(10),
-                  color: Colors.grey[200],
-                ),
-                child: _selectedImage != null
-                    ? Image.file(_selectedImage!, fit: BoxFit.cover)
-                    : const Center(child: Icon(Icons.camera_alt, color: Colors.black, size: 50)),
+
+            /// Carrossel de imagens
+            SizedBox(
+              height: 200,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: _selectedImages.length + 1,
+                itemBuilder: (context, index) {
+                  if (index == _selectedImages.length) {
+                    return GestureDetector(
+                      onTap: () {
+                        if (_selectedImages.length < 5) {
+                          _addImage();
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Você pode adicionar no máximo 5 fotos.')),
+                          );
+                        }
+                      },
+                      child: Container(
+                        height: 200,
+                        width: 150,
+                        margin: const EdgeInsets.only(right: 10),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.black, width: 2),
+                          borderRadius: BorderRadius.circular(10),
+                          color: Colors.grey[200],
+                        ),
+                        child: const Center(child: Icon(Icons.add_a_photo, size: 50, color: Colors.black)),
+                      ),
+                    );
+                  } else {
+                    return Container(
+                      height: 200,
+                      width: 150,
+                      margin: const EdgeInsets.only(right: 10),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.black, width: 2),
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.grey[200],
+                      ),
+                      child: Image.file(
+                        _selectedImages[index],
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => const Center(
+                          child: Icon(Icons.broken_image, color: Colors.red, size: 50),
+                        ),
+                      ),
+                    );
+                  }
+                },
               ),
             ),
             const SizedBox(height: 20),
