@@ -1,6 +1,7 @@
 // lib/pages/trade_offer_page.dart
 import 'package:flutter/material.dart';
 import '../models/book.model.dart';
+import 'request.page.dart';
 
 
 class TradeOfferPage extends StatelessWidget {
@@ -110,7 +111,12 @@ class TradeOfferPage extends StatelessWidget {
               children: [
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.pushNamed(context, '/selectedBook');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => RequestPage(book: book),
+                      ),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF77C593),
