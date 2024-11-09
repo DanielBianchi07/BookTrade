@@ -11,8 +11,6 @@ class RegisterController {
     try {
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(email: email, password: password);
       if (userCredential.user != null) {
-        await userCredential.user!.updateDisplayName(name);
-        await userCredential.user!.reload();
         User? user = userCredential.user;
 
         // Armazenamento das informações do usuário no Firestore
@@ -21,7 +19,6 @@ class RegisterController {
 
         // Criação da subcoleção "favorites" no Firestore
         await _firestore.collection('users').doc(userCredential.user!.uid).collection('favorites').doc('dummyDoc').set({});
-
         return user;
       } else {
         Fluttertoast.showToast(msg: "Erro ao criar usuário", toastLength: Toast.LENGTH_LONG);
