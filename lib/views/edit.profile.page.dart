@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:myapp/controller/edit.profile.controller.dart';
 import '../controller/login.controller.dart';
+import '../services/image.service.dart';
 import '../user.dart';
 import 'change.email.page.dart';
 import 'change.password.page.dart';
@@ -19,6 +20,8 @@ class EditProfilePage extends StatefulWidget {
 class _EditProfilePageState extends State<EditProfilePage> {
   final loginController = LoginController();
   final controller = EditProfileController();
+  final imageUploadService = ImageUploadService();
+
   final TextEditingController name = TextEditingController();
   final TextEditingController phone = TextEditingController();
   final TextEditingController email = TextEditingController();
@@ -26,6 +29,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final TextEditingController currentPassword = TextEditingController();
   final TextEditingController newPassword = TextEditingController();
   final TextEditingController confirmNewPassword = TextEditingController();
+
   String? profileImageUrl;
   File? selectedImage;
   var busy = false;
@@ -56,19 +60,34 @@ class _EditProfilePageState extends State<EditProfilePage> {
       }
       email.text = user.value.email;
       print('dados carregados aos labels');
+      profileImageUrl = user.value.picture;
     }
   }
 
-  handleEditProfile() {
-    setState(() {
-      busy = true;
-    });
-      controller.updateUserProfile(context, name.text.trim(), phone.text.trim(), address.text.trim()).then((data) {
-    }).catchError((err) {
+  Future<void> handleEditProfile() async {
+    setState(() => busy = true);
+
+    // Atualiza o perfil do usuário (nome, telefone e endereço)
+    try {
+      await controller.updateUserProfile(context, name.text.trim(), phone.text.trim(), address.text.trim());
+
+      // Se uma nova imagem foi selecionada, faça o upload e atualize a URL no Firestore
+      if (selectedImage != null) {
+        String userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+        String? newProfileImageUrl = await imageUploadService.uploadProfileImage(selectedImage!, userId);
+
+        if (newProfileImageUrl != null) {
+          setState(() {
+            profileImageUrl = newProfileImageUrl;
+          });
+        }
+      }
+      Fluttertoast.showToast(msg: "Perfil atualizado com sucesso!");
+    } catch (err) {
       onError(err);
-    }).whenComplete(() {
+    } finally {
       onComplete();
-    });
+    }
   }
 
   onError(err) {
@@ -88,14 +107,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
     });
   }
 
-  Future<GestureTapCallback?> selectImage() async {
-    final selectedImage = await controller.pickImage(); // Espera o resultado
-    if (selectedImage != null) {
+  Future<void> selectImage() async {
+    final image = await imageUploadService.pickImage();
+    if (image != null) {
       setState(() {
-        this.selectedImage = selectedImage; // Atualiza o estado aqui
+        selectedImage = image;
       });
     }
-    return null;
   }
 
   @override
@@ -268,7 +286,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               child: ElevatedButton(
                 onPressed: () {
                   handleEditProfile();
-                  controller.uploadImage(selectedImage, context); // Faz o upload da nova imagem de perfil
+                  imageUploadService.uploadProfileImage(selectedImage!, user.value.uid); // Faz o upload da nova imagem de perfil
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF77C593),

@@ -11,7 +11,7 @@ import '../models/message.model.dart';
 class ChatsPage extends StatelessWidget {
   final ChatsService _chatsService = ChatsService();
 
-  ChatsPage({Key? key}) : super(key: key);
+  ChatsPage({super.key});
 
   Future<void> _checkUser(BuildContext context, LoginController loginController) async {
     loginController.AssignUserData(context);

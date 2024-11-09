@@ -1,12 +1,13 @@
 // lib/pages/trade_offer_page.dart
 import 'package:flutter/material.dart';
 import '../models/book.model.dart';
+import 'request.page.dart';
 
 
 class TradeOfferPage extends StatelessWidget {
   final BookModel book;
 
-  const TradeOfferPage({Key? key, required this.book}) : super(key: key);
+  const TradeOfferPage({super.key, required this.book});
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +32,7 @@ class TradeOfferPage extends StatelessWidget {
               height: 200,
               child: PageView(
                 children: [
-                  _buildBookImage(book.imageUserUrl),
+                  _buildBookImage(book.bookImageUserUrls[0]),
                   if (book.imageApiUrl != null && book.imageApiUrl!.isNotEmpty)
                     _buildBookImage(book.imageApiUrl!),
                 ],
@@ -93,7 +94,7 @@ class TradeOfferPage extends StatelessWidget {
                         }),
                         if (book.userInfo.customerRating - book.userInfo.customerRating.floor() >= 0.5)
                           const Icon(Icons.star_half, color: Colors.amber, size: 18),
-                        ...List.generate((5 - book.userInfo.customerRating.ceil()) as int, (index) {
+                        ...List.generate((5 - book.userInfo.customerRating.ceil()), (index) {
                           return const Icon(Icons.star_border, color: Colors.amber, size: 18);
                         }),
                       ],
@@ -110,7 +111,12 @@ class TradeOfferPage extends StatelessWidget {
               children: [
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.pushNamed(context, '/selectedBook');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => RequestPage(book: book),
+                      ),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF77C593),

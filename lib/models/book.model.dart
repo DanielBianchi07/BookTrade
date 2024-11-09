@@ -6,7 +6,7 @@ class BookModel {
   final String id;
   final String title;
   final String author;
-  final String imageUserUrl;
+  final List<String> bookImageUserUrls;
   final String? imageApiUrl;
   final DateTime publishedDate;
   final String condition;
@@ -23,7 +23,7 @@ class BookModel {
     required this.id,
     required this.title,
     required this.author,
-    required this.imageUserUrl,
+    required this.bookImageUserUrls,
     this.imageApiUrl,
     required this.publishedDate,
     required this.condition,
@@ -42,7 +42,7 @@ class BookModel {
       'id': id,
       'title': title,
       'author': author,
-      'imageUserUrl': imageUserUrl,
+      'bookImageUserUrls': bookImageUserUrls,
       'imageApiUrl': imageApiUrl,
       'publishedDate': publishedDate.toIso8601String(),
       'condition': condition,
@@ -59,12 +59,23 @@ class BookModel {
   // Método para criar uma instância de Book a partir de um documento do Firestore
   factory BookModel.fromDocument(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+
+    // Garante que `bookImageUserUrls` seja sempre uma lista de strings
+    var bookImageUserUrls = data['bookImageUserUrls'];
+    if (bookImageUserUrls is String) {
+      bookImageUserUrls = [bookImageUserUrls];
+    } else if (bookImageUserUrls is List) {
+      bookImageUserUrls = bookImageUserUrls.map((item) => item.toString()).toList();
+    } else {
+      bookImageUserUrls = ['https://via.placeholder.com/100']; // Placeholder se estiver ausente ou nulo
+    }
+
     return BookModel(
       userId: data['userId'] ?? '',
       id: doc.id,
       title: data['title'] ?? 'Título não disponível',
       author: data['author'] ?? 'Autor desconhecido',
-      imageUserUrl: data['imageUserUrl'] ?? '',
+      bookImageUserUrls: bookImageUserUrls,
       imageApiUrl: data['imageApiUrl'],
       publishedDate: (data['publishedDate'] as Timestamp).toDate(),
       condition: data['condition'] ?? 'Condição não disponível',

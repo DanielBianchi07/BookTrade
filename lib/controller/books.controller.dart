@@ -47,6 +47,16 @@ class BooksController {
       List<BookModel> books = snapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
 
+        // Verificação e conversão de bookImageUserUrls para garantir que seja uma lista de strings
+        var bookImageUserUrls = data['bookImageUserUrls'];
+        if (bookImageUserUrls is String) {
+          bookImageUserUrls = [bookImageUserUrls]; // Converte para lista se for uma string única
+        } else if (bookImageUserUrls is List) {
+          bookImageUserUrls = bookImageUserUrls.map((item) => item.toString()).toList();
+        } else {
+          bookImageUserUrls = ['https://via.placeholder.com/100']; // Placeholder se o campo estiver vazio ou nulo
+        }
+
         // Criação do objeto UserInfo baseado no documento do Firestore
         UInfo userInfo = UInfo(
           id: data['userInfo']['userId'] ?? '', // Certifique-se que 'userId' está sendo salvo no campo correto
@@ -64,7 +74,7 @@ class BooksController {
           id: doc.id,
           title: data['title'] ?? 'Título não disponível',
           author: data['author'] ?? 'Autor desconhecido',
-          imageUserUrl: data['imageUserUrl'] ?? 'https://via.placeholder.com/100', // Placeholder se não houver imagem
+          bookImageUserUrls: bookImageUserUrls,
           imageApiUrl: data['imageApiUrl'],
           publishedDate: (data['publishedDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
           condition: data['condition'] ?? 'Não especificado',

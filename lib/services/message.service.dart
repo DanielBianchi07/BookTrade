@@ -61,7 +61,7 @@ class MessageService {
 
   // Função para gerar um ID de conversa consistente entre dois usuários
   String getConversationId(String user1, String user2) {
-    return user1.hashCode <= user2.hashCode ? '$user1\_$user2' : '$user2\_$user1';
+    return user1.hashCode <= user2.hashCode ? '${user1}_$user2' : '${user2}_$user1';
   }
 
   // Obter a stream de mensagens entre o usuário atual e o usuário de destino

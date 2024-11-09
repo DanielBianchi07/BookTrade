@@ -5,7 +5,7 @@ import 'package:myapp/views/home.page.dart';
 import '../utils/books.genres.dart';
 
 class FavoriteGenresPage extends StatefulWidget {
-  const FavoriteGenresPage({Key? key}) : super(key: key);
+  const FavoriteGenresPage({super.key});
 
   @override
   _FavoriteGenresPageState createState() => _FavoriteGenresPageState();
@@ -14,7 +14,7 @@ class FavoriteGenresPage extends StatefulWidget {
 class _FavoriteGenresPageState extends State<FavoriteGenresPage> {
   List<String> _selectedGenres = [];
   List<String> _searchResults = [];
-  TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
   User? currentUser;
 
   @override

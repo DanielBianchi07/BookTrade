@@ -8,7 +8,7 @@ class BookCard extends StatelessWidget {
   final String title;
   final String author;
   final String postedBy;
-  final String? imageUserUrl;
+  final String imageUserUrl;
   final String? profileImageUrl;
   final bool isFavorite;
   final double? customerRating;
@@ -21,7 +21,7 @@ class BookCard extends StatelessWidget {
     required this.title,
     required this.author,
     required this.postedBy,
-    this.imageUserUrl,
+    required this.imageUserUrl,
     this.profileImageUrl,
     required this.isFavorite,
     this.customerRating,
@@ -54,7 +54,7 @@ class BookCard extends StatelessWidget {
                     color: Colors.grey[200],
                   ),
                   child: CachedNetworkImage(
-                    imageUrl: imageUserUrl ?? '',
+                    imageUrl: imageUserUrl,
                     placeholder: (context, url) => const Center(
                       child: CircularProgressIndicator(),
                     ),
@@ -93,9 +93,9 @@ class BookCard extends StatelessWidget {
                         children: [
                           CircleAvatar(
                             radius: 15,
-                            backgroundImage: CachedNetworkImageProvider(
-                              profileImageUrl ?? '',
-                            ),
+                            backgroundImage: profileImageUrl != null && profileImageUrl!.isNotEmpty
+                                ? CachedNetworkImageProvider(profileImageUrl!)
+                                : null,
                             child: profileImageUrl == null || profileImageUrl!.isEmpty
                                 ? const Icon(Icons.person, color: Colors.grey)
                                 : null,
