@@ -25,42 +25,59 @@ class MessageService {
 
   // Enviar uma nova mensagem e atualizar a coleção `conversations`
   Future<void> sendMessage({
-  required String senderId,
-  required String receiverId,
-  required String receiverName,
-  required String receiverProfileUrl,
-  required String content,
-  required FieldValue timestamp,
+    required String senderId,
+    required String receiverId,
+    required String receiverName,
+    required String receiverProfileUrl,
+    required String content,
+    required FieldValue timestamp,
   }) async {
-  try {
+    try {
+      final conversationId = await getConversationId(senderId, receiverId);
 
-    final conversationId = getConversationId(senderId, receiverId);
+      // Cria a nova mensagem na coleção `messages`
+      final newMessage = await messagesCollection.add({
+        'conversationId': conversationId,
+        'senderId': senderId,
+        'receiverId': receiverId,
+        'receiverName': receiverName,
+        'receiverProfileUrl': receiverProfileUrl,
+        'content': content,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
 
-    // Cria a nova mensagem na coleção `messages`
-    final newMessage = await messagesCollection.add({
-      'conversationId': conversationId,
-      'senderId': senderId,
-      'receiverId': receiverId,
-      'receiverName': receiverName,
-      'receiverProfileUrl': receiverProfileUrl,
-      'content': content,
-      'timestamp': FieldValue.serverTimestamp(),
-
-    });
-
-    // Atualiza ou cria o documento na coleção `conversations`
-    await conversationsCollection.doc(conversationId).set({
-      'participants': [senderId, receiverId],
-      'lastMessageId': newMessage.id,
-      'timestamp': timestamp,
+      // Atualiza o documento na coleção `conversations`
+      await conversationsCollection.doc(conversationId).set({
+        'participants': conversationId,  // Usando o ID combinado
+        'lastMessageId': newMessage.id,
+        'timestamp': timestamp,
       }, SetOptions(merge: true));
     } catch (e) {
-      Fluttertoast.showToast(msg:'Erro ao enviar mensagem e atualizar conversa: $e');
+      Fluttertoast.showToast(msg: 'Erro ao enviar mensagem e atualizar conversa: $e');
+    }
+  }
+
+  Future<String> getConversationId(String senderId, String receiverId) async {
+    try {
+      // Gera o ID de conversa único e ordenado
+      String conversationId = mergeConversationId(senderId, receiverId);
+
+      final querySnapshot = await conversationsCollection
+          .where('conversationId', isEqualTo: conversationId)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        return querySnapshot.docs.first.id;
+      } else {
+        throw Exception('Conversa não encontrada');
+      }
+    } catch (e) {
+      throw Exception('Erro ao obter conversa: $e');
     }
   }
 
   // Função para gerar um ID de conversa consistente entre dois usuários
-  String getConversationId(String user1, String user2) {
+  String mergeConversationId(String user1, String user2) {
     return user1.hashCode <= user2.hashCode ? '${user1}_$user2' : '${user2}_$user1';
   }
 

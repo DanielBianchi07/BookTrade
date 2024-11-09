@@ -2,15 +2,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ConversationModel {
   final String id;
-  final String lastMessageId;
-  final List<String> participants;
+  final String? lastMessageId;
+  final String participants;
   final Timestamp timestamp;
   final String otherUserName; // Nome do outro usuário na conversa
   final String otherUserImage; // URL da imagem do outro usuário
 
   ConversationModel({
     required this.id,
-    required this.lastMessageId,
+    this.lastMessageId,
     required this.participants,
     required this.timestamp,
     required this.otherUserName,
@@ -23,7 +23,7 @@ class ConversationModel {
     return ConversationModel(
       id: doc.id,
       lastMessageId: data['lastMessageId'],
-      participants: List<String>.from(data['participants'] ?? []),
+      participants: data['participants'] ?? '',
       timestamp: data['timestamp'] ?? Timestamp.now(),
       otherUserName: data['otherUserName'] ?? 'Usuário',
       otherUserImage: data['otherUserImage'] ?? '',
