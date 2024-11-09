@@ -7,6 +7,7 @@ import 'package:myapp/views/app.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await FirebaseAppCheck.instance.activate();
 
   // Teste rápido de Firebase Storage
   try {
