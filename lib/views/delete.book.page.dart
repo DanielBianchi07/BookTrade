@@ -1,12 +1,20 @@
 import 'package:flutter/material.dart';
-import '../models/book.model.dart'; // Importe o modelo Book
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:myapp/controller/books.controller.dart';
+import '../models/book.model.dart';
 
-class DeleteBookPage extends StatelessWidget {
+class DeleteBookPage extends StatefulWidget {
   final BookModel book; // Receber o livro como argumento
 
   const DeleteBookPage({super.key, required this.book});
+
+  @override
+  _DeleteBookPageState createState() => _DeleteBookPageState();
+}
+
+class _DeleteBookPageState extends State<DeleteBookPage> {
+  final BooksController booksController = BooksController();
+  int _currentPage = 0; // Página atual no carrossel
+  final PageController _pageController = PageController();
 
   @override
   Widget build(BuildContext context) {
@@ -26,20 +34,61 @@ class DeleteBookPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Carrossel de Imagens
-            SizedBox(
-              height: 200,
-              child: PageView(
-                children: [
-                  _buildBookImage(book.bookImageUserUrls[0]), // Imagem do livro
-                ],
-              ),
+            // Carrossel de Imagens com Setas
+            Stack(
+              children: [
+                SizedBox(
+                  height: 300,
+                  child: PageView.builder(
+                    controller: _pageController,
+                    itemCount: widget.book.bookImageUserUrls.length,
+                    onPageChanged: (index) {
+                      setState(() {
+                        _currentPage = index;
+                      });
+                    },
+                    itemBuilder: (context, index) {
+                      return _buildBookImage(widget.book.bookImageUserUrls[index]);
+                    },
+                  ),
+                ),
+                // Seta para a esquerda
+                if (_currentPage > 0)
+                  Positioned(
+                    left: 10,
+                    top: 125,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
+                      onPressed: () {
+                        _pageController.previousPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
+                      },
+                    ),
+                  ),
+                // Seta para a direita
+                if (_currentPage < widget.book.bookImageUserUrls.length - 1)
+                  Positioned(
+                    right: 10,
+                    top: 125,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_forward_ios, color: Colors.black),
+                      onPressed: () {
+                        _pageController.nextPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
+                      },
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: 20),
 
             // Informações do Livro
             Text(
-              book.title,
+              widget.book.title,
               style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -47,7 +96,7 @@ class DeleteBookPage extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              'Autor: ${book.author}\nPublicado em: ${book.publishedDate.year}',
+              'Autor: ${widget.book.author}\nPublicado em: ${widget.book.publishedDate.year}',
               style: const TextStyle(
                 fontSize: 14,
                 height: 1.5,
@@ -55,7 +104,7 @@ class DeleteBookPage extends StatelessWidget {
             ),
             const SizedBox(height: 0),
             Text(
-              'Condição: ${book.condition}\nEdição: ${book.edition}\nGêneros: ${book.genres?.join(', ') ?? 'N/A'}\nISBN: ${book.isbn ?? 'N/A'}\nAno de publicação: ${book.publicationYear}\nEditora: ${book.publisher}',
+              'Condição: ${widget.book.condition}\nEdição: ${widget.book.edition}\nGêneros: ${widget.book.genres?.join(', ') ?? 'N/A'}\nISBN: ${widget.book.isbn ?? 'N/A'}\nAno de publicação: ${widget.book.publicationYear}\nEditora: ${widget.book.publisher}',
               style: const TextStyle(
                 fontSize: 14,
                 height: 1.5,
@@ -85,7 +134,7 @@ class DeleteBookPage extends StatelessWidget {
               children: [
                 ElevatedButton(
                   onPressed: () {
-                    _confirmDelete(context, book.id); // Chama a função de confirmação
+                    booksController.confirmDelete(context, widget.book.id); // Chama a função de confirmação
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0xFFDD585B),
@@ -105,74 +154,14 @@ class DeleteBookPage extends StatelessWidget {
 
   Widget _buildBookImage(String imageUrl) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 10.0),
-      child:
-      Image.network(
-        imageUrl,
-        fit: BoxFit.cover,
+      margin: const EdgeInsets.symmetric(horizontal: 5.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10.0),
+        image: DecorationImage(
+          image: NetworkImage(imageUrl),
+          fit: BoxFit.contain, // Ajuste para caber a imagem inteira
+        ),
       ),
     );
-  }
-
-  // Função para confirmar a exclusão do livro
-  Future<void> _confirmDelete(BuildContext context, String bookId) async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false, // O usuário deve tocar em um botão
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Confirmar exclusão'),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: const <Widget>[
-                Text('Você tem certeza que deseja excluir este livro?'),
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancelar'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('Excluir'),
-              onPressed: () {
-                Navigator.of(context).pop();
-                _deleteBook(bookId, context); // Chama a função de exclusão
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // Função para excluir o livro
-  Future<void> _deleteBook(String bookId, BuildContext context) async {
-    try {
-      // Obtém o usuário logado
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Usuário não está logado')),
-        );
-        return;
-      }
-
-      // Exclui o livro da coleção Firestore
-      await FirebaseFirestore.instance.collection('books').doc(bookId).delete();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Livro removido com sucesso!')),
-      );
-
-      // Retorna para a página anterior (opcional)
-      Navigator.of(context).pop();
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao excluir o livro: $e')),
-      );
-    }
   }
 }

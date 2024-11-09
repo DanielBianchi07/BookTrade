@@ -38,10 +38,7 @@ class ChatsPage extends StatelessWidget {
             title: const Text('Conversas', style: TextStyle(color: Colors.black)),
           ),
           body: StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('conversations')
-                .where('participants', arrayContains: user.value.uid)
-                .snapshots(),
+            stream: FirebaseFirestore.instance.collection('conversations').snapshots(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
@@ -53,7 +50,15 @@ class ChatsPage extends StatelessWidget {
                 return const Center(child: Text('Nenhuma conversa encontrada.'));
               }
 
-              final conversationDocs = snapshot.data!.docs;
+              // Filtrar conversas onde o `senderId` está presente em `participants`
+              final conversationDocs = snapshot.data!.docs.where((doc) {
+                final participants = doc['participants'] as String;
+                return participants.contains(user.value.uid);
+              }).toList();
+
+              if (conversationDocs.isEmpty) {
+                return const Center(child: Text('Nenhuma conversa encontrada.'));
+              }
 
               return ListView.builder(
                 itemCount: conversationDocs.length,
@@ -69,24 +74,21 @@ class ChatsPage extends StatelessWidget {
                           title: Text('Carregando...'),
                         );
                       }
-                      if (messageSnapshot.hasError || !messageSnapshot.hasData) {
+                      if (messageSnapshot.hasError) {
                         return const ListTile(
                           title: Text('Erro ao carregar mensagem'),
                         );
                       }
 
                       final message = messageSnapshot.data;
-                      if (message == null) {
-                        return const ListTile(
-                          title: Text('Nenhuma mensagem encontrada'),
-                        );
-                      }
+                      final lastMessage = message != null ? message.content : 'Inicie uma conversa';
+                      final formattedTime = message != null
+                          ? DateFormat('HH:mm').format(message.timestamp.toDate())
+                          : '';
 
-                      final otherUserId = message.senderId == user.value.uid
-                          ? message.receiverId
-                          : message.senderId;
-                      final lastMessage = message.content;
-                      final formattedTime = DateFormat('HH:mm').format(message.timestamp.toDate());
+                      // Dividir `participants` e pegar o outro usuário
+                      final participants = (conversationDoc['participants'] as String).split('_');
+                      final otherUserId = participants.firstWhere((id) => id != user.value.uid);
 
                       return FutureBuilder<DocumentSnapshot>(
                         future: FirebaseFirestore.instance

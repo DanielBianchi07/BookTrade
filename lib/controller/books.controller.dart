@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import '../models/book.model.dart';
 import '../models/user.info.model.dart';
@@ -179,6 +181,67 @@ class BooksController {
       }
     } catch (e) {
       print("Erro ao alternar favorito: $e");
+    }
+  }
+
+  Future<void> confirmDelete(BuildContext context, String bookId) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // O usuário deve tocar em um botão
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirmar exclusão'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: const <Widget>[
+                Text('Você tem certeza que deseja excluir este livro?'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancelar'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Excluir'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _deleteBook(bookId, context); // Chama a função de exclusão
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Função para excluir o livro
+  Future<void> _deleteBook(String bookId, BuildContext context) async {
+    try {
+      // Obtém o usuário logado
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Usuário não está logado')),
+        );
+        return;
+      }
+
+      // Exclui o livro da coleção Firestore
+      await FirebaseFirestore.instance.collection('books').doc(bookId).delete();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Livro removido com sucesso!')),
+      );
+
+      // Retorna para a página anterior (opcional)
+      Navigator.of(context).pop();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao excluir o livro: $e')),
+      );
     }
   }
 }
