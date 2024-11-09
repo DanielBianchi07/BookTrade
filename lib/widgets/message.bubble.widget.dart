@@ -7,11 +7,11 @@ class MessageBubble extends StatelessWidget {
   final String time;
 
   const MessageBubble({
-    Key? key,
+    super.key,
     required this.message,
     required this.isUser,
     required this.time,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +24,7 @@ class MessageBubble extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             margin: const EdgeInsets.symmetric(vertical: 4),
             decoration: BoxDecoration(
-              color: isUser ? Colors.blueAccent : Colors.grey[300],
+              color: isUser ? Colors.greenAccent : Colors.grey[300],
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(

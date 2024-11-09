@@ -12,7 +12,6 @@ import 'publicated.books.page.dart';
 import 'selected.book.page.dart';
 import 'login.page.dart';
 import 'register.page.dart';
-import 'selected.book.page.dart';
 import 'trade.history.page.dart';
 import 'trade.status.page.dart';
 import 'notification.detail.page.dart'; // Importe a tela de detalhes de notificação

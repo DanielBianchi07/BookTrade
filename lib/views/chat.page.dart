@@ -11,9 +11,9 @@ class ChatPage extends StatefulWidget {
   final String otherUserId;
 
   const ChatPage({
-    Key? key,
+    super.key,
     required this.otherUserId,
-  }) : super(key: key);
+  });
 
   @override
   _ChatPageState createState() => _ChatPageState();
@@ -189,6 +189,6 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
   String _generateConversationId(String user1, String user2) {
-    return user1.hashCode <= user2.hashCode ? '$user1\_$user2' : '$user2\_$user1';
+    return user1.hashCode <= user2.hashCode ? '${user1}_$user2' : '${user2}_$user1';
   }
 }

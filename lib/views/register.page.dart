@@ -15,8 +15,8 @@ class RegistrationPage extends StatefulWidget {
 }
 
 class _RegistrationPageState extends State<RegistrationPage> {
-  final controller = new RegisterController();
-  final loginController = new LoginController();
+  final controller = RegisterController();
+  final loginController = LoginController();
   var name = TextEditingController();
   var phone = TextEditingController();
   var email = TextEditingController();

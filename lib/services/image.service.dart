@@ -87,7 +87,7 @@ class ImageUploadService {
       final snapshot = await uploadTask;
       return await snapshot.ref.getDownloadURL();
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 }

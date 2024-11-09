@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../models/book.model.dart';  // Certifique-se de que a classe BookModel está importada corretamente.
 
@@ -8,10 +7,10 @@ class RequestDetailPage extends StatefulWidget {
   final bool isRequester;
 
   const RequestDetailPage({
-    Key? key,
+    super.key,
     required this.requestId,
     required this.isRequester,
-  }) : super(key: key);
+  });
 
   @override
   _RequestDetailPageState createState() => _RequestDetailPageState();

@@ -7,7 +7,7 @@ import 'request.page.dart';
 class TradeOfferPage extends StatelessWidget {
   final BookModel book;
 
-  const TradeOfferPage({Key? key, required this.book}) : super(key: key);
+  const TradeOfferPage({super.key, required this.book});
 
   @override
   Widget build(BuildContext context) {
@@ -94,7 +94,7 @@ class TradeOfferPage extends StatelessWidget {
                         }),
                         if (book.userInfo.customerRating - book.userInfo.customerRating.floor() >= 0.5)
                           const Icon(Icons.star_half, color: Colors.amber, size: 18),
-                        ...List.generate((5 - book.userInfo.customerRating.ceil()) as int, (index) {
+                        ...List.generate((5 - book.userInfo.customerRating.ceil()), (index) {
                           return const Icon(Icons.star_border, color: Colors.amber, size: 18);
                         }),
                       ],

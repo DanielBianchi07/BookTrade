@@ -13,7 +13,7 @@ import 'selected.book.page.dart';
 class RequestPage extends StatefulWidget {
   final BookModel book;
 
-  const RequestPage({Key? key, required this.book}) : super(key: key);
+  const RequestPage({super.key, required this.book});
 
   @override
   _RequestPageState createState() => _RequestPageState();
@@ -23,7 +23,7 @@ class _RequestPageState extends State<RequestPage> {
   final loginController = LoginController();
   final booksController = BooksController();
   late final String userId;
-  List<BookModel> _books = [];
+  final List<BookModel> _books = [];
 
   @override
   Widget build(BuildContext context) {
@@ -148,13 +148,13 @@ class _RequestPageState extends State<RequestPage> {
                         'id': widget.book.id,
                         'title': widget.book.title,
                         'author': widget.book.author,
-                        'imageUrl': widget.book.imageUserUrl,
+                        'imageUrl': widget.book.bookImageUserUrls[0],
                       },
                       'offeredBooks': _books.map((book) => {
                         'id': book.id,
                         'title': book.title,
                         'author': book.author,
-                        'imageUrl': book.imageUserUrl,
+                        'imageUrl': book.bookImageUserUrls[0],
                       }).toList(),
                       'requesterId': userCredential.uid,
                       'ownerId': widget.book.userId,
@@ -211,7 +211,7 @@ class _RequestPageState extends State<RequestPage> {
                 color: Colors.grey[200],
               ),
               child: CachedNetworkImage(
-                imageUrl: book.imageUserUrl,
+                imageUrl: book.bookImageUserUrls[0],
                 placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
                 errorWidget: (context, url, error) => const Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
                 fit: BoxFit.cover,
@@ -255,7 +255,7 @@ class _RequestPageState extends State<RequestPage> {
                 color: Colors.grey[200],
               ),
               child: CachedNetworkImage(
-                imageUrl: book.imageUserUrl,
+                imageUrl: book.bookImageUserUrls[0],
                 placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
                 errorWidget: (context, url, error) => const Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
                 fit: BoxFit.cover,

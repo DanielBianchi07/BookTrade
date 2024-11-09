@@ -9,13 +9,13 @@ class ChatTile extends StatelessWidget {
   final VoidCallback onTap;
 
   const ChatTile({
-    Key? key,
+    super.key,
     required this.contactName,
     required this.lastMessage,
     required this.time,
     required this.avatarUrl,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

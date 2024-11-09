@@ -1,13 +1,10 @@
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:myapp/views/publicated.books.page.dart';
-import 'package:image/image.dart' as img;
 import '../controller/login.controller.dart';
 import '../services/image.service.dart';
 
@@ -31,7 +28,7 @@ class _NewBookPageState extends State<NewBookPage> {
   bool _noIsbn = false;
   List<String> _genres = [];
   final ImageUploadService _imageUploadService = ImageUploadService();
-  List<File> _selectedImages = [];
+  final List<File> _selectedImages = [];
   File? _apiImage;
   String _description = '';
 
