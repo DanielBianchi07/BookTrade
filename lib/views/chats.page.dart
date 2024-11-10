@@ -86,7 +86,7 @@ class ChatsPage extends StatelessWidget {
                           ? DateFormat('HH:mm').format(message.timestamp.toDate())
                           : '';
 
-                      // Dividir `participants` e pegar o outro usuário
+                      // Dividir `participants` e pegar o outro usuário (recebedor)
                       final participants = (conversationDoc['participants'] as String).split('_');
                       final otherUserId = participants.firstWhere((id) => id != user.value.uid);
 
