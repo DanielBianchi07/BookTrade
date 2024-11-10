@@ -33,7 +33,17 @@ class MessageService {
     required FieldValue timestamp,
   }) async {
     try {
-      final conversationId = await getConversationId(senderId, receiverId);
+      // Gera o `conversationId` único com base nos IDs de `senderId` e `receiverId`
+      final conversationId = mergeConversationId(senderId, receiverId);
+
+      // Verifica se o documento de conversa com o `conversationId` já existe
+      final conversationQuery = await conversationsCollection
+          .where('participants', isEqualTo: conversationId)
+          .limit(1)
+          .get();
+
+      String finalConversationId;
+      finalConversationId = conversationQuery.docs.first.id;
 
       // Cria a nova mensagem na coleção `messages`
       final newMessage = await messagesCollection.add({
@@ -46,35 +56,34 @@ class MessageService {
         'timestamp': FieldValue.serverTimestamp(),
       });
 
-      // Atualiza o documento na coleção `conversations`
-      await conversationsCollection.doc(conversationId).set({
-        'participants': conversationId,  // Usando o ID combinado
+      // Atualiza o documento na coleção `conversations` com a última mensagem
+      await conversationsCollection.doc(finalConversationId).update({
         'lastMessageId': newMessage.id,
-        'timestamp': timestamp,
-      }, SetOptions(merge: true));
+        'timestamp': FieldValue.serverTimestamp(),
+      });
     } catch (e) {
       Fluttertoast.showToast(msg: 'Erro ao enviar mensagem e atualizar conversa: $e');
     }
   }
 
-  Future<String> getConversationId(String senderId, String receiverId) async {
-    try {
-      // Gera o ID de conversa único e ordenado
-      String conversationId = mergeConversationId(senderId, receiverId);
-
-      final querySnapshot = await conversationsCollection
-          .where('conversationId', isEqualTo: conversationId)
-          .get();
-
-      if (querySnapshot.docs.isNotEmpty) {
-        return querySnapshot.docs.first.id;
-      } else {
-        throw Exception('Conversa não encontrada');
-      }
-    } catch (e) {
-      throw Exception('Erro ao obter conversa: $e');
-    }
-  }
+  // Future<String> getConversationId(String senderId, String receiverId) async {
+  //   try {
+  //     // Gera o ID de conversa único e ordenado
+  //     String conversationId = mergeConversationId(senderId, receiverId);
+  //
+  //     final querySnapshot = await conversationsCollection
+  //         .where('conversationId', isEqualTo: conversationId)
+  //         .get();
+  //
+  //     if (querySnapshot.docs.isNotEmpty) {
+  //       return querySnapshot.docs.first.id;
+  //     } else {
+  //       throw Exception('Conversa não encontrada');
+  //     }
+  //   } catch (e) {
+  //     throw Exception('Erro ao obter conversa: $e');
+  //   }
+  // }
 
   // Função para gerar um ID de conversa consistente entre dois usuários
   String mergeConversationId(String user1, String user2) {
