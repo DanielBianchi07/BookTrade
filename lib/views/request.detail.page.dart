@@ -49,9 +49,12 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
           offeredBooks = (requestData['offeredBooks'] as List)
               .map((bookData) => BookModel.fromDocument(bookData))
               .toList();
+        });
+      }
     } catch (e) {
       print('Erro ao carregar os dados da solicitação: $e');
     }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,10 +63,67 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
       body: requestData.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : Column(
+        children: [
+          // Exibe o livro solicitado
+          Text('Livro solicitado: ${requestData['requestedBook']['title']}'),
 
+          // Exibe os livros oferecidos
+          Expanded(
+            child: ListView.builder(
+              itemCount: offeredBooks.length,
+              itemBuilder: (context, index) {
+                final book = offeredBooks[index];
+                return RadioListTile<String>(
+                  title: Text(book.title),
+                  value: book.id,
+                  groupValue: selectedBookId,
+                  onChanged: (value) {
+                    setState(() {
+                      selectedBookId = value!;
+                    });
+                  },
+                );
+              },
+            ),
+          ),
 
+          // Botões de Aceitar ou Rejeitar
+          if (!widget.isRequester)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                ElevatedButton(
+                  onPressed: () async {
+                    // Lógica de aceitar a solicitação
+                    await FirebaseFirestore.instance
+                        .collection('requests')
+                        .doc(widget.requestId)
+                        .update({'status': 'accepted'});
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Solicitação aceita!')),
+                    );
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Aceitar'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    // Lógica de rejeitar a solicitação
+                    await FirebaseFirestore.instance
+                        .collection('requests')
+                        .doc(widget.requestId)
+                        .update({'status': 'rejected'});
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Solicitação rejeitada!')),
+                    );
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Rejeitar'),
+                ),
               ],
             ),
+        ],
+      ),
     );
   }
 }
