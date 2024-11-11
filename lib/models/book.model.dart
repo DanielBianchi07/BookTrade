@@ -77,7 +77,9 @@ class BookModel {
       author: data['author'] ?? 'Autor desconhecido',
       bookImageUserUrls: bookImageUserUrls,
       imageApiUrl: data['imageApiUrl'],
-      publishedDate: (data['publishedDate'] as Timestamp).toDate(),
+      publishedDate: data['publishedDate'] != null
+          ? (data['publishedDate'] as Timestamp).toDate()
+          : DateTime.now(), // Valor padrão se publishedDate for nulo
       condition: data['condition'] ?? 'Condição não disponível',
       edition: data['edition'] ?? 'Edição não disponível',
       genres: List<String>.from(data['genres'] ?? []),
@@ -85,11 +87,13 @@ class BookModel {
       publicationYear: data['publicationYear'] ?? 'Ano de publicação não disponível',
       publisher: data['publisher'] ?? 'Editora não disponível',
       description: data['description'], // Carrega a sinopse
-      userInfo: UInfo.fromMap(data['userInfo']),
+      userInfo: data['userInfo'] != null
+          ? UInfo.fromMap(data['userInfo'])
+          : UInfo.empty(), // Valor padrão se userInfo for nulo
     );
   }
 
-  // Método para criar uma instância de BookModel a partir de um Map
+// Método para criar uma instância de BookModel a partir de um Map
   factory BookModel.fromMap(Map<String, dynamic> data) {
     // Garante que `bookImageUserUrls` seja sempre uma lista de strings
     var bookImageUserUrls = data['bookImageUserUrls'];
@@ -108,7 +112,9 @@ class BookModel {
       author: data['author'] ?? 'Autor desconhecido',
       bookImageUserUrls: bookImageUserUrls,
       imageApiUrl: data['imageApiUrl'],
-      publishedDate: (data['publishedDate'] as Timestamp).toDate(),
+      publishedDate: data['publishedDate'] != null
+          ? (data['publishedDate'] as Timestamp).toDate()
+          : DateTime.now(), // Valor padrão se publishedDate for nulo
       condition: data['condition'] ?? 'Condição não disponível',
       edition: data['edition'] ?? 'Edição não disponível',
       genres: List<String>.from(data['genres'] ?? []),
@@ -116,7 +122,9 @@ class BookModel {
       publicationYear: data['publicationYear'] ?? 'Ano de publicação não disponível',
       publisher: data['publisher'] ?? 'Editora não disponível',
       description: data['description'], // Carrega a sinopse
-      userInfo: UInfo.fromMap(data['userInfo']),
+      userInfo: data['userInfo'] != null
+          ? UInfo.fromMap(data['userInfo'])
+          : UInfo.empty(), // Valor padrão se userInfo for nulo
     );
   }
 }

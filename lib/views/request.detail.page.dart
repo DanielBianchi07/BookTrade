@@ -47,7 +47,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
 
           // Mapeia os livros oferecidos usando o método fromMap
           offeredBooks = (requestData['offeredBooks'] as List)
-              .map((bookData) => BookModel.fromDocument(bookData))
+              .map((bookData) => BookModel.fromMap(bookData as Map<String, dynamic>))
               .toList();
         });
       }
@@ -62,67 +62,83 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
       appBar: AppBar(title: Text('Detalhes da Solicitação')),
       body: requestData.isEmpty
           ? const Center(child: CircularProgressIndicator())
-          : Column(
-        children: [
-          // Exibe o livro solicitado
-          Text('Livro solicitado: ${requestData['requestedBook']['title']}'),
+          : SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Exibe o livro solicitado
+              Text(
+                'Livro solicitado: ${requestData['requestedBook']['title']}',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
 
-          // Exibe os livros oferecidos
-          Expanded(
-            child: ListView.builder(
-              itemCount: offeredBooks.length,
-              itemBuilder: (context, index) {
-                final book = offeredBooks[index];
-                return RadioListTile<String>(
-                  title: Text(book.title),
-                  value: book.id,
-                  groupValue: selectedBookId,
-                  onChanged: (value) {
-                    setState(() {
-                      selectedBookId = value!;
-                    });
-                  },
-                );
-              },
-            ),
+              // Exibe os livros oferecidos
+              Text(
+                'Livros Oferecidos:',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              ListView.builder(
+                shrinkWrap: true, // Para que a ListView seja exibida corretamente dentro da Column
+                physics: const NeverScrollableScrollPhysics(), // Evitar conflitos de scroll com o SingleChildScrollView
+                itemCount: offeredBooks.length,
+                itemBuilder: (context, index) {
+                  final book = offeredBooks[index];
+                  return RadioListTile<String>(
+                    title: Text(book.title),
+                    value: book.id,
+                    groupValue: selectedBookId,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedBookId = value!;
+                      });
+                    },
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Botões de Aceitar ou Rejeitar
+              if (!widget.isRequester)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () async {
+                        // Lógica de aceitar a solicitação
+                        await FirebaseFirestore.instance
+                            .collection('requests')
+                            .doc(widget.requestId)
+                            .update({'status': 'accepted'});
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Solicitação aceita!')),
+                        );
+                        Navigator.pop(context);
+                      },
+                      child: const Text('Aceitar'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () async {
+                        // Lógica de rejeitar a solicitação
+                        await FirebaseFirestore.instance
+                            .collection('requests')
+                            .doc(widget.requestId)
+                            .update({'status': 'rejected'});
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Solicitação rejeitada!')),
+                        );
+                        Navigator.pop(context);
+                      },
+                      child: const Text('Rejeitar'),
+                    ),
+                  ],
+                ),
+            ],
           ),
-
-          // Botões de Aceitar ou Rejeitar
-          if (!widget.isRequester)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                ElevatedButton(
-                  onPressed: () async {
-                    // Lógica de aceitar a solicitação
-                    await FirebaseFirestore.instance
-                        .collection('requests')
-                        .doc(widget.requestId)
-                        .update({'status': 'accepted'});
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Solicitação aceita!')),
-                    );
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Aceitar'),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    // Lógica de rejeitar a solicitação
-                    await FirebaseFirestore.instance
-                        .collection('requests')
-                        .doc(widget.requestId)
-                        .update({'status': 'rejected'});
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Solicitação rejeitada!')),
-                    );
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Rejeitar'),
-                ),
-              ],
-            ),
-        ],
+        ),
       ),
     );
   }
