@@ -44,4 +44,18 @@ class UInfo {
       phone: map['phone'] ?? '',
     );
   }
+
+  // Método para criar uma instância vazia de UInfo
+  factory UInfo.empty() {
+    return UInfo(
+      id: 'Identificador de usuário desconhecido',
+      profileImageUrl: 'Imagem de perfil desconhecida',
+      address: 'Endereço desconhecido',
+      customerRating: 0.0,
+      favoriteGenres: [],
+      phone: 'Telefone desconhecido',
+      name: 'Usuário desconhecido',
+      email: 'Email não disponível',
+    );
+  }
 }
