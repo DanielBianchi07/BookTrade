@@ -154,6 +154,7 @@ class _NewBookPageState extends State<NewBookPage> {
           'description': _description,
           'genres': _noIsbn ? [_genreController.text] : _genres,
           'bookImageUserUrls': [''], // Inicialmente uma lista vazia
+          'publishedDate': FieldValue.serverTimestamp(),
           'imageApiUrl': '', // Será atualizado se houver uma imagem da API
           'userId': userId,
           'userInfo': {

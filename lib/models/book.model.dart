@@ -88,4 +88,35 @@ class BookModel {
       userInfo: UInfo.fromMap(data['userInfo']),
     );
   }
+
+  // Método para criar uma instância de BookModel a partir de um Map
+  factory BookModel.fromMap(Map<String, dynamic> data) {
+    // Garante que `bookImageUserUrls` seja sempre uma lista de strings
+    var bookImageUserUrls = data['bookImageUserUrls'];
+    if (bookImageUserUrls is String) {
+      bookImageUserUrls = [bookImageUserUrls];
+    } else if (bookImageUserUrls is List) {
+      bookImageUserUrls = bookImageUserUrls.map((item) => item.toString()).toList();
+    } else {
+      bookImageUserUrls = ['https://via.placeholder.com/100']; // Placeholder se estiver ausente ou nulo
+    }
+
+    return BookModel(
+      userId: data['userId'] ?? '',
+      id: data['id'] ?? '',
+      title: data['title'] ?? 'Título não disponível',
+      author: data['author'] ?? 'Autor desconhecido',
+      bookImageUserUrls: bookImageUserUrls,
+      imageApiUrl: data['imageApiUrl'],
+      publishedDate: (data['publishedDate'] as Timestamp).toDate(),
+      condition: data['condition'] ?? 'Condição não disponível',
+      edition: data['edition'] ?? 'Edição não disponível',
+      genres: List<String>.from(data['genres'] ?? []),
+      isbn: data['isbn'],
+      publicationYear: data['publicationYear'] ?? 'Ano de publicação não disponível',
+      publisher: data['publisher'] ?? 'Editora não disponível',
+      description: data['description'], // Carrega a sinopse
+      userInfo: UInfo.fromMap(data['userInfo']),
+    );
+  }
 }
