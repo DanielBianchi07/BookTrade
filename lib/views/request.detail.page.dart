@@ -1,12 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import '../controller/books.controller.dart';
-import '../controller/login.controller.dart';
 import '../models/book.model.dart';
-import 'selected.book.page.dart';
 import 'trade.confirmation.page.dart';
 
 class RequestDetailPage extends StatefulWidget {

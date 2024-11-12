@@ -1,10 +1,12 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:myapp/controller/edit.profile.controller.dart';
 import '../controller/login.controller.dart';
+import '../models/user.info.model.dart';
 import '../services/image.service.dart';
 import '../user.dart';
 import 'change.email.page.dart';
@@ -82,11 +84,54 @@ class _EditProfilePageState extends State<EditProfilePage> {
           });
         }
       }
+      // Atualiza o UserInfoModel na coleção de livros
+      await updateUserInfoInBooks();
+
       Fluttertoast.showToast(msg: "Perfil atualizado com sucesso!");
     } catch (err) {
       onError(err);
     } finally {
       onComplete();
+    }
+  }
+
+  Future<void> updateUserInfoInBooks() async {
+    String userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+    // Carregar os valores atuais de customerRating e favoriteGenres
+    DocumentSnapshot userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .get();
+    double currentCustomerRating = userDoc['customerRating'] ?? 0.0;
+    List<String> currentFavoriteGenres = List<String>.from(userDoc['favoriteGenres'] ?? []);
+    final userInfo = UInfo(
+      id: userId,
+      name: name.text,
+      email: email.text,
+      phone: phone.text,
+      address: address.text,
+      profileImageUrl: profileImageUrl ?? '',
+      customerRating: currentCustomerRating,
+      favoriteGenres: currentFavoriteGenres,
+    );
+
+    final userMap = userInfo.toMap();
+
+    try {
+      // Busca todos os documentos onde o `userId` corresponde ao usuário logado
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('books')
+          .where('userId', isEqualTo: userId)
+          .get();
+
+      // Atualiza o campo `userInfo` em cada documento encontrado
+      for (QueryDocumentSnapshot doc in snapshot.docs) {
+        await doc.reference.update({
+          'userInfo': userMap,
+        });
+      }
+    } catch (e) {
+      print("Erro ao atualizar userInfo nos livros: $e");
     }
   }
 
