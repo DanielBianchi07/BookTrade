@@ -177,6 +177,10 @@ class _RequestPageState extends State<RequestPage> {
                           timestamp: FieldValue.serverTimestamp());
                       // Navega de volta após o envio da solicitação
                       Navigator.of(context).pop();
+                      chatsService.newChat(
+                          senderId: user.value.uid,
+                          receiverId: widget.book.userInfo.id,
+                          timestamp: FieldValue.serverTimestamp());
                     } catch (e) {
                       print('Erro ao enviar a solicitação: $e');
                       ScaffoldMessenger.of(context).showSnackBar(
