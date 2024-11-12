@@ -16,6 +16,7 @@ class BookModel {
   final String publicationYear;
   final String publisher;
   final String? description; // Novo campo para a sinopse
+  final bool isAvailable;
   final UInfo userInfo;
 
   BookModel({
@@ -33,6 +34,7 @@ class BookModel {
     required this.publicationYear,
     required this.publisher,
     this.description, // Inicialização do novo campo
+    required this.isAvailable,
     required this.userInfo,
   });
 
@@ -52,6 +54,7 @@ class BookModel {
       'publicationYear': publicationYear,
       'publisher': publisher,
       'description': description, // Mapeamento da sinopse
+      'isAvailable': isAvailable,
       'userInfo': userInfo.toMap(),
     };
   }
@@ -87,6 +90,7 @@ class BookModel {
       publicationYear: data['publicationYear'] ?? 'Ano de publicação não disponível',
       publisher: data['publisher'] ?? 'Editora não disponível',
       description: data['description'], // Carrega a sinopse
+      isAvailable: data['isAvailable'] ?? true,
       userInfo: data['userInfo'] != null
           ? UInfo.fromMap(data['userInfo'])
           : UInfo.empty(), // Valor padrão se userInfo for nulo
@@ -122,6 +126,7 @@ class BookModel {
       publicationYear: data['publicationYear'] ?? 'Ano de publicação não disponível',
       publisher: data['publisher'] ?? 'Editora não disponível',
       description: data['description'], // Carrega a sinopse
+      isAvailable: data['isAvailable'] ?? true,
       userInfo: data['userInfo'] != null
           ? UInfo.fromMap(data['userInfo'])
           : UInfo.empty(), // Valor padrão se userInfo for nulo

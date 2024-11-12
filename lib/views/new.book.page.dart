@@ -156,6 +156,7 @@ class _NewBookPageState extends State<NewBookPage> {
           'bookImageUserUrls': [''], // Inicialmente uma lista vazia
           'publishedDate': FieldValue.serverTimestamp(),
           'imageApiUrl': '', // Será atualizado se houver uma imagem da API
+          'isAvailable': true,
           'userId': userId,
           'userInfo': {
             'profileImageUrl': userData['profileImageUrl'] ?? '',

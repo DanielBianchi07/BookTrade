@@ -117,6 +117,7 @@ class _HomePageState extends State<HomePage> {
             isbn: data['isbn'],
             publicationYear: data['publicationYear'] ?? 'Ano de publicação não disponível', // Valor padrão
             publisher: data['publisher'] ?? 'Editora não disponível', // Valor padrão
+            isAvailable: data['isAvailable'] ?? true,
             userInfo: UInfo.fromMap(data['userInfo'] ?? {}), // Constrói userInfo com um map vazio se null
           );
         }).toList();
@@ -361,7 +362,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.history, color: Colors.black),
-                  title: const Text('Histórico de trocas'),
+                  title: const Text('Minhas trocas'),
                   onTap: () {
                     Navigator.pushNamed(context, '/tradeHistory');
                   },
@@ -375,7 +376,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.swap_horiz, color: Colors.black),
-                  title: const Text('Status de trocas'),
+                  title: const Text('Trocas pendentes'),
                   onTap: () {
                     Navigator.pushNamed(context, '/tradeStatus');
                   },
