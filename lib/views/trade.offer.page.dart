@@ -18,7 +18,7 @@ class TradeOfferPage extends StatefulWidget {
 class _TradeOfferPageState extends State<TradeOfferPage> {
   int _currentPage = 0; // Página atual no carrossel
   final PageController _pageController = PageController();
-  final ChatsService chatsService = ChatsService();
+
 
   @override
   Widget build(BuildContext context) {
@@ -157,7 +157,7 @@ class _TradeOfferPageState extends State<TradeOfferPage> {
 
             // Botões de Solicitar e Chat
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ElevatedButton(
                   onPressed: () {
@@ -177,7 +177,7 @@ class _TradeOfferPageState extends State<TradeOfferPage> {
                   child: const Text('Solicitar'),
                 ),
               ],
-            ),
+            )
           ],
         ),
       ),

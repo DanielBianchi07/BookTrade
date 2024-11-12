@@ -171,7 +171,10 @@ class _RequestPageState extends State<RequestPage> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Solicitação enviada com sucesso!')),
                       );
-
+                      chatsService.newChat(
+                          senderId: user.value.uid,
+                          receiverId: widget.book.userInfo.id,
+                          timestamp: FieldValue.serverTimestamp());
                       // Navega de volta após o envio da solicitação
                       Navigator.of(context).pop();
                       chatsService.newChat(
