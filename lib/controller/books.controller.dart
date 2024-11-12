@@ -85,6 +85,7 @@ class BooksController {
           isbn: data['isbn'],
           publicationYear: data['publicationYear'] ?? 'Ano não especificado',
           publisher: data['publisher'] ?? 'Editora não especificada',
+          isAvailable: data['isAvailable'] ?? true,
           userInfo: userInfo,
         );
       }).toList();
