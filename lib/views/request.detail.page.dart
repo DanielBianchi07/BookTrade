@@ -1,5 +1,3 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -31,6 +29,8 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
   late List<BookModel> offeredBooks;
   late String requesterName;
   late String requesterProfileUrl;
+  late String ownerName;
+  late String ownerProfileUrl;
   late String status;
   bool isLoading = true;
 
@@ -47,12 +47,19 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
         final requestData = requestDoc.data()!;
         final requestedBookData = requestData['requestedBook'];
         final offeredBooksData = List<Map<String, dynamic>>.from(requestData['offeredBooks']);
+        final requesterId = requestData['requesterId']; // Acessa o requesterId diretamente do requestData
+
+        // Obtém informações adicionais do solicitante
+        final requesterDoc = await FirebaseFirestore.instance.collection('users').doc(requesterId).get();
 
         setState(() {
+          if (requesterDoc.exists) {
+            final requesterData = requesterDoc.data()!;
+            requesterName = requesterData['name'] ?? 'Nome não encontrado';
+            requesterProfileUrl = requesterData['profileImageUrl'] ?? '';
+          }
           requestedBook = BookModel.fromMap(requestedBookData);
           offeredBooks = offeredBooksData.map((bookData) => BookModel.fromMap(bookData)).toList();
-          requesterName = requestData['requesterName'] ?? 'Nome não encontrado';
-          requesterProfileUrl = requestData['requesterProfileUrl'] ?? '';
           status = requestData['status'] ?? 'Aguardando resposta';
           isLoading = false;
         });
@@ -92,7 +99,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
               const SizedBox(height: 20),
               const Text('Livros Disponíveis para Troca', style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
-              ...offeredBooks.map((book) => _buildOfferedBookCard(book)).toList(),
+              ...offeredBooks.map((offerbook) => _buildOfferedBookCard(offerbook)).toList(),
               const SizedBox(height: 20),
               Text('Status: $status', style: TextStyle(fontWeight: FontWeight.bold)),
             ] else ...[
@@ -153,18 +160,18 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
     );
   }
 
-  Widget _buildOfferedBookCard(BookModel book) {
+  Widget _buildOfferedBookCard(BookModel offerbook) {
     return GestureDetector(
       onTap: widget.isRequester ? null : () {
         setState(() {
-          _selectedBook = book;
+          _selectedBook = offerbook;
         });
       },
       child: Card(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
           side: BorderSide(
-            color: _selectedBook == book ? Colors.green : Colors.transparent,
+            color: _selectedBook == offerbook ? Colors.green : Colors.transparent,
             width: 2,
           ),
         ),
@@ -181,7 +188,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                   color: Colors.grey[200],
                 ),
                 child: CachedNetworkImage(
-                  imageUrl: book.bookImageUserUrls[0],
+                  imageUrl: offerbook.bookImageUserUrls[0],
                   placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
                   errorWidget: (context, url, error) => const Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
                   fit: BoxFit.cover,
@@ -192,11 +199,11 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(book.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    Text('De ${book.author}', style: const TextStyle(fontSize: 14)),
+                    Text(offerbook.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    Text('De ${offerbook.author}', style: const TextStyle(fontSize: 14)),
                     const SizedBox(height: 8),
-                    Text('Publicado em: ${book.publishedDate.year}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                    Text('Estado: ${book.condition}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                    Text('Publicado em: ${offerbook.publishedDate.year}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                    Text('Estado: ${offerbook.condition}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
                   ],
                 ),
               ),
