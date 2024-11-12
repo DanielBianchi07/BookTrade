@@ -8,6 +8,7 @@ class IUser {
   String telephone = "";
   double customerRating = 0.0;
   String? address;
+  List<String>? favoriteGenres;
 }
 
 ValueNotifier<IUser> user = ValueNotifier(IUser());
