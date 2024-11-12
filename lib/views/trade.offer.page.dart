@@ -161,10 +161,6 @@ class _TradeOfferPageState extends State<TradeOfferPage> {
               children: [
                 ElevatedButton(
                   onPressed: () {
-                    chatsService.newChat(
-                        senderId: user.value.uid,
-                        receiverId: widget.book.userInfo.id,
-                        timestamp: FieldValue.serverTimestamp());
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -179,22 +175,6 @@ class _TradeOfferPageState extends State<TradeOfferPage> {
                     ),
                   ),
                   child: const Text('Solicitar'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(
-                      context,
-                      '/chat',
-                      arguments: {'receiverUserId': widget.book.userInfo.id},
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                  child: const Text('Chat'),
                 ),
               ],
             ),

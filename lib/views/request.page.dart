@@ -8,6 +8,8 @@ import 'package:intl/intl.dart';
 import '../controller/books.controller.dart';
 import '../controller/login.controller.dart';
 import '../models/book.model.dart';
+import '../services/chats.service.dart';
+import '../user.dart';
 import 'selected.book.page.dart';
 
 class RequestPage extends StatefulWidget {
@@ -22,6 +24,7 @@ class RequestPage extends StatefulWidget {
 class _RequestPageState extends State<RequestPage> {
   final loginController = LoginController();
   final booksController = BooksController();
+  final ChatsService chatsService = ChatsService();
   late final String userId;
   final List<BookModel> _books = [];
 
@@ -171,6 +174,10 @@ class _RequestPageState extends State<RequestPage> {
 
                       // Navega de volta após o envio da solicitação
                       Navigator.of(context).pop();
+                      chatsService.newChat(
+                          senderId: user.value.uid,
+                          receiverId: widget.book.userInfo.id,
+                          timestamp: FieldValue.serverTimestamp());
                     } catch (e) {
                       print('Erro ao enviar a solicitação: $e');
                       ScaffoldMessenger.of(context).showSnackBar(
