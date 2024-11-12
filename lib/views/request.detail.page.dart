@@ -1,5 +1,3 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -50,6 +48,10 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
         final requestData = requestDoc.data()!;
         final requestedBookData = requestData['requestedBook'];
         final offeredBooksData = List<Map<String, dynamic>>.from(requestData['offeredBooks']);
+        final requesterId = requestData['requesterId']; // Acessa o requesterId diretamente do requestData
+
+        // Obtém informações adicionais do solicitante
+        final requesterDoc = await FirebaseFirestore.instance.collection('users').doc(requesterId).get();
 
         setState(() {
           if (requesterDoc.exists) {
