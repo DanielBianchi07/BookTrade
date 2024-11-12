@@ -64,11 +64,11 @@ class BookModel {
     final data = doc.data() as Map<String, dynamic>;
 
     // Garante que `bookImageUserUrls` seja sempre uma lista de strings
-    var bookImageUserUrls = data['bookImageUserUrls'];
-    if (bookImageUserUrls is String) {
-      bookImageUserUrls = [bookImageUserUrls];
-    } else if (bookImageUserUrls is List) {
-      bookImageUserUrls = bookImageUserUrls.map((item) => item.toString()).toList();
+    List<String> bookImageUserUrls;
+    if (data['bookImageUserUrls'] is String) {
+      bookImageUserUrls = [data['bookImageUserUrls']];
+    } else if (data['bookImageUserUrls'] is List) {
+      bookImageUserUrls = List<String>.from(data['bookImageUserUrls']);
     } else {
       bookImageUserUrls = ['https://via.placeholder.com/100']; // Placeholder se estiver ausente ou nulo
     }
@@ -82,10 +82,10 @@ class BookModel {
       imageApiUrl: data['imageApiUrl'],
       publishedDate: data['publishedDate'] != null
           ? (data['publishedDate'] as Timestamp).toDate()
-          : DateTime.now(), // Valor padrão se publishedDate for nulo
+          : DateTime.now(),
       condition: data['condition'] ?? 'Condição não disponível',
       edition: data['edition'] ?? 'Edição não disponível',
-      genres: List<String>.from(data['genres'] ?? []),
+      genres: data['genres'] != null ? List<String>.from(data['genres']) : [],
       isbn: data['isbn'],
       publicationYear: data['publicationYear'] ?? 'Ano de publicação não disponível',
       publisher: data['publisher'] ?? 'Editora não disponível',
@@ -100,11 +100,11 @@ class BookModel {
 // Método para criar uma instância de BookModel a partir de um Map
   factory BookModel.fromMap(Map<String, dynamic> data) {
     // Garante que `bookImageUserUrls` seja sempre uma lista de strings
-    var bookImageUserUrls = data['bookImageUserUrls'];
-    if (bookImageUserUrls is String) {
-      bookImageUserUrls = [bookImageUserUrls];
-    } else if (bookImageUserUrls is List) {
-      bookImageUserUrls = bookImageUserUrls.map((item) => item.toString()).toList();
+    List<String> bookImageUserUrls;
+    if (data['bookImageUserUrls'] is String) {
+      bookImageUserUrls = [data['bookImageUserUrls']];
+    } else if (data['bookImageUserUrls'] is List) {
+      bookImageUserUrls = List<String>.from(data['bookImageUserUrls']);
     } else {
       bookImageUserUrls = ['https://via.placeholder.com/100']; // Placeholder se estiver ausente ou nulo
     }
@@ -118,10 +118,10 @@ class BookModel {
       imageApiUrl: data['imageApiUrl'],
       publishedDate: data['publishedDate'] != null
           ? (data['publishedDate'] as Timestamp).toDate()
-          : DateTime.now(), // Valor padrão se publishedDate for nulo
+          : DateTime.now(),
       condition: data['condition'] ?? 'Condição não disponível',
       edition: data['edition'] ?? 'Edição não disponível',
-      genres: List<String>.from(data['genres'] ?? []),
+      genres: data['genres'] != null ? List<String>.from(data['genres']) : [],
       isbn: data['isbn'],
       publicationYear: data['publicationYear'] ?? 'Ano de publicação não disponível',
       publisher: data['publisher'] ?? 'Editora não disponível',
