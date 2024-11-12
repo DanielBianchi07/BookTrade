@@ -23,6 +23,7 @@ class _HomePageState extends State<HomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final loginController = LoginController();
   final booksController = BooksController(); // Instância do BooksController
+  final TextEditingController _searchController = TextEditingController();
   bool busy = false;
   List<BookModel> books = [];
   List<bool> favoriteStatus = [];
@@ -187,6 +188,7 @@ class _HomePageState extends State<HomePage> {
                   SizedBox(width: 8),
                   Expanded(
                     child: TextField(
+                      controller: _searchController,
                       decoration: InputDecoration(
                         hintText: 'Buscar...',
                         hintStyle: TextStyle(fontSize: 14),
@@ -198,14 +200,14 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             const SizedBox(height: 5),
-            const Row(
+            Row(
               children: [
-                Icon(Icons.location_on, color: Colors.green, size: 18),
-                SizedBox(width: 8),
+                const Icon(Icons.location_on, color: Colors.green, size: 18),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Endereço 1 - Bairro',
-                    style: TextStyle(color: Colors.black, fontSize: 12),
+                    user.value.address ?? 'Endereço não cadastrado',
+                    style: const TextStyle(color: Colors.black, fontSize: 12),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
