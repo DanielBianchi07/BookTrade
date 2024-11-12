@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../models/book.model.dart';
+import '../models/user.info.model.dart';
 import 'trade.confirmation.page.dart';
 
 class RequestDetailPage extends StatefulWidget {
@@ -23,6 +24,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
   late BookModel requestedBook;
   late List<BookModel> offeredBooks;
   late String requesterName;
+  late double requesterRating;
   late String requesterProfileUrl;
   late String ownerName;
   late String ownerProfileUrl;
@@ -42,19 +44,85 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
         final requestData = requestDoc.data()!;
         final requestedBookData = requestData['requestedBook'];
         final offeredBooksData = List<Map<String, dynamic>>.from(requestData['offeredBooks']);
-        final requesterId = requestData['requesterId']; // Acessa o requesterId diretamente do requestData
+        final requesterId = requestData['requesterId'];
+        final ownerId = requestData['ownerId'];
 
-        // Obtém informações adicionais do solicitante
+        // Obtém informações adicionais do solicitante e do dono do livro solicitado
         final requesterDoc = await FirebaseFirestore.instance.collection('users').doc(requesterId).get();
+        final requestedBookDoc = await FirebaseFirestore.instance.collection('books').doc(requestedBookData['id']).get();
+
+        // Informações do solicitante
+        if (requesterDoc.exists) {
+          final requesterData = requesterDoc.data()!;
+          requesterName = requesterData['name'] ?? 'Nome não encontrado';
+          requesterProfileUrl = requesterData['profileImageUrl'] ?? '';
+          requesterRating = requesterData['customerRating'] ?? 0;
+        }
+
+        // Informações do livro solicitado
+        if (requestedBookDoc.exists) {
+          final requestedBookInfo = requestedBookDoc.data()!;
+          requestedBook = BookModel(
+            userId: requestedBookInfo['userId'] ?? '',
+            id: requestedBookData['id'] ?? '',
+            title: requestedBookData['title'] ?? 'Título não disponível',
+            author: requestedBookData['author'] ?? 'Autor desconhecido',
+            bookImageUserUrls: [requestedBookData['imageUrl']],
+            condition: requestedBookInfo['condition'] ?? 'Condição não disponível',
+            publishedDate: DateTime.now(), // Ajuste a data conforme necessário
+            edition: requestedBookInfo['edition'] ?? 'Edição não disponível',
+            genres: [],
+            isbn: '',
+            publicationYear: '',
+            publisher: '',
+            description: '',
+            userInfo: UInfo.fromMap(requestedBookInfo['userInfo']),
+          );
+        }
+
+        // Mapeia `offeredBooks` de forma assíncrona
+        offeredBooks = await Future.wait(offeredBooksData.map((bookData) async {
+          final bookDoc = await FirebaseFirestore.instance.collection('books').doc(bookData['id']).get();
+          if (bookDoc.exists) {
+            final bookInfo = bookDoc.data()!;
+            return BookModel(
+              userId: bookInfo['userId'] ?? '',
+              id: bookData['id'] ?? '',
+              title: bookData['title'] ?? 'Título não disponível',
+              author: bookData['author'] ?? 'Autor desconhecido',
+              bookImageUserUrls: [bookData['imageUrl']],
+              condition: bookInfo['condition'] ?? 'Condição não disponível',
+              publishedDate: DateTime.now(),
+              edition: bookInfo['edition'] ?? 'Edição não disponível',
+              genres: [],
+              isbn: '',
+              publicationYear: '',
+              publisher: '',
+              description: '',
+              userInfo: UInfo.fromMap(bookInfo['userInfo']),
+            );
+          } else {
+            // Retorna um BookModel vazio caso o documento não exista
+            return BookModel(
+              userId: '',
+              id: '',
+              title: 'Título não disponível',
+              author: 'Autor desconhecido',
+              bookImageUserUrls: ['https://via.placeholder.com/100'],
+              condition: 'Condição não disponível',
+              publishedDate: DateTime.now(),
+              edition: 'Edição não disponível',
+              genres: [],
+              isbn: '',
+              publicationYear: '',
+              publisher: '',
+              description: '',
+              userInfo: UInfo.empty(),
+            );
+          }
+        }).toList());
 
         setState(() {
-          if (requesterDoc.exists) {
-            final requesterData = requesterDoc.data()!;
-            requesterName = requesterData['name'] ?? 'Nome não encontrado';
-            requesterProfileUrl = requesterData['profileImageUrl'] ?? '';
-          }
-          requestedBook = BookModel.fromMap(requestedBookData);
-          offeredBooks = offeredBooksData.map((bookData) => BookModel.fromMap(bookData)).toList();
           status = requestData['status'] ?? 'Aguardando resposta';
           isLoading = false;
         });
@@ -182,12 +250,14 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                   borderRadius: BorderRadius.circular(8.0),
                   color: Colors.grey[200],
                 ),
-                child: CachedNetworkImage(
+                child: offerbook.bookImageUserUrls.isNotEmpty
+                    ? CachedNetworkImage(
                   imageUrl: offerbook.bookImageUserUrls[0],
                   placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
                   errorWidget: (context, url, error) => const Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
                   fit: BoxFit.cover,
-                ),
+                )
+                    : const Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -197,8 +267,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                     Text(offerbook.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                     Text('De ${offerbook.author}', style: const TextStyle(fontSize: 14)),
                     const SizedBox(height: 8),
-                    Text('Publicado em: ${offerbook.publishedDate.year}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                    Text('Estado: ${offerbook.condition}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                    Text('Estado: ${offerbook.condition ?? 'Não informado'}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
                   ],
                 ),
               ),
@@ -223,12 +292,15 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                 borderRadius: BorderRadius.circular(8.0),
                 color: Colors.grey[200],
               ),
-              child: CachedNetworkImage(
+              child: book.bookImageUserUrls.isNotEmpty
+                  ? CachedNetworkImage(
                 imageUrl: book.bookImageUserUrls[0],
                 placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-                errorWidget: (context, url, error) => const Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
+                errorWidget: (context, url, error) =>
+                const Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
                 fit: BoxFit.cover,
-              ),
+              )
+                  : const Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -237,9 +309,30 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                 children: [
                   Text(book.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   Text('De ${book.author}', style: const TextStyle(fontSize: 14)),
-                  const SizedBox(height: 8),
-                  Text('Publicado em: ${book.publishedDate.year}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+
+                  // Exibe o estado de conservação
+
                   Text('Estado: ${book.condition}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+
+                  // Exibe as informações do usuário solicitante
+                  if (widget.isRequester)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            backgroundImage: CachedNetworkImageProvider(requesterProfileUrl),
+                            radius: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(requesterName),
+                          const SizedBox(width: 8),
+                          Row(
+                            children: List.generate(5, (index) => Icon(Icons.star, color: Colors.amber, size: 16)),
+                          ),
+                        ],
+                      ),
+                    ),
                 ],
               ),
             ),
