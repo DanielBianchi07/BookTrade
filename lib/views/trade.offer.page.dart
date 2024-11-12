@@ -18,7 +18,7 @@ class TradeOfferPage extends StatefulWidget {
 class _TradeOfferPageState extends State<TradeOfferPage> {
   int _currentPage = 0; // Página atual no carrossel
   final PageController _pageController = PageController();
-  final ChatsService chatsService = ChatsService();
+
 
   @override
   Widget build(BuildContext context) {
@@ -157,14 +157,10 @@ class _TradeOfferPageState extends State<TradeOfferPage> {
 
             // Botões de Solicitar e Chat
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ElevatedButton(
                   onPressed: () {
-                    chatsService.newChat(
-                        senderId: user.value.uid,
-                        receiverId: widget.book.userInfo.id,
-                        timestamp: FieldValue.serverTimestamp());
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -180,24 +176,8 @@ class _TradeOfferPageState extends State<TradeOfferPage> {
                   ),
                   child: const Text('Solicitar'),
                 ),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(
-                      context,
-                      '/chat',
-                      arguments: {'receiverUserId': widget.book.userInfo.id},
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                  child: const Text('Chat'),
-                ),
               ],
-            ),
+            )
           ],
         ),
       ),
