@@ -77,6 +77,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
             publicationYear: '',
             publisher: '',
             description: '',
+            isAvailable: true,
             userInfo: UInfo.fromMap(requestedBookInfo['userInfo']),
           );
         }
@@ -100,6 +101,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
               publicationYear: '',
               publisher: '',
               description: '',
+              isAvailable: false,
               userInfo: UInfo.fromMap(bookInfo['userInfo']),
             );
           } else {
@@ -118,6 +120,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
               publicationYear: '',
               publisher: '',
               description: '',
+              isAvailable: false,
               userInfo: UInfo.empty(),
             );
           }
