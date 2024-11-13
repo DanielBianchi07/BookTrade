@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:myapp/views/trade.history.page.dart';
+import 'package:myapp/views/exchange.tracking.page.dart';
 import '../models/book.model.dart';
 import '../models/user.info.model.dart';
 import 'chat.page.dart';
@@ -266,8 +266,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                             'status': 'Aguardando confirmação do endereço',
                             'offeredBooks': offeredBooks
                                 .where((book) => book.id == _selectedBook!.id)
-                                .map((book) =>
-                            {
+                                .map((book) => {
                               'id': book.id,
                               'title': book.title,
                               'author': book.author,
@@ -278,23 +277,39 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                                 .toList(),
                           });
 
+                          // Atualiza `isAvailable` para true para os livros não selecionados
+                          for (var book in offeredBooks) {
+                            if (book.id != _selectedBook!.id) {
+                              await FirebaseFirestore.instance
+                                  .collection('books')
+                                  .doc(book.id)
+                                  .update({'isAvailable': true});
+                            }
+                          }
+
+                          // Atualiza `isAvailable` para false para o `requestedBook` (livro que está recebendo a oferta)
+                          await FirebaseFirestore.instance
+                              .collection('books')
+                              .doc(requestedBook.id)
+                              .update({'isAvailable': false});
+
                           // Exibe uma mensagem de confirmação
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(
-                                'Troca confirmada, aguardando confirmação do endereço')),
+                            SnackBar(
+                              content: Text('Troca confirmada, aguardando confirmação do endereço'),
+                            ),
                           );
 
+                          // Navega para a página de Acompanhamento de trocas
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) =>
-                                  TradeHistoryPage(),
+                              builder: (context) => ExchangeTrackingPage(),
                             ),
                           );
                         } catch (e) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content: Text('Erro ao confirmar a troca')),
+                            SnackBar(content: Text('Erro ao confirmar a troca')),
                           );
                         }
                       },

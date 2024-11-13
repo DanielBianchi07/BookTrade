@@ -12,7 +12,7 @@ import 'publicated.books.page.dart';
 import 'selected.book.page.dart';
 import 'login.page.dart';
 import 'register.page.dart';
-import 'trade.history.page.dart';
+import 'exchange.tracking.page.dart';
 import 'trade.status.page.dart';
 import 'notification.detail.page.dart'; // Importe a tela de detalhes de notificação
 
@@ -34,7 +34,7 @@ class BookTradeApp extends StatelessWidget {
         // Remova a rota nomeada para `TradeOfferPage`, pois ela requer um argumento:
         // "/tradeOffer": (context) => TradeOfferPage(),
         "/register": (context) => RegistrationPage(),
-        "/tradeHistory": (context) => TradeHistoryPage(),
+        "/exchangeTracking": (context) => ExchangeTrackingPage(),
         "/newBook": (context) => NewBookPage(),
         "/notifications": (context) => NotificationsPage(),
         "/tradeStatus": (context) => TradeStatusPage(),
