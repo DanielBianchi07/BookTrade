@@ -1,5 +1,3 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -10,7 +8,7 @@ import 'chat.page.dart';
 class TradeConfirmationPage extends StatefulWidget {
   final String requestId;
   final BookModel requestedBook;
-  final BookModel selectedOfferedBook;  // Alterado para um único livro
+  final BookModel selectedOfferedBook;
   final String requesterName;
   final String requesterProfileUrl;
 
@@ -18,7 +16,7 @@ class TradeConfirmationPage extends StatefulWidget {
     Key? key,
     required this.requestId,
     required this.requestedBook,
-    required this.selectedOfferedBook,  // Alterado para um único livro
+    required this.selectedOfferedBook,
     required this.requesterName,
     required this.requesterProfileUrl,
   }) : super(key: key);
@@ -36,7 +34,7 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Status da Troca'),
+        title: Text('Finalizar Troca'),
         backgroundColor: const Color(0xFFD8D5B3),
       ),
       body: SingleChildScrollView(
@@ -55,15 +53,32 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
             const SizedBox(height: 20),
             _buildAddressSection(),
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _isAddressProvided ? _confirmTrade : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF77C593),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(5),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                  ),
+                  child: const Text('Cancelar'),
                 ),
-              ),
-              child: const Text('Confirmar'),
+                ElevatedButton(
+                  onPressed: _isAddressProvided ? _confirmTrade : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF77C593),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                  ),
+                  child: const Text('Confirmar'),
+                ),
+              ],
             ),
             const SizedBox(height: 20),
             _buildRequesterInfo(),
@@ -87,23 +102,31 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
         ),
         const SizedBox(height: 8),
         SizedBox(
-          width: 120, // Aumenta a largura do texto para dar mais espaço
+          width: 120,
           child: Text(
             book.title,
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
             overflow: TextOverflow.ellipsis,
-            maxLines: 2, // Permite até duas linhas para o título
+            maxLines: 2,
           ),
         ),
         SizedBox(
-          width: 120, // Mantém a largura para o autor também
+          width: 120,
           child: Text(
             'de ${book.author}',
             style: TextStyle(fontSize: 12, color: Colors.grey),
             textAlign: TextAlign.center,
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
+          ),
+        ),
+        SizedBox(
+          width: 120,
+          child: Text(
+            'Ano: ${book.publicationYear.isNotEmpty ? book.publicationYear : 'Ano não disponível'}',
+            style: TextStyle(fontSize: 12, color: Colors.grey),
+            textAlign: TextAlign.center,
           ),
         ),
       ],
@@ -139,50 +162,57 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
   }
 
   Widget _buildRequesterInfo() {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        CircleAvatar(
-          radius: 25,
-          backgroundImage: CachedNetworkImageProvider(widget.requesterProfileUrl),
+        Text(
+          'Solicitante',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                widget.requesterName,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            CircleAvatar(
+              radius: 25,
+              backgroundImage: CachedNetworkImageProvider(widget.requesterProfileUrl),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.requesterName,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: List.generate(
+                      5,
+                          (index) => Icon(Icons.star, color: Colors.amber, size: 16),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 4),
-              Row(
-                children: List.generate(
-                  5,
-                      (index) => Icon(Icons.star, color: Colors.amber, size: 16),
-                ),
-              ),
-            ],
-          ),
-        ),
-        IconButton(
-          icon: Icon(Icons.chat_bubble_outline, color: Colors.black),
-          onPressed: () {
-            // Ação ao clicar no ícone de chat
-            // Navegar para a tela de chat ou iniciar a interação com o solicitante
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ChatPage(
-                  otherUserId: widget.requestId,
-                ),
-              ),
-            );
-          },
+            ),
+            IconButton(
+              icon: Icon(Icons.chat_bubble_outline, color: Colors.black),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ChatPage(
+                      otherUserId: widget.selectedOfferedBook.userId,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
         ),
       ],
     );
   }
-
 
   Widget _buildTradeDetails() {
     return Card(
@@ -195,12 +225,12 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
             const Text('Informações da troca', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
             Text(
-              'Livro Ofertado:\n${widget.selectedOfferedBook.author}, ${widget.selectedOfferedBook.title}, ${widget.selectedOfferedBook.publishedDate.year}',
+              'Livro a ser Recebido:\n${widget.selectedOfferedBook.author}, ${widget.selectedOfferedBook.title}, Ano: ${widget.selectedOfferedBook.publicationYear}',
               style: TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 10),
             Text(
-              'Livro Requerido:\n${widget.requestedBook.author}, ${widget.requestedBook.title}, ${widget.requestedBook.publishedDate.year}',
+              'Livro a ser Enviado:\n${widget.requestedBook.author}, ${widget.requestedBook.title}, Ano: ${widget.requestedBook.publicationYear}',
               style: TextStyle(fontSize: 14),
             ),
           ],
@@ -209,9 +239,7 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
     );
   }
 
-
   void _confirmTrade() {
-    // Função para confirmar a troca
     try {
       FirebaseFirestore.instance.collection('requests').doc(widget.requestId).update({'status': 'confirmed', 'address': _addressController.text});
       ScaffoldMessenger.of(context).showSnackBar(

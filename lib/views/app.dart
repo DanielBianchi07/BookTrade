@@ -67,28 +67,6 @@ class BookTradeApp extends StatelessWidget {
             },
           );
         }
-        if (settings.name == '/chat') {
-          final args = settings.arguments as Map<String, dynamic>?;
-          final receiverUserId = args?['receiverUserId'] as String?;
-
-          // Verificação de null antes de navegar
-          if (receiverUserId != null) {
-            return MaterialPageRoute(
-              builder: (context) => ChatPage(
-                otherUserId: receiverUserId,
-              ),
-            );
-          } else {
-            // Caso o recipientUserId seja null
-            return MaterialPageRoute(
-              builder: (context) => Scaffold(
-                body: Center(
-                  child: Text("Usuário de destino não encontrado."),
-                ),
-              ),
-            );
-          }
-        }
         return null; // Adicione outras rotas dinâmicas aqui, se necessário
       },
     );

@@ -97,6 +97,7 @@ class BookModel {
     );
   }
 
+
 // Método para criar uma instância de BookModel a partir de um Map
   factory BookModel.fromMap(Map<String, dynamic> data) {
     // Garante que `bookImageUserUrls` seja sempre uma lista de strings
