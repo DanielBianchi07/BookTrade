@@ -67,119 +67,121 @@ class _LoginPageState extends State<LoginPage> {
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Logo e Nome do Aplicativo lado a lado
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Logo do aplicativo
-                  Image.asset(
-                    'assets/logo_transparent.png',
-                    height: 60,
-                    errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
-                      return Text('Erro ao carregar imagem');
-                    },
-                  ),
-                  SizedBox(width: 5),
-                  // Nome do aplicativo
-                  Text(
-                    'BookTrade',
-                    style: TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Logo e Nome do Aplicativo lado a lado
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Logo do aplicativo
+                    Image.asset(
+                      'assets/logo_transparent.png',
+                      height: 60,
+                      errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
+                        return Text('Erro ao carregar imagem');
+                      },
                     ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 40),
-
-              // Campo de Email
-              TextField(
-                controller: _email,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  filled: true,
-                  fillColor: Colors.white,
-                ),
-              ),
-              SizedBox(height: 20),
-
-              // Campo de Senha
-              TextField(
-                controller: _password,
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: 'Senha',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  filled: true,
-                  fillColor: Colors.white,
-                ),
-              ),
-              SizedBox(height: 10),
-
-              // Esqueceu a senha
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    // Ação para "Esqueceu sua senha?"
-                    // Você pode implementar a recuperação de senha aqui
-                  },
-                  child: Text(
-                    'Esqueceu sua senha?',
-                    style: TextStyle(
-                      color: Colors.grey[700],
-                    ),
-                  ),
-                ),
-              ),
-
-              // Botão Entrar
-              TDBusy(busy: busy,
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: handleSignIn,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF77C593),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                    SizedBox(width: 5),
+                    // Nome do aplicativo
+                    Text(
+                      'BookTrade',
+                      style: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(15.0),
-                      child: Text('Entrar'),
+                  ],
+                ),
+                SizedBox(height: 40),
+            
+                // Campo de Email
+                TextField(
+                  controller: _email,
+                  decoration: InputDecoration(
+                    labelText: 'Email',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                  ),
+                ),
+                SizedBox(height: 20),
+            
+                // Campo de Senha
+                TextField(
+                  controller: _password,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: 'Senha',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                  ),
+                ),
+                SizedBox(height: 10),
+            
+                // Esqueceu a senha
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () {
+                      // Ação para "Esqueceu sua senha?"
+                      // Você pode implementar a recuperação de senha aqui
+                    },
+                    child: Text(
+                      'Esqueceu sua senha?',
+                      style: TextStyle(
+                        color: Colors.grey[700],
+                      ),
                     ),
                   ),
                 ),
-              ),
-
-              // Criar nova conta
-              TDBusyClear(
-                busy: busy,
-                child: TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => RegistrationPage(),
+            
+                // Botão Entrar
+                TDBusy(busy: busy,
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: handleSignIn,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFF77C593),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(15.0),
+                        child: Text('Entrar'),
+                      ),
                     ),
-                  );
-                },
-                child: Text(
-                  'Criar nova conta',
-                  style: TextStyle(
-                    color: Colors.black,
                   ),
                 ),
-              ),)
-            ],
+            
+                // Criar nova conta
+                TDBusyClear(
+                  busy: busy,
+                  child: TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => RegistrationPage(),
+                      ),
+                    );
+                  },
+                  child: Text(
+                    'Criar nova conta',
+                    style: TextStyle(
+                      color: Colors.black,
+                    ),
+                  ),
+                ),)
+              ],
+            ),
           ),
         ),
       ),
