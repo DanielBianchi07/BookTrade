@@ -364,9 +364,9 @@ class _HomePageState extends State<HomePage> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.history, color: Colors.black),
-                  title: const Text('Minhas trocas'),
+                  title: const Text('Acompanhar Trocas'),
                   onTap: () {
-                    Navigator.pushNamed(context, '/tradeHistory');
+                    Navigator.pushNamed(context, '/exchangeTracking');
                   },
                 ),
                 ListTile(

@@ -6,8 +6,8 @@ import '../models/book.model.dart';
 import '../user.dart';
 import 'trade.confirmation.page.dart';
 
-class TradeHistoryPage extends StatelessWidget {
-  const TradeHistoryPage({super.key});
+class ExchangeTrackingPage extends StatelessWidget {
+  const ExchangeTrackingPage({super.key});
 
   Future<void> _checkUser(BuildContext context, LoginController loginController) async {
     loginController.AssignUserData(context);
@@ -16,7 +16,7 @@ class TradeHistoryPage extends StatelessWidget {
   Future<List<Map<String, dynamic>>> _fetchTradeHistory(LoginController loginController) async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('requests')
-        .where('status', whereIn: ['Aguardando confirmação do endereço', 'Aguardando confirmação da troca'])
+        .where('status', whereIn: ['Aguardando confirmação do recebimento', 'Aguardando confirmação do endereço'])
         .get();
 
     List<Map<String, dynamic>> tradeHistory = [];
@@ -49,8 +49,9 @@ class TradeHistoryPage extends StatelessWidget {
         'profileImageUrl': otherUserData?['profileImageUrl'] ?? 'https://via.placeholder.com/50',
         'bookImageUrl': bookToShow['imageUrl'] ?? 'https://via.placeholder.com/150',
         'requestedBook': requestedBookData,
-        'offeredBook': offeredBooksData[0], // Assumindo que o primeiro livro é o principal oferecido
+        'offeredBook': offeredBooksData[0],
         'publicationYear': bookToShow['publicationYear'] ?? 'Ano não disponível',
+        'isRequester': isRequester, // Passa a informação de isRequester
       });
     }
 
@@ -74,7 +75,7 @@ class TradeHistoryPage extends StatelessWidget {
               },
             ),
             title: const Text(
-              'Histórico de trocas',
+              'Acompanhe suas trocas',
               style: TextStyle(color: Colors.black),
             ),
           ),
@@ -113,6 +114,7 @@ class TradeHistoryPage extends StatelessWidget {
                           context,
                           MaterialPageRoute(
                             builder: (context) => TradeConfirmationPage(
+                              isRequester: trade['isRequester'], // Passa a informação de isRequester
                               requestId: trade['requestId'],
                               requestedBook: BookModel.fromMap(trade['requestedBook']),
                               selectedOfferedBook: BookModel.fromMap(trade['offeredBook']),

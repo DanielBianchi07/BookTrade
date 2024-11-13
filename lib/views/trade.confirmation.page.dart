@@ -11,6 +11,7 @@ class TradeConfirmationPage extends StatefulWidget {
   final BookModel selectedOfferedBook;
   final String requesterName;
   final String requesterProfileUrl;
+  final bool isRequester;
 
   const TradeConfirmationPage({
     Key? key,
@@ -19,6 +20,7 @@ class TradeConfirmationPage extends StatefulWidget {
     required this.selectedOfferedBook,
     required this.requesterName,
     required this.requesterProfileUrl,
+    required this.isRequester,
   }) : super(key: key);
 
   @override
@@ -28,6 +30,31 @@ class TradeConfirmationPage extends StatefulWidget {
 class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
   final TextEditingController _addressController = TextEditingController();
   bool _isAddressProvided = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadExistingAddress();
+  }
+
+  Future<void> _loadExistingAddress() async {
+    try {
+      final requestDoc = await FirebaseFirestore.instance
+          .collection('requests')
+          .doc(widget.requestId)
+          .get();
+      if (requestDoc.exists) {
+        final data = requestDoc.data();
+        if (data != null && data['deliveryAddress'] != null) {
+          _addressController.text = data['deliveryAddress'];
+          _isAddressProvided = true;
+          setState(() {});
+        }
+      }
+    } catch (e) {
+      print('Erro ao carregar endereço existente: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,9 +84,7 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
+                  onPressed: _showCancelConfirmationDialog,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,
                     shape: RoundedRectangleBorder(
@@ -68,22 +93,36 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
                   ),
                   child: const Text('Cancelar'),
                 ),
-                ElevatedButton(
-                  onPressed: _isAddressProvided ? _confirmTrade : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF77C593),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5),
+                if (!widget.isRequester)
+                  ElevatedButton(
+                    onPressed: _isAddressProvided ? _confirmAddress : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF77C593),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5),
+                      ),
                     ),
+                    child: const Text('Confirmar endereço'),
                   ),
-                  child: const Text('Confirmar'),
-                ),
               ],
             ),
             const SizedBox(height: 20),
-            _buildRequesterInfo(),
+            if (!widget.isRequester) _buildRequesterInfo(),
             const SizedBox(height: 20),
             _buildTradeDetails(),
+            const SizedBox(height: 20),
+            Center(
+              child: ElevatedButton(
+                onPressed: _markAsCompleted,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                ),
+                child: const Text('Marcar como concluído'),
+              ),
+            ),
           ],
         ),
       ),
@@ -143,7 +182,14 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
           children: [
             const Text('Endereço', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
-            TextField(
+            widget.isRequester
+                ? Text(
+              _addressController.text.isNotEmpty
+                  ? _addressController.text
+                  : 'Aguardando confirmação do endereço...',
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+            )
+                : TextField(
               controller: _addressController,
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
@@ -239,16 +285,75 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
     );
   }
 
-  void _confirmTrade() {
+  void _showCancelConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Cancelar Troca'),
+          content: Text('Tem certeza de que deseja cancelar esta troca? Esta ação não pode ser desfeita.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Não'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _cancelTrade();
+              },
+              child: Text('Sim'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _cancelTrade() async {
     try {
-      FirebaseFirestore.instance.collection('requests').doc(widget.requestId).update({'status': 'confirmed', 'address': _addressController.text});
+      await FirebaseFirestore.instance.collection('requests').doc(widget.requestId).delete();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Troca confirmada com sucesso!')),
+        SnackBar(content: Text('Pedido cancelado com sucesso!')),
       );
       Navigator.of(context).pop();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao confirmar a troca. Tente novamente.')),
+        SnackBar(content: Text('Erro ao cancelar o pedido. Tente novamente.')),
+      );
+    }
+  }
+
+  Future<void> _confirmAddress() async {
+    try {
+      await FirebaseFirestore.instance.collection('requests').doc(widget.requestId).update({
+        'status': 'Aguardando confirmação do recebimento',
+        'deliveryAddress': _addressController.text,
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Endereço confirmado com sucesso! Aguardando confirmação do recebimento.')),
+      );
+      Navigator.of(context).pop();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao confirmar o endereço. Tente novamente.')),
+      );
+    }
+  }
+
+  Future<void> _markAsCompleted() async {
+    try {
+      await FirebaseFirestore.instance.collection('requests').doc(widget.requestId).update({
+        'status': 'concluído',
+        'completedAt': FieldValue.serverTimestamp(),
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Troca marcada como concluída com sucesso!')),
+      );
+      Navigator.of(context).pop();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao marcar a troca como concluída. Tente novamente.')),
       );
     }
   }
