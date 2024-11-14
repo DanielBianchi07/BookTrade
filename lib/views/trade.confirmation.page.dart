@@ -31,12 +31,56 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
   final TextEditingController _addressController = TextEditingController();
   bool _isAddressProvided = false;
   List<String> _deliveryAddressList = [];
+  BookModel? requestedBook;
+  BookModel? selectedOfferedBook;
 
   @override
   void initState() {
     super.initState();
     _loadExistingAddress();
     _initializeConfirmationStatus();
+    fetchRequestedBookData();
+    fetchSelectedBookData();
+  }
+
+  Future<void> fetchRequestedBookData() async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('books')
+          .doc(widget.requestedBook.id)
+          .get();
+
+      if (snapshot.exists) {
+        setState(() {
+          requestedBook = BookModel.fromMap(snapshot.data()!);
+        });
+        print("Dados do requestedBook: ${snapshot.data()}");
+      } else {
+        print("O documento requestedBook não foi encontrado.");
+      }
+    } catch (e) {
+      print("Erro ao buscar o documento: $e");
+    }
+  }
+
+  Future<void> fetchSelectedBookData() async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('books')
+          .doc(widget.selectedOfferedBook.id)
+          .get();
+
+      if (snapshot.exists) {
+        setState(() {
+          selectedOfferedBook = BookModel.fromMap(snapshot.data()!);
+        });
+        print("Dados do selectedOfferedBook: ${snapshot.data()}");
+      } else {
+        print("O documento selectedOfferedBook não foi encontrado.");
+      }
+    } catch (e) {
+      print("Erro ao buscar o documento: $e");
+    }
   }
 
   Future<void> _loadExistingAddress() async {
@@ -95,9 +139,11 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildBookImage(widget.requestedBook),
+                if (requestedBook != null)
+                _buildBookImage(requestedBook!),
                 Icon(Icons.swap_horiz, size: 40, color: Colors.grey),
-                _buildBookImage(widget.selectedOfferedBook),
+                if (selectedOfferedBook != null)
+                  _buildBookImage(selectedOfferedBook!),
               ],
             ),
             const SizedBox(height: 20),
@@ -295,15 +341,15 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
             const SizedBox(height: 10),
             Text(
               widget.isRequester
-                  ? 'Livro a ser Recebido:\n${widget.requestedBook.author}, ${widget.requestedBook.title}, Ano: ${widget.requestedBook.publicationYear}'
-                  : 'Livro a ser Recebido:\n${widget.selectedOfferedBook.author}, ${widget.selectedOfferedBook.title}, Ano: ${widget.selectedOfferedBook.publicationYear}',
+                  ? 'Livro a ser Recebido:\n${widget.requestedBook.author}, ${widget.requestedBook.title}, Ano: ${requestedBook?.publicationYear ?? 'Ano não disponível'}'
+                  : 'Livro a ser Recebido:\n${widget.selectedOfferedBook.author}, ${widget.selectedOfferedBook.title}, Ano: ${selectedOfferedBook?.publicationYear ?? 'Ano não disponível'}',
               style: TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 10),
             Text(
               widget.isRequester
-                  ? 'Livro a ser Enviado:\n${widget.selectedOfferedBook.author}, ${widget.selectedOfferedBook.title}, Ano: ${widget.selectedOfferedBook.publicationYear}'
-                  : 'Livro a ser Enviado:\n${widget.requestedBook.author}, ${widget.requestedBook.title}, Ano: ${widget.requestedBook.publicationYear}',
+                  ? 'Livro a ser Enviado:\n${widget.selectedOfferedBook.author}, ${widget.selectedOfferedBook.title}, Ano: ${selectedOfferedBook?.publicationYear ?? 'Ano não disponível'}'
+                  : 'Livro a ser Enviado:\n${widget.requestedBook.author}, ${widget.requestedBook.title}, Ano: ${requestedBook?.publicationYear ?? 'Ano não disponível'}',
               style: TextStyle(fontSize: 14),
             ),
           ],
@@ -454,7 +500,7 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
             TextButton(
               onPressed: () async {
                 Navigator.of(context).pop(); // Fecha o diálogo de confirmação antes
-                _showRatingDialog(); // Mostra o pop-up de avaliação
+                //_showRatingDialog(); // Mostra o pop-up de avaliação
                 await _markAsCompleted();
               },
               child: Text('Sim'),
@@ -513,14 +559,15 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
 
   void _showRatingDialog() {
     double rating = 3.0; // Avaliação inicial
-    String otherUserId = widget.isRequester ? widget.selectedOfferedBook.userId : widget.requestedBook.userId;
-
-    if (otherUserId.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro: ID do outro usuário está vazio.')),
-      );
-      return;
+    String otherUserId;
+    if (widget.isRequester) {
+      // Quando o usuário é o solicitante, usa o userId do livro solicitado
+      otherUserId = widget.requestedBook.userId;
+    } else {
+      // Quando o usuário é o proprietário, usa o userId do primeiro livro ofertado em offeredBooks
+      otherUserId = widget.selectedOfferedBook.userId;
     }
+
 
     showDialog(
       context: context,
