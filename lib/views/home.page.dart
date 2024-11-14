@@ -24,6 +24,7 @@ class _HomePageState extends State<HomePage> {
   final loginController = LoginController();
   final booksController = BooksController(); // Instância do BooksController
   final TextEditingController _searchController = TextEditingController();
+  List<BookModel> allBooks = []; // Lista que armazena todos os livros
   bool busy = false;
   List<BookModel> books = [];
   List<bool> favoriteStatus = [];
@@ -78,10 +79,7 @@ class _HomePageState extends State<HomePage> {
     try {
       final userId = FirebaseAuth.instance.currentUser?.uid;
 
-      // Inicializa uma lista de favoritos vazia
       List<String> favoriteBooks = [];
-
-      // Se o usuário estiver logado, busca os livros favoritados
       if (userId != null) {
         favoriteBooks = await booksController.getFavoriteBookIds(userId);
       }
@@ -89,45 +87,56 @@ class _HomePageState extends State<HomePage> {
       QuerySnapshot snapshot = await FirebaseFirestore.instance.collection('books').get();
 
       setState(() {
-        books = snapshot.docs
+        allBooks = snapshot.docs
             .where((doc) => (doc.data() as Map<String, dynamic>)['userId'] != userId)
             .map((doc) {
           final data = doc.data() as Map<String, dynamic>;
 
-          // Verificação e conversão de `bookImageUserUrls` para garantir que seja uma lista de strings
           var bookImageUserUrls = data['bookImageUserUrls'];
           if (bookImageUserUrls is String) {
             bookImageUserUrls = [bookImageUserUrls];
           } else if (bookImageUserUrls is List) {
             bookImageUserUrls = bookImageUserUrls.map((item) => item.toString()).toList();
           } else {
-            bookImageUserUrls = ['https://via.placeholder.com/100']; // Placeholder se estiver ausente ou nulo
+            bookImageUserUrls = ['https://via.placeholder.com/100'];
           }
 
           return BookModel(
-            userId: data['userId'] ?? '', // Adiciona valor padrão se for null
+            userId: data['userId'] ?? '',
             id: doc.id,
-            title: data['title'] ?? 'Título não disponível', // Valor padrão
-            author: data['author'] ?? 'Autor desconhecido', // Valor padrão
+            title: data['title'] ?? 'Título não disponível',
+            author: data['author'] ?? 'Autor desconhecido',
             bookImageUserUrls: bookImageUserUrls,
             imageApiUrl: data['imageApiUrl'],
-            publishedDate: (data['publishedDate'] as Timestamp?)?.toDate() ?? DateTime.now(), // Valor padrão para publishedDate
-            condition: data['condition'] ?? 'Condição não disponível', // Valor padrão
-            edition: data['edition'] ?? 'Edição não disponível', // Valor padrão
-            genres: data['genres'] != null ? List<String>.from(data['genres']) : [], // Lista vazia se null
+            publishedDate: (data['publishedDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
+            condition: data['condition'] ?? 'Condição não disponível',
+            edition: data['edition'] ?? 'Edição não disponível',
+            genres: data['genres'] != null ? List<String>.from(data['genres']) : [],
             isbn: data['isbn'],
-            publicationYear: data['publicationYear'] ?? 'Ano de publicação não disponível', // Valor padrão
-            publisher: data['publisher'] ?? 'Editora não disponível', // Valor padrão
+            publicationYear: data['publicationYear'] ?? 'Ano de publicação não disponível',
+            publisher: data['publisher'] ?? 'Editora não disponível',
             isAvailable: data['isAvailable'] ?? true,
-            userInfo: UInfo.fromMap(data['userInfo'] ?? {}), // Constrói userInfo com um map vazio se null
+            userInfo: UInfo.fromMap(data['userInfo'] ?? {}),
           );
         }).toList();
+
+        // Inicialmente, `books` contém todos os livros
+        books = List.from(allBooks);
 
         favoriteStatus = List.generate(books.length, (index) => favoriteBooks.contains(books[index].id));
       });
     } catch (e) {
       print('Erro ao carregar livros: $e');
     }
+  }
+
+  void _filterBooks(String query) {
+    setState(() {
+      books = allBooks
+          .where((book) => book.title.toLowerCase().contains(query.toLowerCase()) ||
+          book.author.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+    });
   }
 
   void toggleFavoriteStatus(String bookId, int index) async {
@@ -194,6 +203,9 @@ class _HomePageState extends State<HomePage> {
                         hintStyle: TextStyle(fontSize: 14),
                         border: InputBorder.none,
                       ),
+                      onChanged: (query) {
+                        _filterBooks(query);
+                        },
                     ),
                   ),
                 ],
