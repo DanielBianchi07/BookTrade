@@ -4,55 +4,63 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:myapp/controller/login.controller.dart';
 import '../models/book.model.dart';
 import '../user.dart';
+import 'trade.confirmation.page.dart';
 
-class TradeHistoryPage extends StatelessWidget {
-  const TradeHistoryPage({super.key});
+class ExchangeTrackingPage extends StatelessWidget {
+  const ExchangeTrackingPage({super.key});
 
   Future<void> _checkUser(BuildContext context, LoginController loginController) async {
     loginController.AssignUserData(context);
   }
 
   Future<List<Map<String, dynamic>>> _fetchTradeHistory(LoginController loginController) async {
-    final querySnapshot = await FirebaseFirestore.instance.collection('requests').get();
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('requests')
+        .where('status', whereIn: ['Aguardando confirmação do recebimento', 'Aguardando confirmação do endereço'])
+        .get();
 
     List<Map<String, dynamic>> tradeHistory = [];
     final userId = user.value.uid;
 
     for (var doc in querySnapshot.docs) {
       final data = doc.data();
+      final requesterId = data['requesterId'];
+      final ownerId = data['ownerId'];
+      final requestedBookData = data['requestedBook'];
+      final offeredBooksData = List<Map<String, dynamic>>.from(data['offeredBooks']);
 
-      // Filtrar para ignorar `requests` com status "pending"
-      if (data['status'] == 'pending') continue;
-
-      final requesterId = data['requesterId'] ?? '';
-      final ownerId = data['ownerId'] ?? '';
-      final requestedBookData = data['requestedBook'] ?? {};
-      final offeredBooksData = List<Map<String, dynamic>>.from(data['offeredBooks'] ?? []);
-
+      // Verifica se o usuário logado é o requester (ofereceu o livro) ou o owner (postou o livro)
       bool isRequester = requesterId == userId;
-      final bookToShow = isRequester ? requestedBookData : (offeredBooksData.isNotEmpty ? offeredBooksData[0] : {});
+      final userConfirmationStatus = isRequester ? data['requesterConfirmationStatus'] : data['ownerConfirmationStatus'];
 
-      final userSpecificStatus = (isRequester ? data['requesterConfirmationStatus'] : data['ownerConfirmationStatus']) ?? 'Status desconhecido';
-      final statusColor = userSpecificStatus == 'concluído' ? Colors.green : Colors.red;
+      // Verifica o status de confirmação apenas se o campo existir
+      if (userConfirmationStatus != null || userConfirmationStatus == 'Aguardando confirmação') {
+        continue; // Ignora este request se o status de confirmação é "Aguardando confirmação"
+      }
 
+      final bookToShow = isRequester ? requestedBookData : offeredBooksData[0];
+
+      // Obter informações do usuário da outra pessoa envolvida na troca
       final otherUserId = isRequester ? ownerId : requesterId;
       final otherUserDoc = await FirebaseFirestore.instance.collection('users').doc(otherUserId).get();
       final otherUserData = otherUserDoc.data();
+
+      // Define o status de entrega como o status do request
+      final deliveryStatus = data['status'];
 
       tradeHistory.add({
         'requestId': doc.id,
         'title': bookToShow['title'] ?? 'Título não disponível',
         'author': bookToShow['author'] ?? 'Autor desconhecido',
         'postedBy': otherUserData?['name'] ?? 'Usuário desconhecido',
-        'userSpecificStatus': userSpecificStatus,
-        'statusColor': statusColor,
-        'rating': (otherUserData?['customerRating'] ?? 0).toDouble(),
+        'deliveryStatus': deliveryStatus,
+        'rating': otherUserData?['customerRating']?.toDouble() ?? 0.0,
         'profileImageUrl': otherUserData?['profileImageUrl'] ?? 'https://via.placeholder.com/50',
         'bookImageUrl': bookToShow['imageUrl'] ?? 'https://via.placeholder.com/150',
         'requestedBook': requestedBookData,
-        'offeredBook': offeredBooksData.isNotEmpty ? offeredBooksData[0] : {},
+        'offeredBook': offeredBooksData[0],
         'publicationYear': bookToShow['publicationYear'] ?? 'Ano não disponível',
-        'isRequester': isRequester,
+        'isRequester': isRequester, // Passa a informação de isRequester
       });
     }
 
@@ -76,7 +84,7 @@ class TradeHistoryPage extends StatelessWidget {
               },
             ),
             title: const Text(
-              'Histórico de trocas',
+              'Acompanhe suas trocas',
               style: TextStyle(color: Colors.black),
             ),
           ),
@@ -103,23 +111,26 @@ class TradeHistoryPage extends StatelessWidget {
                   itemBuilder: (context, index) {
                     final trade = tradeHistory[index];
                     return TradeHistoryCard(
-                      title: trade['title']!,
+                      title: trade['title'],
                       author: 'De ${trade['author']}',
-                      postedBy: trade['postedBy']!,
-                      userSpecificStatus: trade['userSpecificStatus']!,
-                      statusColor: trade['statusColor']!,
-                      rating: trade['rating']!,
-                      profileImageUrl: trade['profileImageUrl']!,
-                      bookImageUrl: trade['bookImageUrl']!,
+                      postedBy: trade['postedBy'],
+                      deliveryStatus: trade['deliveryStatus'],
+                      rating: trade['rating'],
+                      profileImageUrl: trade['profileImageUrl'],
+                      bookImageUrl: trade['bookImageUrl'],
                       onTap: () {
-                        final bookToPass = trade['isRequester']
-                            ? BookModel.fromMap(trade['requestedBook']!)
-                            : BookModel.fromMap(trade['offeredBook']!);
-
-                        Navigator.pushNamed(
+                        Navigator.push(
                           context,
-                          '/exchangedBookDetails',
-                          arguments: bookToPass,
+                          MaterialPageRoute(
+                            builder: (context) => TradeConfirmationPage(
+                              isRequester: trade['isRequester'], // Passa a informação de isRequester
+                              requestId: trade['requestId'],
+                              requestedBook: BookModel.fromMap(trade['requestedBook']),
+                              selectedOfferedBook: BookModel.fromMap(trade['offeredBook']),
+                              requesterName: trade['postedBy'],
+                              requesterProfileUrl: trade['profileImageUrl'],
+                            ),
+                          ),
                         );
                       },
                     );
@@ -138,8 +149,7 @@ class TradeHistoryCard extends StatelessWidget {
   final String title;
   final String author;
   final String postedBy;
-  final String userSpecificStatus;
-  final Color statusColor;
+  final String deliveryStatus;
   final double rating;
   final String profileImageUrl;
   final String bookImageUrl;
@@ -150,8 +160,7 @@ class TradeHistoryCard extends StatelessWidget {
     required this.title,
     required this.author,
     required this.postedBy,
-    required this.userSpecificStatus,
-    required this.statusColor,
+    required this.deliveryStatus,
     required this.rating,
     required this.profileImageUrl,
     required this.bookImageUrl,
@@ -204,6 +213,7 @@ class TradeHistoryCard extends StatelessWidget {
                           author,
                           style: const TextStyle(
                             fontSize: 14,
+                            fontWeight: FontWeight.normal,
                             color: Colors.grey,
                           ),
                         ),
@@ -238,10 +248,10 @@ class TradeHistoryCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          userSpecificStatus,
+                          deliveryStatus,
                           style: TextStyle(
                             fontSize: 14,
-                            color: statusColor,
+                            color: Colors.orange,
                             fontWeight: FontWeight.bold,
                           ),
                         ),

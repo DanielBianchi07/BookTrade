@@ -1,5 +1,3 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -55,26 +53,19 @@ class _RequestPageState extends State<RequestPage> {
                   MaterialPageRoute(builder: (context) => SelectedBookPage()),
                 );
 
-                // Verifica se um livro foi selecionado
-                // Verifica se um livro foi selecionado
                 if (selectedBook != null) {
-                  // Verifica se o livro já está na lista de livros
                   bool bookExists = _books.any((existingBook) => existingBook.id == selectedBook.id);
-
                   if (bookExists) {
-                    // Exibe uma mensagem dizendo que o livro já foi adicionado
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Este livro já foi adicionado!')),
                     );
                   } else {
-                    // Caso contrário, adiciona o livro à lista e atualiza a interface
                     setState(() {
-                      _books.add(selectedBook); // Adiciona o livro à lista
+                      _books.add(selectedBook);
                     });
                   }
                 }
               },
-              
               style: OutlinedButton.styleFrom(
                 backgroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
@@ -85,21 +76,19 @@ class _RequestPageState extends State<RequestPage> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.add_circle, color: Color.fromARGB(255, 82, 82, 82),),
+                  Icon(Icons.add_circle, color: Color.fromARGB(255, 82, 82, 82)),
                   SizedBox(width: 8),
-                  Text('Adicionar Livro', 
-                    style: TextStyle(
-                      color: Color.fromARGB(255, 82, 82, 82)
-                    ),
+                  Text(
+                    'Adicionar Livro',
+                    style: TextStyle(color: Color.fromARGB(255, 82, 82, 82)),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 10),
-            
-            //Scroll da lista de livros
+
             SizedBox(
-              height: 240, // Defina uma altura adequada para a lista
+              height: 240,
               child: ListView.builder(
                 itemCount: _books.length,
                 itemBuilder: (context, index) {
@@ -109,7 +98,6 @@ class _RequestPageState extends State<RequestPage> {
               ),
             ),
 
-            // Botões de Ação
             const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -126,26 +114,22 @@ class _RequestPageState extends State<RequestPage> {
                   ),
                   child: const Text('Cancelar'),
                 ),
-
                 ElevatedButton(
                   onPressed: () async {
-                     if (_books.isEmpty) {
-                      // Se a lista de livros oferecidos está vazia, exibe uma mensagem
+                    if (_books.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Adicione pelo menos um livro para troca.')),
                       );
-                      return; // Sai da função sem enviar a solicitação
+                      return;
                     }
                     final userCredential = FirebaseAuth.instance.currentUser;
                     if (userCredential == null) {
-                      // Verifica se o usuário está logado
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Usuário não autenticado.')),
                       );
                       return;
                     }
 
-                    // Prepara a solicitação
                     final requestData = {
                       'requestedBook': {
                         'id': widget.book.id,
@@ -161,26 +145,33 @@ class _RequestPageState extends State<RequestPage> {
                       }).toList(),
                       'requesterId': userCredential.uid,
                       'ownerId': widget.book.userId,
-                      'status': 'pending', // Status inicial da solicitação
+                      'status': 'pending',
                       'createdAt': Timestamp.now(),
                     };
 
-                    // Salva a solicitação no Firestore
                     try {
+                      // Salva a solicitação no Firestore
                       await FirebaseFirestore.instance.collection('requests').add(requestData);
+
+                      // Atualiza o campo isAvailable para false para cada livro oferecido
+                      for (var book in _books) {
+                        await FirebaseFirestore.instance
+                            .collection('books')
+                            .doc(book.id)
+                            .update({'isAvailable': false});
+                      }
+
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Solicitação enviada com sucesso!')),
                       );
-                      chatsService.newChat(
-                          senderId: user.value.uid,
-                          receiverId: widget.book.userInfo.id,
-                          timestamp: FieldValue.serverTimestamp());
-                      // Navega de volta após o envio da solicitação
+
                       Navigator.of(context).pop();
+
                       chatsService.newChat(
-                          senderId: user.value.uid,
-                          receiverId: widget.book.userInfo.id,
-                          timestamp: FieldValue.serverTimestamp());
+                        senderId: user.value.uid,
+                        receiverId: widget.book.userInfo.id,
+                        timestamp: FieldValue.serverTimestamp(),
+                      );
                     } catch (e) {
                       print('Erro ao enviar a solicitação: $e');
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -194,8 +185,8 @@ class _RequestPageState extends State<RequestPage> {
                       borderRadius: BorderRadius.circular(5),
                     ),
                   ),
-                child: const Text('Enviar'),
-              ),
+                  child: const Text('Enviar'),
+                ),
               ],
             ),
           ],
@@ -204,7 +195,6 @@ class _RequestPageState extends State<RequestPage> {
     );
   }
 
-  // Função para construir o card do livro desejado com o modelo da SelectedBookPage
   Widget _buildDesiredBookCard(BookModel book) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -212,7 +202,6 @@ class _RequestPageState extends State<RequestPage> {
         padding: const EdgeInsets.all(8.0),
         child: Row(
           children: [
-            // Imagem do livro com CachedNetworkImage
             Container(
               height: 100,
               width: 80,
@@ -223,13 +212,12 @@ class _RequestPageState extends State<RequestPage> {
               child: CachedNetworkImage(
                 imageUrl: book.bookImageUserUrls[0],
                 placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-                errorWidget: (context, url, error) => const Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
+                errorWidget: (context, url, error) =>
+                const Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
                 fit: BoxFit.cover,
               ),
             ),
             const SizedBox(width: 16),
-
-            // Informações do livro desejado
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -248,7 +236,6 @@ class _RequestPageState extends State<RequestPage> {
     );
   }
 
-  // Função para construir o card dos livros do usuário
   Widget _buildUserBookCard(BookModel book) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -267,13 +254,12 @@ class _RequestPageState extends State<RequestPage> {
               child: CachedNetworkImage(
                 imageUrl: book.bookImageUserUrls[0],
                 placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-                errorWidget: (context, url, error) => const Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
+                errorWidget: (context, url, error) =>
+                const Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
                 fit: BoxFit.cover,
               ),
             ),
             const SizedBox(width: 16),
-
-            // Informações do livro
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -281,11 +267,9 @@ class _RequestPageState extends State<RequestPage> {
                   Text(book.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   Text('De ${book.author}', style: const TextStyle(fontSize: 14)),
                   const SizedBox(height: 8),
-                  Text('Postado em: ${DateFormat.yMMMd().format(book.publishedDate)}', 
-                  style: const TextStyle(
-                    fontSize: 12, 
-                    color: Colors.grey
-                    )
+                  Text(
+                    'Postado em: ${DateFormat.yMMMd().format(book.publishedDate)}',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ],
               ),
@@ -302,10 +286,8 @@ class _RequestPageState extends State<RequestPage> {
     );
   }
 
-  // Função para remover o livro da lista local
   void _removeBook(BookModel book) {
     setState(() {
-      // Remover o livro da lista de livros
       _books.remove(book);
     });
   }

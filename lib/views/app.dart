@@ -1,8 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:myapp/views/trade.history.page.dart';
+import '../models/book.model.dart';
 import 'chat.page.dart';
 import 'chats.page.dart';
 import 'edit.profile.page.dart';
+import 'exchanged.book.details.page.dart';
 import 'favorite.books.page.dart';
 import 'favorite.genres.page.dart';
 import 'home.page.dart';
@@ -12,7 +15,7 @@ import 'publicated.books.page.dart';
 import 'selected.book.page.dart';
 import 'login.page.dart';
 import 'register.page.dart';
-import 'trade.history.page.dart';
+import 'exchange.tracking.page.dart';
 import 'trade.status.page.dart';
 import 'notification.detail.page.dart'; // Importe a tela de detalhes de notificação
 
@@ -31,10 +34,9 @@ class BookTradeApp extends StatelessWidget {
         "/publicatedBooks": (context) => PublicatedBooksPage(),
         "/selectedBook": (context) => SelectedBookPage(),
         "/editProfile": (context) => EditProfilePage(),
-        // Remova a rota nomeada para `TradeOfferPage`, pois ela requer um argumento:
-        // "/tradeOffer": (context) => TradeOfferPage(),
         "/register": (context) => RegistrationPage(),
         "/tradeHistory": (context) => TradeHistoryPage(),
+        "/exchangeTracking": (context) => ExchangeTrackingPage(),
         "/newBook": (context) => NewBookPage(),
         "/notifications": (context) => NotificationsPage(),
         "/tradeStatus": (context) => TradeStatusPage(),
@@ -66,28 +68,14 @@ class BookTradeApp extends StatelessWidget {
               );
             },
           );
-        }
-        if (settings.name == '/chat') {
-          final args = settings.arguments as Map<String, dynamic>?;
-          final receiverUserId = args?['receiverUserId'] as String?;
+        }else if (settings.name == '/exchangedBookDetails') {
+          final book = settings.arguments as BookModel;
 
-          // Verificação de null antes de navegar
-          if (receiverUserId != null) {
-            return MaterialPageRoute(
-              builder: (context) => ChatPage(
-                otherUserId: receiverUserId,
-              ),
-            );
-          } else {
-            // Caso o recipientUserId seja null
-            return MaterialPageRoute(
-              builder: (context) => Scaffold(
-                body: Center(
-                  child: Text("Usuário de destino não encontrado."),
-                ),
-              ),
-            );
-          }
+          return MaterialPageRoute(
+            builder: (context) {
+              return ExchangedBookDetailsPage(book: book);
+            },
+          );
         }
         return null; // Adicione outras rotas dinâmicas aqui, se necessário
       },
