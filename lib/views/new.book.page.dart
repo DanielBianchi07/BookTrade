@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:myapp/utils/books.genres.dart';
 import 'package:myapp/views/publicated.books.page.dart';
 import '../controller/login.controller.dart';
 import '../services/image.service.dart';
@@ -24,6 +25,7 @@ class _NewBookPageState extends State<NewBookPage> {
   final TextEditingController _publisherController = TextEditingController();
 
   final TextEditingController _genreController = TextEditingController();
+  String? _selectedGenre;
   String _condition = 'Novo';
   bool _noIsbn = false;
   List<String> _genres = [];
@@ -61,7 +63,8 @@ class _NewBookPageState extends State<NewBookPage> {
 
             // Carregar imagem do livro da API
             if (volumeInfo['imageLinks']?['thumbnail'] != null) {
-              _apiImage = File.fromUri(Uri.parse(volumeInfo['imageLinks']['thumbnail']));
+              _apiImage = File.fromUri(
+                  Uri.parse(volumeInfo['imageLinks']['thumbnail']));
             }
           });
         } else {
@@ -76,7 +79,8 @@ class _NewBookPageState extends State<NewBookPage> {
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _addImage() async {
@@ -97,12 +101,17 @@ class _NewBookPageState extends State<NewBookPage> {
       _showError('O campo "Nome do Autor" é obrigatório.');
       return false;
     }
+    if (_selectedGenre == null) {
+      _showError('O campo "Gênero" é obrigatório.');
+      return false;
+    }
     if (_editionController.text.isEmpty) {
       _showError('O campo "Edição" é obrigatório.');
       return false;
     }
     if (!_noIsbn && _isbnController.text.isEmpty) {
-      _showError('O campo "ISBN" é obrigatório quando "Não possui ISBN" não está marcado.');
+      _showError(
+          'O campo "ISBN" é obrigatório quando "Não possui ISBN" não está marcado.');
       return false;
     }
     if (_publicationYearController.text.isEmpty) {
@@ -111,10 +120,6 @@ class _NewBookPageState extends State<NewBookPage> {
     }
     if (_publisherController.text.isEmpty) {
       _showError('O campo "Editora" é obrigatório.');
-      return false;
-    }
-    if (_noIsbn && _genreController.text.isEmpty) {
-      _showError('O campo "Gênero" é obrigatório quando "Não possui ISBN" está marcado.');
       return false;
     }
     return true;
@@ -132,18 +137,24 @@ class _NewBookPageState extends State<NewBookPage> {
       // Limite de 5 imagens para cada livro
       if (_selectedImages.length > 5) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Você pode adicionar no máximo 5 fotos.')),
+          const SnackBar(
+              content: Text('Você pode adicionar no máximo 5 fotos.')),
         );
         return; // Interrompe a execução se o limite for excedido
       }
 
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .get();
 
       if (userDoc.exists && userDoc.data() != null) {
         Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+        
 
         // Cria o documento do livro no Firestore (sem imagens inicialmente)
-        DocumentReference bookDoc = await FirebaseFirestore.instance.collection('books').add({
+        DocumentReference bookDoc =
+            await FirebaseFirestore.instance.collection('books').add({
           'title': _titleController.text.trim(),
           'author': _authorController.text.trim(),
           'edition': _editionController.text.trim(),
@@ -152,7 +163,7 @@ class _NewBookPageState extends State<NewBookPage> {
           'publisher': _publisherController.text.trim(),
           'condition': _condition,
           'description': _description,
-          'genres': _noIsbn ? [_genreController.text] : _genres,
+          'genres': _selectedGenre != null ? [_selectedGenre!] : [],
           'bookImageUserUrls': [''], // Inicialmente uma lista vazia
           'publishedDate': FieldValue.serverTimestamp(),
           'imageApiUrl': '', // Será atualizado se houver uma imagem da API
@@ -172,13 +183,17 @@ class _NewBookPageState extends State<NewBookPage> {
 
         // Faz o upload de cada imagem selecionada e armazena a URL
         for (var image in _selectedImages) {
-          String? imageUrl = await _imageUploadService.uploadBookImage(image, userId, bookId);
+          String? imageUrl =
+              await _imageUploadService.uploadBookImage(image, userId, bookId);
           if (imageUrl != null) {
             bookImageUserUrls.add(imageUrl);
           }
         }
 
-        await FirebaseFirestore.instance.collection('books').doc(bookId).update({
+        await FirebaseFirestore.instance
+            .collection('books')
+            .doc(bookId)
+            .update({
           'bookImageUserUrls': bookImageUserUrls,
           // 'imageApiUrl': apiImageUrl ?? '',
         });
@@ -219,14 +234,16 @@ class _NewBookPageState extends State<NewBookPage> {
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Cadastro do Livro', style: TextStyle(color: Colors.black)),
+        title: const Text('Cadastro do Livro',
+            style: TextStyle(color: Colors.black)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Adicione fotos do livro:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Adicione fotos do livro:',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
 
             /// Carrossel de imagens
@@ -243,7 +260,9 @@ class _NewBookPageState extends State<NewBookPage> {
                           _addImage();
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Você pode adicionar no máximo 5 fotos.')),
+                            const SnackBar(
+                                content: Text(
+                                    'Você pode adicionar no máximo 5 fotos.')),
                           );
                         }
                       },
@@ -256,7 +275,9 @@ class _NewBookPageState extends State<NewBookPage> {
                           borderRadius: BorderRadius.circular(10),
                           color: Colors.grey[200],
                         ),
-                        child: const Center(child: Icon(Icons.add_a_photo, size: 50, color: Colors.black)),
+                        child: const Center(
+                            child: Icon(Icons.add_a_photo,
+                                size: 50, color: Colors.black)),
                       ),
                     );
                   } else {
@@ -272,8 +293,10 @@ class _NewBookPageState extends State<NewBookPage> {
                       child: Image.file(
                         _selectedImages[index],
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => const Center(
-                          child: Icon(Icons.broken_image, color: Colors.red, size: 50),
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Center(
+                          child: Icon(Icons.broken_image,
+                              color: Colors.red, size: 50),
                         ),
                       ),
                     );
@@ -283,12 +306,13 @@ class _NewBookPageState extends State<NewBookPage> {
             ),
             const SizedBox(height: 20),
             _buildTextField('ISBN', _isbnController,
-                enabled: !_noIsbn, // Desabilitar ISBN se "Não possui ISBN" for marcado
+                enabled:
+                    !_noIsbn, // Desabilitar ISBN se "Não possui ISBN" for marcado
                 onChanged: (value) {
-                  if (_validateISBN(value)) {
-                    _fetchBookData(value.trim());
-                  }
-                }),
+              if (_validateISBN(value)) {
+                _fetchBookData(value.trim());
+              }
+            }),
             Row(
               children: [
                 Checkbox(
@@ -305,15 +329,56 @@ class _NewBookPageState extends State<NewBookPage> {
                 const Text('Não possui ISBN'),
               ],
             ),
-            if (_noIsbn) _buildTextField('Gênero', _genreController),
             const SizedBox(height: 20),
             _buildTextField('Nome do Livro', _titleController),
             _buildTextField('Nome do Autor', _authorController),
             _buildTextField('Edição', _editionController),
             _buildTextField('Ano de publicação', _publicationYearController),
             _buildTextField('Editora', _publisherController),
+            const Text('Digite o Gênero:', style: TextStyle(fontSize: 14)),
+            const SizedBox(height: 10),
+            Autocomplete<String>(
+              optionsBuilder: (TextEditingValue textEditingValue) {
+                // Filtra os gêneros conforme o que é digitado
+                return BookGenres.genres.where((genre) {
+                  return genre.toLowerCase().contains(textEditingValue.text.toLowerCase());
+                }).toList();
+              },
+              onSelected: (String selection) {
+                setState(() {
+                  _selectedGenre = selection; // Atualiza o gênero selecionado
+                });
+              },
+              fieldViewBuilder: (context, controller, focusNode, onEditingComplete) {
+                return TextField(
+                  controller: controller,
+                  focusNode: focusNode,
+                  decoration: InputDecoration(
+                    labelText: 'Gênero',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    filled: true,
+                    fillColor: Colors.grey[200],
+                    errorText: _selectedGenre == null && controller.text.isNotEmpty
+                        ? 'Gênero inválido. Por favor, escolha da lista.'
+                        : null,
+                  ),
+                  onEditingComplete: onEditingComplete,
+                  onChanged: (value) {
+                    // Verifica se o gênero digitado é válido
+                    if (!BookGenres.genres.contains(value.trim())) {
+                      setState(() {
+                        _selectedGenre = null; // Limpa a seleção se não for válido
+                      });
+                    }
+                  },
+                );
+              },
+            ),
             const SizedBox(height: 20),
-
+            // Aqui você pode exibir o gênero selecionado ou usá-lo em outro campo
+            if (_selectedGenre != null)
+              Text('Gênero selecionado: $_selectedGenre', style: TextStyle(fontSize: 16)),
+            const SizedBox(height: 20),
             // Dropdown para Estado de Conservação
             Text(
               'Estado de conservação',
@@ -356,11 +421,14 @@ class _NewBookPageState extends State<NewBookPage> {
                 onPressed: _onConfirm,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF77C593),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
                 ),
                 child: const Padding(
                   padding: EdgeInsets.all(15.0),
-                  child: Text('Confirmar', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                  child: Text('Confirmar',
+                      style: TextStyle(
+                          color: Colors.black, fontWeight: FontWeight.bold)),
                 ),
               ),
             ),
@@ -388,5 +456,7 @@ class _NewBookPageState extends State<NewBookPage> {
     );
   }
 
-  bool _validateISBN(String isbn) => (isbn.length == 10 || isbn.length == 13) && isbn.contains(RegExp(r'^\d+$'));
+  bool _validateISBN(String isbn) =>
+      (isbn.length == 10 || isbn.length == 13) &&
+      isbn.contains(RegExp(r'^\d+$'));
 }
