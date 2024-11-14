@@ -7,6 +7,7 @@ import 'chat.page.dart';
 
 class TradeConfirmationPage extends StatefulWidget {
   final String requestId;
+  final String otherUserId;
   final BookModel requestedBook;
   final BookModel selectedOfferedBook;
   final String requesterName;
@@ -16,6 +17,7 @@ class TradeConfirmationPage extends StatefulWidget {
   const TradeConfirmationPage({
     Key? key,
     required this.requestId,
+    required this. otherUserId,
     required this.requestedBook,
     required this.selectedOfferedBook,
     required this.requesterName,
@@ -54,7 +56,6 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
         setState(() {
           requestedBook = BookModel.fromMap(snapshot.data()!);
         });
-        print("Dados do requestedBook: ${snapshot.data()}");
       } else {
         print("O documento requestedBook não foi encontrado.");
       }
@@ -74,7 +75,6 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
         setState(() {
           selectedOfferedBook = BookModel.fromMap(snapshot.data()!);
         });
-        print("Dados do selectedOfferedBook: ${snapshot.data()}");
       } else {
         print("O documento selectedOfferedBook não foi encontrado.");
       }
@@ -317,7 +317,7 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => ChatPage(
-                      otherUserId: widget.selectedOfferedBook.userId,
+                      otherUserId: widget.otherUserId,
                     ),
                   ),
                 );
@@ -500,7 +500,7 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
             TextButton(
               onPressed: () async {
                 Navigator.of(context).pop(); // Fecha o diálogo de confirmação antes
-                //_showRatingDialog(); // Mostra o pop-up de avaliação
+                _showRatingDialog(); // Mostra o pop-up de avaliação
                 await _markAsCompleted();
               },
               child: Text('Sim'),
@@ -518,8 +518,8 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
 
       if (requestData.exists) {
         final data = requestData.data();
-        final requesterConfirmationStatus = data?['requesterConfirmationStatus'] ?? 'Aguardando confirmação';
-        final ownerConfirmationStatus = data?['ownerConfirmationStatus'] ?? 'Aguardando confirmação';
+        final requesterConfirmationStatus = data?['requesterConfirmationStatus'];
+        final ownerConfirmationStatus = data?['ownerConfirmationStatus'];
 
         if (widget.isRequester) {
           await requestRef.update({'requesterConfirmationStatus': 'concluído'});
@@ -559,14 +559,7 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
 
   void _showRatingDialog() {
     double rating = 3.0; // Avaliação inicial
-    String otherUserId;
-    if (widget.isRequester) {
-      // Quando o usuário é o solicitante, usa o userId do livro solicitado
-      otherUserId = widget.requestedBook.userId;
-    } else {
-      // Quando o usuário é o proprietário, usa o userId do primeiro livro ofertado em offeredBooks
-      otherUserId = widget.selectedOfferedBook.userId;
-    }
+    String otherUserId = widget.otherUserId;
 
 
     showDialog(
@@ -621,8 +614,8 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
       final userData = await userRef.get();
 
       if (userData.exists) {
-        final currentRating = userData['customerRating'] ?? 0.0;
-        final totalRatings = userData['totalRatings'] ?? 0;
+        final currentRating = (userData.data()?['customerRating'] ?? 0.0) as double;
+        final totalRatings = (userData.data()?['totalRatings'] ?? 0) as int;
 
         // Calcula o novo rating médio
         final newTotalRatings = totalRatings + 1;
@@ -638,8 +631,9 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
         );
       }
     } catch (e) {
+      print("Erro ao atualizar a avaliação do usuário: $e"); // Log do erro
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao atualizar a avaliação do usuário.')),
+        SnackBar(content: Text('Erro ao atualizar a avaliação do usuário: $e')),
       );
     }
   }

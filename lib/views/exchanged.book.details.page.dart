@@ -26,15 +26,16 @@ class _ExchangedBookDetailsPageState extends State<ExchangedBookDetailsPage> {
   double requesterRating = 0.0;
   double ownerRating = 0.0;
   bool isRequester = false;
+  String? tradeStatus;
   List<String> _deliveryAddressList = [];
 
   @override
   void initState() {
     super.initState();
-    _loadRequestData();
+    _fetchBookData();
   }
 
-  Future<void> _loadRequestData() async {
+  Future<void> _fetchBookData() async {
     try {
       final requestDoc = await FirebaseFirestore.instance
           .collection('requests')
@@ -45,12 +46,55 @@ class _ExchangedBookDetailsPageState extends State<ExchangedBookDetailsPage> {
         final data = requestDoc.data();
 
         if (data != null) {
-          // Carrega informações do livro solicitado e do livro ofertado
-          requestedBook = BookModel.fromMap(data['requestedBook']);
-          selectedOfferedBook = BookModel.fromMap((data['offeredBooks'] as List).first);
+          // Pega o ID do livro solicitado a partir de 'requestedBook'
+          final requestedBookId = data['requestedBook']['id'];
+
+          if (requestedBookId != null) {
+            // Faz a consulta na coleção 'books' usando o ID do livro solicitado
+            final requestedBookDoc = await FirebaseFirestore.instance
+                .collection('books')
+                .doc(requestedBookId)
+                .get();
+            if (requestedBookDoc.exists) {
+              // Carrega o modelo BookModel com as informações adicionais do livro solicitado
+              final requestedBookData = requestedBookDoc.data();
+              requestedBook = BookModel.fromMap(
+                  requestedBookData!); // Usando um método `fromMap` do modelo BookModel
+            }
+          }
+
+          // Para os livros ofertados, realiza uma busca individual para cada ID
+          final offeredBooksData = data['offeredBooks'];
+
+          if (offeredBooksData is List && offeredBooksData.isNotEmpty) {
+            for (var offeredBook in offeredBooksData) {
+              final offeredBookId = offeredBook['id'];
+
+              if (offeredBookId != null) {
+                // Faz a consulta na coleção 'books' usando o ID de cada livro ofertado
+                final offeredBookDoc = await FirebaseFirestore.instance
+                    .collection('books')
+                    .doc(offeredBookId)
+                    .get();
+
+                if (offeredBookDoc.exists) {
+                  final offeredBookData = offeredBookDoc.data();
+                  selectedOfferedBook = BookModel.fromMap(offeredBookData!);
+                }
+              }
+            }
+          }
 
           // Verifica se o usuário atual é o solicitante
           isRequester = data['requesterId'] == user.value.uid;
+
+          // Verifica status de confirmação
+          tradeStatus = isRequester
+              ? data['requesterConfirmationStatus']
+              : data['ownerConfirmationStatus'];
+          if (tradeStatus == 'concluido') {
+            tradeStatus = isRequester ? 'Livro recebido' : 'Livro enviado';
+          }
 
           // Carrega o endereço de entrega, se disponível
           if (data['deliveryAddress'] != null) {
@@ -122,9 +166,14 @@ class _ExchangedBookDetailsPageState extends State<ExchangedBookDetailsPage> {
             const SizedBox(height: 20),
 
             // Exibe informações dos usuários envolvidos
-            _buildUserInfoSection(ownerProfileUrl, ownerName, ownerRating, "Dono do Livro"),
+            Text(
+              'Participantes da Troca',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            _buildUserInfoSection(ownerProfileUrl, ownerName, ownerRating),
             const SizedBox(height: 20),
-            _buildUserInfoSection(requesterProfileUrl, requesterName, requesterRating, "Solicitante"),
+            _buildUserInfoSection(requesterProfileUrl, requesterName, requesterRating),
             const SizedBox(height: 20),
 
             // Exibe detalhes da troca
@@ -169,7 +218,7 @@ class _ExchangedBookDetailsPageState extends State<ExchangedBookDetailsPage> {
         SizedBox(
           width: 120,
           child: Text(
-            'Ano: ${book.publicationYear.isNotEmpty ? book.publicationYear : 'Ano não disponível'}',
+            'Ano: ${book.publicationYear}',
             style: TextStyle(fontSize: 12, color: Colors.grey),
             textAlign: TextAlign.center,
           ),
@@ -202,15 +251,10 @@ class _ExchangedBookDetailsPageState extends State<ExchangedBookDetailsPage> {
     );
   }
 
-  Widget _buildUserInfoSection(String profileUrl, String name, double rating, String role) {
+  Widget _buildUserInfoSection(String profileUrl, String name, double rating) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          role,
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
         Row(
           children: [
             CircleAvatar(
@@ -268,6 +312,11 @@ class _ExchangedBookDetailsPageState extends State<ExchangedBookDetailsPage> {
                   ? 'Livro a ser Enviado:\n${selectedOfferedBook?.author ?? 'Autor desconhecido'}, ${selectedOfferedBook?.title ?? 'Título não disponível'}, Ano: ${selectedOfferedBook?.publicationYear ?? 'Ano não disponível'}'
                   : 'Livro a ser Enviado:\n${requestedBook?.author ?? 'Autor desconhecido'}, ${requestedBook?.title ?? 'Título não disponível'}, Ano: ${requestedBook?.publicationYear ?? 'Ano não disponível'}',
               style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Status da Troca: $tradeStatus',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
             ),
           ],
         ),
