@@ -1,9 +1,6 @@
-// lib/pages/trade_offer_page.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:myapp/services/chats.service.dart';
 import '../models/book.model.dart';
-import '../user.dart';
 import 'request.page.dart';
 
 class TradeOfferPage extends StatefulWidget {
@@ -19,6 +16,34 @@ class _TradeOfferPageState extends State<TradeOfferPage> {
   int _currentPage = 0; // Página atual no carrossel
   final PageController _pageController = PageController();
 
+  Future<void> _checkAvailabilityAndRequest() async {
+    try {
+      final bookDoc = await FirebaseFirestore.instance
+          .collection('books')
+          .doc(widget.book.id)
+          .get();
+
+      if (bookDoc.exists && bookDoc.data()?['isAvailable'] == true) {
+        // Se o livro ainda está disponível, navega para a página de solicitação
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => RequestPage(book: widget.book),
+          ),
+        );
+      } else {
+        // Se o livro não está mais disponível, exibe uma mensagem
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('O livro não está mais disponível para troca.')),
+        );
+      }
+    } catch (e) {
+      print("Erro ao verificar disponibilidade: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao verificar a disponibilidade do livro. Tente novamente.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +81,7 @@ class _TradeOfferPageState extends State<TradeOfferPage> {
                     },
                   ),
                 ),
-                // Seta para a esquerda
+                // Setas para navegar no carrossel
                 if (_currentPage > 0)
                   Positioned(
                     left: 10,
@@ -71,7 +96,6 @@ class _TradeOfferPageState extends State<TradeOfferPage> {
                       },
                     ),
                   ),
-                // Seta para a direita
                 if (_currentPage < widget.book.bookImageUserUrls.length - 1)
                   Positioned(
                     right: 10,
@@ -155,29 +179,19 @@ class _TradeOfferPageState extends State<TradeOfferPage> {
             ),
             const SizedBox(height: 20),
 
-            // Botões de Solicitar e Chat
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => RequestPage(book: widget.book),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF77C593),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
+            // Botão de Solicitar
+            Center(
+              child: ElevatedButton(
+                onPressed: _checkAvailabilityAndRequest,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF77C593),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Text('Solicitar'),
                 ),
-              ],
-            )
+                child: const Text('Solicitar'),
+              ),
+            ),
           ],
         ),
       ),
@@ -191,7 +205,7 @@ class _TradeOfferPageState extends State<TradeOfferPage> {
         borderRadius: BorderRadius.circular(10.0),
         image: DecorationImage(
           image: NetworkImage(imageUrl),
-          fit: BoxFit.contain, // Ajuste para caber a imagem inteira
+          fit: BoxFit.contain,
         ),
       ),
     );
