@@ -37,7 +37,9 @@ class _SelectedBookPageState extends State<SelectedBookPage> {
       try {
         // Carregando livros
         List<BookModel> books = await booksController.loadBooks();
-        List<BookModel> userBooks = books.where((book) => book.userId == userCredential.uid).toList();
+
+        // Filtra apenas os livros do usuário logado e com isAvailable igual a true
+        List<BookModel> userBooks = books.where((book) => book.userId == userCredential.uid && book.isAvailable).toList();
 
         setState(() {
           _books = userBooks;
@@ -48,7 +50,7 @@ class _SelectedBookPageState extends State<SelectedBookPage> {
         setState(() {
           _isLoading = false;
         });
-    }
+      }
     } else {
       print('Não existe usuário');
     }

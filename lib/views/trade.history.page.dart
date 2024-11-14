@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:myapp/controller/login.controller.dart';
+import 'package:myapp/views/exchanged.book.details.page.dart';
 import '../models/book.model.dart';
 import '../user.dart';
 
@@ -21,18 +22,30 @@ class TradeHistoryPage extends StatelessWidget {
     for (var doc in querySnapshot.docs) {
       final data = doc.data();
 
-      // Filtrar para ignorar `requests` com status "pending"
+      // Ignorar requests com status "pending"
       if (data['status'] == 'pending') continue;
+
+      // Verificar se os campos de confirmação existem
+      if (!data.containsKey('requesterConfirmationStatus') || !data.containsKey('ownerConfirmationStatus')) {
+        continue; // Ignora este request se algum campo de confirmação estiver ausente
+      }
 
       final requesterId = data['requesterId'] ?? '';
       final ownerId = data['ownerId'] ?? '';
       final requestedBookData = data['requestedBook'] ?? {};
       final offeredBooksData = List<Map<String, dynamic>>.from(data['offeredBooks'] ?? []);
 
+      // Verifica se o usuário logado é o requester ou o owner
       bool isRequester = requesterId == userId;
-      final bookToShow = isRequester ? requestedBookData : (offeredBooksData.isNotEmpty ? offeredBooksData[0] : {});
+      final userConfirmationStatus = isRequester ? data['requesterConfirmationStatus'] : data['ownerConfirmationStatus'];
 
-      final userSpecificStatus = (isRequester ? data['requesterConfirmationStatus'] : data['ownerConfirmationStatus']) ?? 'Status desconhecido';
+      // Ignorar se o status do usuário logado é "Aguardando confirmação"
+      if (userConfirmationStatus == 'Aguardando confirmação') {
+        continue;
+      }
+
+      final bookToShow = isRequester ? requestedBookData : (offeredBooksData.isNotEmpty ? offeredBooksData[0] : {});
+      final userSpecificStatus = isRequester ? data['requesterConfirmationStatus'] : data['ownerConfirmationStatus'];
       final statusColor = userSpecificStatus == 'concluído' ? Colors.green : Colors.red;
 
       final otherUserId = isRequester ? ownerId : requesterId;
@@ -112,14 +125,13 @@ class TradeHistoryPage extends StatelessWidget {
                       profileImageUrl: trade['profileImageUrl']!,
                       bookImageUrl: trade['bookImageUrl']!,
                       onTap: () {
-                        final bookToPass = trade['isRequester']
-                            ? BookModel.fromMap(trade['requestedBook']!)
-                            : BookModel.fromMap(trade['offeredBook']!);
-
-                        Navigator.pushNamed(
+                        Navigator.push(
                           context,
-                          '/exchangedBookDetails',
-                          arguments: bookToPass,
+                          MaterialPageRoute(
+                            builder: (context) => ExchangedBookDetailsPage(
+                              requestId: trade['requestId'],
+                            ),
+                          ),
                         );
                       },
                     );

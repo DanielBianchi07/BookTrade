@@ -69,11 +69,11 @@ class BookTradeApp extends StatelessWidget {
             },
           );
         }else if (settings.name == '/exchangedBookDetails') {
-          final book = settings.arguments as BookModel;
+          final requestId = settings.arguments as String;
 
           return MaterialPageRoute(
             builder: (context) {
-              return ExchangedBookDetailsPage(book: book);
+              return ExchangedBookDetailsPage(requestId: requestId);
             },
           );
         }

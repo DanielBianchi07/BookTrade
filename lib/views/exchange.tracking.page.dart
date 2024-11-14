@@ -33,9 +33,9 @@ class ExchangeTrackingPage extends StatelessWidget {
       bool isRequester = requesterId == userId;
       final userConfirmationStatus = isRequester ? data['requesterConfirmationStatus'] : data['ownerConfirmationStatus'];
 
-      // Verifica o status de confirmação apenas se o campo existir
-      if (userConfirmationStatus != null || userConfirmationStatus == 'Aguardando confirmação') {
-        continue; // Ignora este request se o status de confirmação é "Aguardando confirmação"
+      // Filtra registros onde o status de confirmação do usuário atual é diferente de "Aguardando confirmação"
+      if (userConfirmationStatus == 'concluído' || userConfirmationStatus == 'cancelado') {
+        continue; // Ignora este request
       }
 
       final bookToShow = isRequester ? requestedBookData : offeredBooksData[0];
@@ -50,6 +50,7 @@ class ExchangeTrackingPage extends StatelessWidget {
 
       tradeHistory.add({
         'requestId': doc.id,
+        'otherUserId': otherUserId,
         'title': bookToShow['title'] ?? 'Título não disponível',
         'author': bookToShow['author'] ?? 'Autor desconhecido',
         'postedBy': otherUserData?['name'] ?? 'Usuário desconhecido',
@@ -110,6 +111,15 @@ class ExchangeTrackingPage extends StatelessWidget {
                   itemCount: tradeHistory.length,
                   itemBuilder: (context, index) {
                     final trade = tradeHistory[index];
+                    final otherUserId = trade['otherUserId'];
+                    final isRequester = trade['isRequester'];
+                    final requestedBookData = trade['requestedBook'];
+                    final offeredBooksData = trade['offeredBook'];
+                    final otherUserData = {
+                      'name': trade['postedBy'],
+                      'profileImageUrl': trade['profileImageUrl'],
+                    };
+
                     return TradeHistoryCard(
                       title: trade['title'],
                       author: 'De ${trade['author']}',
@@ -119,16 +129,23 @@ class ExchangeTrackingPage extends StatelessWidget {
                       profileImageUrl: trade['profileImageUrl'],
                       bookImageUrl: trade['bookImageUrl'],
                       onTap: () {
+                        // Definindo as variáveis necessárias para passar para a página de confirmação
+                        final requestedBook = isRequester ? requestedBookData : offeredBooksData;
+                        final selectedOfferedBook = isRequester ? offeredBooksData : requestedBookData;
+                        final requesterName = isRequester ? trade['postedBy'] : otherUserData['name'];
+                        final requesterProfileUrl = isRequester ? trade['profileImageUrl'] : otherUserData['profileImageUrl'];
+
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => TradeConfirmationPage(
-                              isRequester: trade['isRequester'], // Passa a informação de isRequester
+                              otherUserId: otherUserId,
+                              isRequester: isRequester,
                               requestId: trade['requestId'],
-                              requestedBook: BookModel.fromMap(trade['requestedBook']),
-                              selectedOfferedBook: BookModel.fromMap(trade['offeredBook']),
-                              requesterName: trade['postedBy'],
-                              requesterProfileUrl: trade['profileImageUrl'],
+                              requestedBook: BookModel.fromMap(requestedBook),
+                              selectedOfferedBook: BookModel.fromMap(selectedOfferedBook),
+                              requesterName: requesterName,
+                              requesterProfileUrl: requesterProfileUrl,
                             ),
                           ),
                         );

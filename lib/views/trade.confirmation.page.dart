@@ -7,6 +7,7 @@ import 'chat.page.dart';
 
 class TradeConfirmationPage extends StatefulWidget {
   final String requestId;
+  final String otherUserId;
   final BookModel requestedBook;
   final BookModel selectedOfferedBook;
   final String requesterName;
@@ -16,6 +17,7 @@ class TradeConfirmationPage extends StatefulWidget {
   const TradeConfirmationPage({
     Key? key,
     required this.requestId,
+    required this. otherUserId,
     required this.requestedBook,
     required this.selectedOfferedBook,
     required this.requesterName,
@@ -31,12 +33,54 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
   final TextEditingController _addressController = TextEditingController();
   bool _isAddressProvided = false;
   List<String> _deliveryAddressList = [];
+  BookModel? requestedBook;
+  BookModel? selectedOfferedBook;
 
   @override
   void initState() {
     super.initState();
     _loadExistingAddress();
     _initializeConfirmationStatus();
+    fetchRequestedBookData();
+    fetchSelectedBookData();
+  }
+
+  Future<void> fetchRequestedBookData() async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('books')
+          .doc(widget.requestedBook.id)
+          .get();
+
+      if (snapshot.exists) {
+        setState(() {
+          requestedBook = BookModel.fromMap(snapshot.data()!);
+        });
+      } else {
+        print("O documento requestedBook não foi encontrado.");
+      }
+    } catch (e) {
+      print("Erro ao buscar o documento: $e");
+    }
+  }
+
+  Future<void> fetchSelectedBookData() async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('books')
+          .doc(widget.selectedOfferedBook.id)
+          .get();
+
+      if (snapshot.exists) {
+        setState(() {
+          selectedOfferedBook = BookModel.fromMap(snapshot.data()!);
+        });
+      } else {
+        print("O documento selectedOfferedBook não foi encontrado.");
+      }
+    } catch (e) {
+      print("Erro ao buscar o documento: $e");
+    }
   }
 
   Future<void> _loadExistingAddress() async {
@@ -95,9 +139,11 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildBookImage(widget.requestedBook),
+                if (requestedBook != null)
+                _buildBookImage(requestedBook!),
                 Icon(Icons.swap_horiz, size: 40, color: Colors.grey),
-                _buildBookImage(widget.selectedOfferedBook),
+                if (selectedOfferedBook != null)
+                  _buildBookImage(selectedOfferedBook!),
               ],
             ),
             const SizedBox(height: 20),
@@ -271,7 +317,7 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => ChatPage(
-                      otherUserId: widget.selectedOfferedBook.userId,
+                      otherUserId: widget.otherUserId,
                     ),
                   ),
                 );
@@ -295,15 +341,15 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
             const SizedBox(height: 10),
             Text(
               widget.isRequester
-                  ? 'Livro a ser Recebido:\n${widget.requestedBook.author}, ${widget.requestedBook.title}, Ano: ${widget.requestedBook.publicationYear}'
-                  : 'Livro a ser Recebido:\n${widget.selectedOfferedBook.author}, ${widget.selectedOfferedBook.title}, Ano: ${widget.selectedOfferedBook.publicationYear}',
+                  ? 'Livro a ser Recebido:\n${widget.requestedBook.author}, ${widget.requestedBook.title}, Ano: ${requestedBook?.publicationYear ?? 'Ano não disponível'}'
+                  : 'Livro a ser Recebido:\n${widget.selectedOfferedBook.author}, ${widget.selectedOfferedBook.title}, Ano: ${selectedOfferedBook?.publicationYear ?? 'Ano não disponível'}',
               style: TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 10),
             Text(
               widget.isRequester
-                  ? 'Livro a ser Enviado:\n${widget.selectedOfferedBook.author}, ${widget.selectedOfferedBook.title}, Ano: ${widget.selectedOfferedBook.publicationYear}'
-                  : 'Livro a ser Enviado:\n${widget.requestedBook.author}, ${widget.requestedBook.title}, Ano: ${widget.requestedBook.publicationYear}',
+                  ? 'Livro a ser Enviado:\n${widget.selectedOfferedBook.author}, ${widget.selectedOfferedBook.title}, Ano: ${selectedOfferedBook?.publicationYear ?? 'Ano não disponível'}'
+                  : 'Livro a ser Enviado:\n${widget.requestedBook.author}, ${widget.requestedBook.title}, Ano: ${requestedBook?.publicationYear ?? 'Ano não disponível'}',
               style: TextStyle(fontSize: 14),
             ),
           ],
@@ -344,8 +390,6 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
 
       if (requestData.exists) {
         final data = requestData.data();
-        final requesterConfirmationStatus = data?['requesterConfirmationStatus'] ?? 'Aguardando confirmação';
-        final ownerConfirmationStatus = data?['ownerConfirmationStatus'] ?? 'Aguardando confirmação';
         final deliveryAddressList = List<String>.from(data?['deliveryAddress'] ?? []);
 
         // Verifica se a lista de endereços está vazia
@@ -358,61 +402,69 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
           await requestRef.update({'ownerConfirmationStatus': 'cancelado'});
         }
 
-        // Se nenhum endereço foi adicionado, atualiza ambos os livros para isAvailable: true e exclui o request
-        if (isAddressEmpty) {
+        // Recarrega o documento para garantir que estamos trabalhando com os valores atualizados
+        final updatedRequestData = await requestRef.get();
+        if (updatedRequestData.exists) {
+          final updatedData = updatedRequestData.data();
+          final requesterConfirmationStatus = updatedData?['requesterConfirmationStatus'];
+          final ownerConfirmationStatus = updatedData?['ownerConfirmationStatus'];
+
+          // Se nenhum endereço foi adicionado, atualiza ambos os livros para isAvailable: true e exclui o request
+          if (isAddressEmpty) {
+            await FirebaseFirestore.instance
+                .collection('books')
+                .doc(widget.requestedBook.id)
+                .update({'isAvailable': true});
+
+            await FirebaseFirestore.instance
+                .collection('books')
+                .doc(widget.selectedOfferedBook.id)
+                .update({'isAvailable': true});
+
+            await requestRef.delete();
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Pedido excluído pois nenhum endereço foi registrado.')),
+            );
+
+            Navigator.of(context).pop();
+            return;
+          }
+
+          // Atualiza apenas o livro do usuário que está cancelando para isAvailable: true
+          final bookIdToUpdate = widget.isRequester ? widget.selectedOfferedBook.id : widget.requestedBook.id;
           await FirebaseFirestore.instance
               .collection('books')
-              .doc(widget.requestedBook.id)
+              .doc(bookIdToUpdate)
               .update({'isAvailable': true});
 
-          await FirebaseFirestore.instance
-              .collection('books')
-              .doc(widget.selectedOfferedBook.id)
-              .update({'isAvailable': true});
+          // Checa se ambos os status estão como "cancelado" e muda o status do request para "cancelado" se necessário
+          final bothCancelled = requesterConfirmationStatus == 'cancelado' && ownerConfirmationStatus == 'cancelado';
+          final oneCancelledOneConfirmed =
+              (requesterConfirmationStatus == 'concluído' && ownerConfirmationStatus == 'cancelado') ||
+                  (requesterConfirmationStatus == 'cancelado' && ownerConfirmationStatus == 'concluído');
 
-          await requestRef.delete();
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Pedido excluído pois nenhum endereço foi registrado.')),
-          );
+          if (bothCancelled) {
+            await requestRef.update({'status': 'cancelado'});
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Pedido marcado como cancelado com sucesso!')),
+            );
+          } else if (oneCancelledOneConfirmed) {
+            await requestRef.update({
+              'status': 'Finalizado com divergência',
+              'completedAt': FieldValue.serverTimestamp(),
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Pedido finalizado com divergência.')),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Cancelamento registrado com sucesso!')),
+            );
+          }
 
           Navigator.of(context).pop();
-          return;
         }
-
-        // Atualiza apenas o livro do usuário que está cancelando para isAvailable: true
-        final bookIdToUpdate = widget.isRequester ? widget.selectedOfferedBook.id : widget.requestedBook.id;
-        await FirebaseFirestore.instance
-            .collection('books')
-            .doc(bookIdToUpdate)
-            .update({'isAvailable': true});
-
-        // Checa se ambos os status estão como "cancelado" e muda o status do request para "cancelado" se necessário
-        final bothCancelled = requesterConfirmationStatus == 'cancelado' && ownerConfirmationStatus == 'cancelado';
-        final oneCancelledOneConfirmed =
-            (requesterConfirmationStatus == 'concluído' && ownerConfirmationStatus == 'cancelado') ||
-                (requesterConfirmationStatus == 'cancelado' && ownerConfirmationStatus == 'concluído');
-
-        if (bothCancelled) {
-          await requestRef.update({'status': 'cancelado'});
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Pedido marcado como cancelado com sucesso!')),
-          );
-        } else if (oneCancelledOneConfirmed) {
-          await requestRef.update({
-            'status': 'Finalizado com divergência',
-            'completedAt': FieldValue.serverTimestamp(),
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Pedido finalizado com divergência.')),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Cancelamento registrado com sucesso!')),
-          );
-        }
-
-        Navigator.of(context).pop();
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -468,18 +520,20 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
   Future<void> _markAsCompleted() async {
     try {
       final requestRef = FirebaseFirestore.instance.collection('requests').doc(widget.requestId);
-      final requestData = await requestRef.get();
 
-      if (requestData.exists) {
-        final data = requestData.data();
-        final requesterConfirmationStatus = data?['requesterConfirmationStatus'] ?? 'Aguardando confirmação';
-        final ownerConfirmationStatus = data?['ownerConfirmationStatus'] ?? 'Aguardando confirmação';
+      // Atualiza o status de confirmação do usuário atual
+      if (widget.isRequester) {
+        await requestRef.update({'requesterConfirmationStatus': 'concluído'});
+      } else {
+        await requestRef.update({'ownerConfirmationStatus': 'concluído'});
+      }
 
-        if (widget.isRequester) {
-          await requestRef.update({'requesterConfirmationStatus': 'concluído'});
-        } else {
-          await requestRef.update({'ownerConfirmationStatus': 'concluído'});
-        }
+      // Recarrega o documento para garantir que estamos trabalhando com os valores atualizados
+      final updatedRequestData = await requestRef.get();
+      if (updatedRequestData.exists) {
+        final data = updatedRequestData.data();
+        final requesterConfirmationStatus = data?['requesterConfirmationStatus'];
+        final ownerConfirmationStatus = data?['ownerConfirmationStatus'];
 
         final bothConfirmed = requesterConfirmationStatus == 'concluído' && ownerConfirmationStatus == 'concluído';
         final oneCancelledOneConfirmed =
@@ -513,14 +567,7 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
 
   void _showRatingDialog() {
     double rating = 3.0; // Avaliação inicial
-    String otherUserId = widget.isRequester ? widget.selectedOfferedBook.userId : widget.requestedBook.userId;
-
-    if (otherUserId.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro: ID do outro usuário está vazio.')),
-      );
-      return;
-    }
+    String otherUserId = widget.otherUserId;
 
     showDialog(
       context: context,
@@ -574,8 +621,8 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
       final userData = await userRef.get();
 
       if (userData.exists) {
-        final currentRating = userData['customerRating'] ?? 0.0;
-        final totalRatings = userData['totalRatings'] ?? 0;
+        final currentRating = (userData.data()?['customerRating'] ?? 0.0) as double;
+        final totalRatings = (userData.data()?['totalRatings'] ?? 0) as int;
 
         // Calcula o novo rating médio
         final newTotalRatings = totalRatings + 1;
@@ -591,8 +638,9 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
         );
       }
     } catch (e) {
+      print("Erro ao atualizar a avaliação do usuário: $e"); // Log do erro
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao atualizar a avaliação do usuário.')),
+        SnackBar(content: Text('Erro ao atualizar a avaliação do usuário: $e')),
       );
     }
   }

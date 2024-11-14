@@ -85,8 +85,13 @@ class _HomePageState extends State<HomePage> {
         favoriteBooks = await booksController.getFavoriteBookIds(userId);
       }
 
-      QuerySnapshot snapshot = await FirebaseFirestore.instance.collection('books').get();
       final recommendedBooks = await getRecommendedBooks(user.value.uid);
+      // Consulta para carregar apenas livros com isAvailable = true
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('books')
+          .where('isAvailable', isEqualTo: true)
+          .get();
+
       setState(() {
         favoriteGenreBooks = recommendedBooks.map((data) {
           // Transforme o map do Firestore em BookModel

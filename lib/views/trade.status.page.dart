@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'home.page.dart';
 import 'request.detail.page.dart';
 
 class TradeStatusPage extends StatefulWidget {
@@ -38,6 +39,17 @@ class _TradeStatusPageState extends State<TradeStatusPage> {
       appBar: AppBar(
         title: const Text('Trocas Pendentes'),
         backgroundColor: const Color(0xFFD8D5B3),
+        leading: IconButton(
+          icon: const Icon(Icons.home),
+          onPressed: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                builder: (context) => HomePage()
+              ),
+            );
+          },
+        ),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
