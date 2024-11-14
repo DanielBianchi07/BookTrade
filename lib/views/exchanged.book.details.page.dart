@@ -175,7 +175,6 @@ class _ExchangedBookDetailsPageState extends State<ExchangedBookDetailsPage> {
             const SizedBox(height: 20),
             _buildUserInfoSection(requesterProfileUrl, requesterName, requesterRating),
             const SizedBox(height: 20),
-
             // Exibe detalhes da troca
             _buildTradeDetails(),
           ],

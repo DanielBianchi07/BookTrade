@@ -500,7 +500,7 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
             TextButton(
               onPressed: () async {
                 Navigator.of(context).pop(); // Fecha o diálogo de confirmação antes
-                _showRatingDialog(); // Mostra o pop-up de avaliação
+                //_showRatingDialog(); // Mostra o pop-up de avaliação
                 await _markAsCompleted();
               },
               child: Text('Sim'),
@@ -560,7 +560,6 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
   void _showRatingDialog() {
     double rating = 3.0; // Avaliação inicial
     String otherUserId = widget.otherUserId;
-
 
     showDialog(
       context: context,
