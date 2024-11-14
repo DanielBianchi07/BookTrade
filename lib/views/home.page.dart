@@ -363,10 +363,17 @@ class _HomePageState extends State<HomePage> {
                   },
                 ),
                 ListTile(
-                  leading: const Icon(Icons.history, color: Colors.black),
-                  title: const Text('Acompanhar Trocas'),
+                  leading: const Icon(Icons.swap_horiz, color: Colors.black),
+                  title: const Text('Trocas em Andamento'),
                   onTap: () {
                     Navigator.pushNamed(context, '/exchangeTracking');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.history, color: Colors.black),
+                  title: const Text('Histórico de Trocas'),
+                  onTap: () {
+                    Navigator.pushNamed(context, '/tradeHistory');
                   },
                 ),
                 ListTile(
@@ -377,7 +384,7 @@ class _HomePageState extends State<HomePage> {
                   },
                 ),
                 ListTile(
-                  leading: const Icon(Icons.swap_horiz, color: Colors.black),
+                  leading: const Icon(Icons.question_mark_rounded, color: Colors.black),
                   title: const Text('Trocas pendentes'),
                   onTap: () {
                     Navigator.pushNamed(context, '/tradeStatus');

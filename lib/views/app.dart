@@ -1,8 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:myapp/views/trade.history.page.dart';
+import '../models/book.model.dart';
 import 'chat.page.dart';
 import 'chats.page.dart';
 import 'edit.profile.page.dart';
+import 'exchanged.book.details.page.dart';
 import 'favorite.books.page.dart';
 import 'favorite.genres.page.dart';
 import 'home.page.dart';
@@ -31,9 +34,8 @@ class BookTradeApp extends StatelessWidget {
         "/publicatedBooks": (context) => PublicatedBooksPage(),
         "/selectedBook": (context) => SelectedBookPage(),
         "/editProfile": (context) => EditProfilePage(),
-        // Remova a rota nomeada para `TradeOfferPage`, pois ela requer um argumento:
-        // "/tradeOffer": (context) => TradeOfferPage(),
         "/register": (context) => RegistrationPage(),
+        "/tradeHistory": (context) => TradeHistoryPage(),
         "/exchangeTracking": (context) => ExchangeTrackingPage(),
         "/newBook": (context) => NewBookPage(),
         "/notifications": (context) => NotificationsPage(),
@@ -64,6 +66,14 @@ class BookTradeApp extends StatelessWidget {
                 message: args['message'] ?? 'Sem mensagem',
                 time: args['time'] ?? 'Sem data',
               );
+            },
+          );
+        }else if (settings.name == '/exchangedBookDetails') {
+          final book = settings.arguments as BookModel;
+
+          return MaterialPageRoute(
+            builder: (context) {
+              return ExchangedBookDetailsPage(book: book);
             },
           );
         }
