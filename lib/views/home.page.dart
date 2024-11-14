@@ -86,7 +86,11 @@ class _HomePageState extends State<HomePage> {
         favoriteBooks = await booksController.getFavoriteBookIds(userId);
       }
 
-      QuerySnapshot snapshot = await FirebaseFirestore.instance.collection('books').get();
+      // Consulta para carregar apenas livros com isAvailable = true
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('books')
+          .where('isAvailable', isEqualTo: true)
+          .get();
 
       setState(() {
         books = snapshot.docs
