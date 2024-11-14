@@ -50,6 +50,7 @@ class ExchangeTrackingPage extends StatelessWidget {
 
       tradeHistory.add({
         'requestId': doc.id,
+        'otherUserId': otherUserId,
         'title': bookToShow['title'] ?? 'Título não disponível',
         'author': bookToShow['author'] ?? 'Autor desconhecido',
         'postedBy': otherUserData?['name'] ?? 'Usuário desconhecido',
@@ -110,6 +111,7 @@ class ExchangeTrackingPage extends StatelessWidget {
                   itemCount: tradeHistory.length,
                   itemBuilder: (context, index) {
                     final trade = tradeHistory[index];
+                    final otherUserId = trade['otherUserId'];
                     final isRequester = trade['isRequester'];
                     final requestedBookData = trade['requestedBook'];
                     final offeredBooksData = trade['offeredBook'];
@@ -137,6 +139,7 @@ class ExchangeTrackingPage extends StatelessWidget {
                           context,
                           MaterialPageRoute(
                             builder: (context) => TradeConfirmationPage(
+                              otherUserId: otherUserId,
                               isRequester: isRequester,
                               requestId: trade['requestId'],
                               requestedBook: BookModel.fromMap(requestedBook),

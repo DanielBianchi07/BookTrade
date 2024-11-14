@@ -5,7 +5,6 @@ import 'package:myapp/views/exchange.tracking.page.dart';
 import '../models/book.model.dart';
 import '../models/user.info.model.dart';
 import 'chat.page.dart';
-import 'trade.confirmation.page.dart';
 
 class RequestDetailPage extends StatefulWidget {
   final String requestId;
