@@ -219,6 +219,7 @@ class BooksController {
     );
   }
 
+
   // Função para excluir o livro
   Future<void> _deleteBook(String bookId, BuildContext context) async {
     try {
@@ -242,6 +243,41 @@ class BooksController {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro ao excluir o livro: $e')),
+      );
+    }
+  }
+
+  // Função para verificar e excluir o livro
+  Future<void> checkAndDeleteBook(BuildContext context, String bookId) async {
+    try {
+      // Consulta a coleção de requests para verificar se o livro está em uma solicitação
+      final requestSnapshot = await FirebaseFirestore.instance
+          .collection('requests')
+          .where('requestedBook.id', isEqualTo: bookId)
+          .get();
+
+      // Verifica se existem solicitações relacionadas ao livro
+      if (requestSnapshot.docs.isNotEmpty) {
+        final requestData = requestSnapshot.docs.first.data();
+
+        // Verifica se o campo ownerConfirmationStatus existe e se está concluído
+        final ownerConfirmationStatus = requestData['ownerConfirmationStatus'];
+        if (ownerConfirmationStatus == 'concluído') {
+          await _deleteBook(bookId, context); // Chama a função de exclusão do livro
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('O livro não pode ser excluído porque está em uma solicitação de troca pendente.'),
+            ),
+          );
+        }
+      } else {
+        // Caso não haja solicitações relacionadas, exclui o livro
+        await _deleteBook(bookId, context);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao verificar solicitações: $e')),
       );
     }
   }

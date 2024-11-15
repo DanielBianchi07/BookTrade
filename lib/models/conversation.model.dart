@@ -5,8 +5,10 @@ class ConversationModel {
   final String? lastMessageId;
   final String participants;
   final Timestamp timestamp;
-  final String otherUserName; // Nome do outro usuário na conversa
-  final String otherUserImage; // URL da imagem do outro usuário
+  final String otherUserName;
+  final String otherUserImage;
+  final bool isActiveForUser1;
+  final bool isActiveForUser2;
 
   ConversationModel({
     required this.id,
@@ -15,9 +17,10 @@ class ConversationModel {
     required this.timestamp,
     required this.otherUserName,
     required this.otherUserImage,
+    required this.isActiveForUser1,
+    required this.isActiveForUser2,
   });
 
-  // Converte um documento do Firestore em um `ConversationModel`
   factory ConversationModel.fromDocument(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return ConversationModel(
@@ -27,10 +30,11 @@ class ConversationModel {
       timestamp: data['timestamp'] ?? Timestamp.now(),
       otherUserName: data['otherUserName'] ?? 'Usuário',
       otherUserImage: data['otherUserImage'] ?? '',
+      isActiveForUser1: data['isActiveForUser1'] ?? true,
+      isActiveForUser2: data['isActiveForUser2'] ?? true,
     );
   }
 
-  // Converte `ConversationModel` para um mapa para o Firestore
   Map<String, dynamic> toMap() {
     return {
       'lastMessageId': lastMessageId,
@@ -38,6 +42,8 @@ class ConversationModel {
       'timestamp': timestamp,
       'otherUserName': otherUserName,
       'otherUserImage': otherUserImage,
+      'isActiveForUser1': isActiveForUser1,
+      'isActiveForUser2': isActiveForUser2,
     };
   }
 }

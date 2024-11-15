@@ -4,6 +4,7 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:myapp/controller/login.controller.dart';
 import '../models/book.model.dart';
 import '../user.dart';
+import 'home.page.dart';
 import 'trade.confirmation.page.dart';
 
 class ExchangeTrackingPage extends StatelessWidget {
@@ -17,6 +18,7 @@ class ExchangeTrackingPage extends StatelessWidget {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('requests')
         .where('status', whereIn: ['Aguardando confirmação do recebimento', 'Aguardando confirmação do endereço'])
+        .orderBy('createdAt', descending: true) // Ordena pelo campo createdAt em ordem decrescente
         .get();
 
     List<Map<String, dynamic>> tradeHistory = [];
@@ -62,6 +64,7 @@ class ExchangeTrackingPage extends StatelessWidget {
         'offeredBook': offeredBooksData[0],
         'publicationYear': bookToShow['publicationYear'] ?? 'Ano não disponível',
         'isRequester': isRequester, // Passa a informação de isRequester
+        'createdAt': (data['createdAt'] as Timestamp).toDate(), // Conversão de Timestamp para DateTime
       });
     }
 
@@ -79,9 +82,15 @@ class ExchangeTrackingPage extends StatelessWidget {
             backgroundColor: const Color(0xFFD8D5B3),
             elevation: 0,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.black),
-              onPressed: () {
-                Navigator.pop(context);
+              icon: const Icon(Icons.home),
+              onPressed: () async{
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => HomePage(),
+                  ),
+                      (Route<dynamic> route) => false, // Remove todas as rotas anteriores
+                );
               },
             ),
             title: const Text(
@@ -128,6 +137,7 @@ class ExchangeTrackingPage extends StatelessWidget {
                       rating: trade['rating'],
                       profileImageUrl: trade['profileImageUrl'],
                       bookImageUrl: trade['bookImageUrl'],
+                      createdAt: trade['createdAt'],
                       onTap: () {
                         // Definindo as variáveis necessárias para passar para a página de confirmação
                         final requestedBook = isRequester ? requestedBookData : offeredBooksData;
@@ -171,6 +181,7 @@ class TradeHistoryCard extends StatelessWidget {
   final String profileImageUrl;
   final String bookImageUrl;
   final VoidCallback onTap;
+  final DateTime createdAt; // Adicionado campo createdAt
 
   const TradeHistoryCard({
     super.key,
@@ -182,6 +193,7 @@ class TradeHistoryCard extends StatelessWidget {
     required this.profileImageUrl,
     required this.bookImageUrl,
     required this.onTap,
+    required this.createdAt, // Inicialização do campo createdAt
   });
 
   @override
@@ -189,7 +201,7 @@ class TradeHistoryCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: SizedBox(
-        height: 180, // Altura fixa para manter o tamanho uniforme
+        height: 190,
         child: Card(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10.0),
@@ -271,6 +283,16 @@ class TradeHistoryCard extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 8),
+                      // Exibição do campo createdAt formatado
+                      Text(
+                        'Data: ${createdAt.day}/${createdAt.month}/${createdAt.year}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
                       Row(
                         children: [
                           Icon(

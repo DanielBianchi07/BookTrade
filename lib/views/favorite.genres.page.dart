@@ -117,6 +117,18 @@ class _FavoriteGenresPageState extends State<FavoriteGenresPage> {
       appBar: AppBar(
         title: const Text('Gêneros Favoritos'),
         backgroundColor: const Color(0xFFD8D5B3),
+        leading: IconButton(
+          icon: const Icon(Icons.home),
+          onPressed: () async{
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (context) => HomePage(),
+              ),
+                  (Route<dynamic> route) => false, // Remove todas as rotas anteriores
+            );
+          },
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

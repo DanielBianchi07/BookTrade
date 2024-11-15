@@ -5,6 +5,7 @@ import 'package:myapp/controller/login.controller.dart';
 import 'package:myapp/views/exchanged.book.details.page.dart';
 import '../models/book.model.dart';
 import '../user.dart';
+import 'home.page.dart';
 
 class TradeHistoryPage extends StatelessWidget {
   const TradeHistoryPage({super.key});
@@ -14,7 +15,10 @@ class TradeHistoryPage extends StatelessWidget {
   }
 
   Future<List<Map<String, dynamic>>> _fetchTradeHistory(LoginController loginController) async {
-    final querySnapshot = await FirebaseFirestore.instance.collection('requests').get();
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('requests')
+        .orderBy('createdAt', descending: true) // Ordenação por data de criação
+        .get();
 
     List<Map<String, dynamic>> tradeHistory = [];
     final userId = user.value.uid;
@@ -22,12 +26,10 @@ class TradeHistoryPage extends StatelessWidget {
     for (var doc in querySnapshot.docs) {
       final data = doc.data();
 
-      // Ignorar requests com status "pending"
       if (data['status'] == 'pending') continue;
 
-      // Verificar se os campos de confirmação existem
       if (!data.containsKey('requesterConfirmationStatus') || !data.containsKey('ownerConfirmationStatus')) {
-        continue; // Ignora este request se algum campo de confirmação estiver ausente
+        continue;
       }
 
       final requesterId = data['requesterId'] ?? '';
@@ -35,14 +37,9 @@ class TradeHistoryPage extends StatelessWidget {
       final requestedBookData = data['requestedBook'] ?? {};
       final offeredBooksData = List<Map<String, dynamic>>.from(data['offeredBooks'] ?? []);
 
-      // Verifica se o usuário logado é o requester ou o owner
       bool isRequester = requesterId == userId;
       final userConfirmationStatus = isRequester ? data['requesterConfirmationStatus'] : data['ownerConfirmationStatus'];
-
-      // Ignorar se o status do usuário logado é "Aguardando confirmação"
-      if (userConfirmationStatus == 'Aguardando confirmação') {
-        continue;
-      }
+      if (userConfirmationStatus == 'Aguardando confirmação') continue;
 
       final bookToShow = isRequester ? requestedBookData : (offeredBooksData.isNotEmpty ? offeredBooksData[0] : {});
       final userSpecificStatus = isRequester ? data['requesterConfirmationStatus'] : data['ownerConfirmationStatus'];
@@ -51,6 +48,12 @@ class TradeHistoryPage extends StatelessWidget {
       final otherUserId = isRequester ? ownerId : requesterId;
       final otherUserDoc = await FirebaseFirestore.instance.collection('users').doc(otherUserId).get();
       final otherUserData = otherUserDoc.data();
+
+      final Timestamp createdAtTimestamp = data['createdAt'];
+      final DateTime createdAt = createdAtTimestamp.toDate();
+
+      final Timestamp? completedAtTimestamp = isRequester ? data['completedByRequesterAt'] : data['completedByOwnerAt'];
+      final DateTime? completedAt = completedAtTimestamp?.toDate();
 
       tradeHistory.add({
         'requestId': doc.id,
@@ -66,6 +69,8 @@ class TradeHistoryPage extends StatelessWidget {
         'offeredBook': offeredBooksData.isNotEmpty ? offeredBooksData[0] : {},
         'publicationYear': bookToShow['publicationYear'] ?? 'Ano não disponível',
         'isRequester': isRequester,
+        'createdAt': createdAt,
+        'completedAt': completedAt,
       });
     }
 
@@ -83,9 +88,15 @@ class TradeHistoryPage extends StatelessWidget {
             backgroundColor: const Color(0xFFD8D5B3),
             elevation: 0,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.black),
-              onPressed: () {
-                Navigator.pop(context);
+              icon: const Icon(Icons.home),
+              onPressed: () async{
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => HomePage(),
+                  ),
+                      (Route<dynamic> route) => false, // Remove todas as rotas anteriores
+                );
               },
             ),
             title: const Text(
@@ -105,7 +116,7 @@ class TradeHistoryPage extends StatelessWidget {
               }
 
               if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const Center(child: Text('Nenhuma troca encontrada'));
+                return const Center(child: Text('Você ainda não concluiu nenhuma troca'));
               }
 
               final tradeHistory = snapshot.data!;
@@ -124,6 +135,8 @@ class TradeHistoryPage extends StatelessWidget {
                       rating: trade['rating']!,
                       profileImageUrl: trade['profileImageUrl']!,
                       bookImageUrl: trade['bookImageUrl']!,
+                      createdAt: trade['createdAt'],
+                      completedAt: trade['completedAt'],
                       onTap: () {
                         Navigator.push(
                           context,
@@ -155,6 +168,8 @@ class TradeHistoryCard extends StatelessWidget {
   final double rating;
   final String profileImageUrl;
   final String bookImageUrl;
+  final DateTime createdAt;
+  final DateTime? completedAt;
   final VoidCallback onTap;
 
   const TradeHistoryCard({
@@ -167,6 +182,8 @@ class TradeHistoryCard extends StatelessWidget {
     required this.rating,
     required this.profileImageUrl,
     required this.bookImageUrl,
+    required this.createdAt,
+    this.completedAt,
     required this.onTap,
   });
 
@@ -175,7 +192,7 @@ class TradeHistoryCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: SizedBox(
-        height: 180, // Define uma altura fixa para manter o tamanho uniforme
+        height: 200,
         child: Card(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10.0),
@@ -261,6 +278,16 @@ class TradeHistoryCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Criado em: ${createdAt.day}/${createdAt.month}/${createdAt.year}',
+                            style: const TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
                         children: [
                           Icon(
                             Icons.info_outline,
@@ -270,7 +297,7 @@ class TradeHistoryCard extends StatelessWidget {
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
-                              userSpecificStatus,
+                              '${userSpecificStatus} em: ${completedAt!.day}/${completedAt!.month}/${completedAt!.year}',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: statusColor,

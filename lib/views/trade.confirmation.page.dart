@@ -6,7 +6,6 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:myapp/views/home.page.dart';
 import '../models/book.model.dart';
 import 'chat.page.dart';
-import 'exchange.tracking.page.dart';
 
 class TradeConfirmationPage extends StatefulWidget {
   final String requestId;
@@ -35,6 +34,8 @@ class TradeConfirmationPage extends StatefulWidget {
 class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
   final TextEditingController _addressController = TextEditingController();
   bool _isAddressProvided = false;
+  bool _isTradeCancelled = false;
+  bool _isTradeConcluded = false;
   List<String> _deliveryAddressList = [];
   BookModel? requestedBook;
   BookModel? selectedOfferedBook;
@@ -43,7 +44,7 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
   void initState() {
     super.initState();
     _loadExistingAddress();
-    _initializeConfirmationStatus();
+    _initializeAndCheckStatus();
     fetchRequestedBookData();
     fetchSelectedBookData();
   }
@@ -108,22 +109,49 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
     }
   }
 
-  Future<void> _initializeConfirmationStatus() async {
-    final requestRef = FirebaseFirestore.instance.collection('requests').doc(widget.requestId);
+  Future<void> _initializeAndCheckStatus() async {
+    try {
+      final requestRef = FirebaseFirestore.instance.collection('requests').doc(widget.requestId);
+      final requestDoc = await requestRef.get();
 
-    await requestRef.get().then((doc) {
-      if (doc.exists) {
-        final data = doc.data();
+      if (requestDoc.exists) {
+        final data = requestDoc.data();
+
+        // Inicializa os campos de status, se não existirem
         if (data != null) {
           if (!data.containsKey('requesterConfirmationStatus')) {
-            requestRef.update({'requesterConfirmationStatus': 'Aguardando confirmação'});
+            await requestRef.update({'requesterConfirmationStatus': 'Aguardando confirmação'});
           }
           if (!data.containsKey('ownerConfirmationStatus')) {
-            requestRef.update({'ownerConfirmationStatus': 'Aguardando confirmação'});
+            await requestRef.update({'ownerConfirmationStatus': 'Aguardando confirmação'});
+          }
+
+          // Verifica se o outro usuário cancelou
+          if (data['requesterConfirmationStatus'] == 'cancelado') {
+            setState(() {
+              _isTradeCancelled = true;
+            });
+          }
+
+          if (data['requesterConfirmationStatus'] == 'concluído') {
+            setState(() {
+              _isTradeConcluded = true;
+            });
+          }
+
+          // Verifica se há endereços cadastrados
+          if (data['deliveryAddress'] != null) {
+            _deliveryAddressList = List<String>.from(data['deliveryAddress']);
+            if (_deliveryAddressList.isNotEmpty) {
+              _addressController.text = _deliveryAddressList.last;
+              _isAddressProvided = true;
+            }
           }
         }
       }
-    });
+    } catch (e) {
+      print('Erro ao inicializar e verificar status: $e');
+    }
   }
 
   @override
@@ -134,80 +162,93 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
         title: Text('Finalizar Troca'),
         backgroundColor: const Color(0xFFD8D5B3),
       ),
-      body: Scrollbar(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  if (requestedBook != null) _buildBookImage(requestedBook!),
-                  Icon(Icons.swap_horiz, size: 40, color: Colors.grey),
-                  if (selectedOfferedBook != null) _buildBookImage(selectedOfferedBook!),
-                ],
-              ),
-              const SizedBox(height: 5),
-              _buildAddressSection(),
-              const SizedBox(height: 5),
-              if (!widget.isRequester)
-                Center(
-                  child: ElevatedButton(
-                    onPressed: _isAddressProvided ? _confirmAddress : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      side: BorderSide(color: const Color(0xFF77C593), width: 1.5),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5),
+      body: Column(
+        children: [
+          Expanded(
+            child: Scrollbar(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        if (requestedBook != null) _buildBookImage(requestedBook!),
+                        Icon(Icons.swap_horiz, size: 40, color: Colors.black),
+                        if (selectedOfferedBook != null) _buildBookImage(selectedOfferedBook!),
+                      ],
+                    ),
+                    const SizedBox(height: 5),
+                    _buildAddressSection(),
+                    const SizedBox(height: 5),
+                    if (!widget.isRequester)
+                      Center(
+                        child: ElevatedButton(
+                          onPressed: _isAddressProvided && !_isTradeCancelled && !_isTradeConcluded ? _confirmAddress : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            side: BorderSide(color: const Color(0xFF77C593), width: 1.5),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                          ),
+                          child: const Text(
+                            'Confirmar endereço',
+                            style: TextStyle(color: Color(0xFF77C593)),
+                          ),
+                        ),
                       ),
+                    const SizedBox(height: 5),
+                    if (!widget.isRequester) _buildRequesterInfo(),
+                    const SizedBox(height: 5),
+                    _buildTradeDetails(),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border(
+                top: BorderSide(color: Colors.grey.shade300),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ElevatedButton(
+                  onPressed: _showCancelConfirmationDialog,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5),
                     ),
-                    child: const Text(
-                      'Confirmar endereço',
-                      style: TextStyle(color: Color(0xFF77C593)),
-                    ),
+                  ),
+                  child: const Text(
+                    'Cancelar Troca',
+                    style: TextStyle(color: Colors.black),
                   ),
                 ),
-              const SizedBox(height: 5),
-              if (!widget.isRequester) _buildRequesterInfo(),
-              const SizedBox(height: 5),
-              _buildTradeDetails(),
-              const SizedBox(height: 5),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                    onPressed: _showCancelConfirmationDialog,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                    ),
-                    child: const Text(
-                      'Cancelar Troca',
-                      style: TextStyle(color: Colors.black),
+                ElevatedButton(
+                  onPressed: _deliveryAddressList.isNotEmpty ? _showMarkAsCompletedDialog : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF77C593),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5),
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  ElevatedButton(
-                    onPressed: _deliveryAddressList.isNotEmpty ? _showMarkAsCompletedDialog : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF77C593),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                    ),
-                    child: const Text(
-                      'Concluir Troca',
-                      style: TextStyle(color: Colors.black),
-                    ),
+                  child: const Text(
+                    'Concluir Troca',
+                    style: TextStyle(color: Colors.black),
                   ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -256,6 +297,10 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
   }
 
   Widget _buildAddressSection() {
+    // Define quando mostrar a mensagem de cancelamento
+    bool showCancelInfoMessage = _isTradeCancelled && _deliveryAddressList.isNotEmpty && !widget.isRequester;
+    bool showConfirmationInfoMessage = _isTradeConcluded && _deliveryAddressList.isNotEmpty && !widget.isRequester;
+
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: Padding(
@@ -272,17 +317,54 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
                   : 'Aguardando confirmação do endereço...',
               style: TextStyle(fontSize: 14, color: Colors.grey),
             )
-                : TextField(
-              controller: _addressController,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'Insira o endereço de troca combinado',
-              ),
-              onChanged: (value) {
-                setState(() {
-                  _isAddressProvided = value.isNotEmpty;
-                });
-              },
+                : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: _addressController,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: 'Insira o endereço de troca combinado',
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      _isAddressProvided = value.isNotEmpty;
+                    });
+                  },
+                ),
+                if (showCancelInfoMessage) ...[
+                  const SizedBox(height: 5),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.info, color: Colors.orange),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'A troca foi cancelada pelo outro usuário. Caso a troca tenha sido realizada com sucesso, confirme normalmente, pois pode ter sido um erro do outro usuário.',
+                          style: TextStyle(color: Colors.orange, fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                if (showConfirmationInfoMessage) ...[
+                  const SizedBox(height: 5),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.info, color: Colors.orange),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'A troca foi concluída pelo outro usuário. Caso a troca não tenha sido realizada com sucesso, cancele normalmente, pois pode ter sido um erro do outro usuário.',
+                          style: TextStyle(color: Colors.orange, fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
             ),
           ],
         ),
@@ -386,7 +468,6 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
             ),
             TextButton(
               onPressed: () async {
-                Navigator.of(context).pop();
                 await _cancelTrade();
                 Navigator.pushAndRemoveUntil(
                   context,
@@ -463,6 +544,9 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
               (requesterConfirmationStatus == 'concluído' && ownerConfirmationStatus == 'cancelado') ||
                   (requesterConfirmationStatus == 'cancelado' && ownerConfirmationStatus == 'concluído');
 
+          // Define o campo de data com o nome correspondente
+          String completionField = widget.isRequester ? 'completedByRequesterAt' : 'completedByOwnerAt';
+
           if (bothCancelled) {
             await requestRef.update({'status': 'cancelado'});
             ScaffoldMessenger.of(context).showSnackBar(
@@ -471,12 +555,15 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
           } else if (oneCancelledOneConfirmed) {
             await requestRef.update({
               'status': 'Finalizado com divergência',
-              'completedAt': FieldValue.serverTimestamp(),
+              'completionField': FieldValue.serverTimestamp(),
             });
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Pedido cancelado com sucesso!')),
             );
           } else {
+            await requestRef.update({
+              completionField: FieldValue.serverTimestamp(),
+            });
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Pedido cancelado com sucesso!')),
             );
@@ -563,23 +650,29 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
             (requesterConfirmationStatus == 'concluído' && ownerConfirmationStatus == 'cancelado') ||
                 (requesterConfirmationStatus == 'cancelado' && ownerConfirmationStatus == 'concluído');
 
+        // Define o campo de data com o nome correspondente
+        String completionField = widget.isRequester ? 'completedByRequesterAt' : 'completedByOwnerAt';
+
         if (bothConfirmed) {
           // Ambos confirmaram, o status é atualizado para "concluído"
           await requestRef.update({
             'status': 'concluído',
-            'completedAt': FieldValue.serverTimestamp(),
+            'completionField': FieldValue.serverTimestamp(),
           });
         } else if (oneCancelledOneConfirmed) {
           // Um confirmou e o outro cancelou, atualiza o status para "Finalizado com divergência"
           await requestRef.update({
             'status': 'Finalizado com divergência',
-            'completedAt': FieldValue.serverTimestamp(),
+            'completionField': FieldValue.serverTimestamp(),
           });
+        }else {
+          await requestRef.update({
+            completionField: FieldValue.serverTimestamp(),
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Confirmação de troca registrada com sucesso!')),
+          );
         }
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Confirmação de troca registrada com sucesso!')),
-        );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

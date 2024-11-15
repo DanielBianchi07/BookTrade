@@ -17,7 +17,7 @@ class _TradeStatusPageState extends State<TradeStatusPage> {
   @override
   void initState() {
     super.initState();
-    userId = FirebaseAuth.instance.currentUser!.uid; // Pegando o UID do usuário atual
+    userId = FirebaseAuth.instance.currentUser!.uid;
   }
 
   Future<String> _getRequesterName(String requesterId) async {
@@ -41,12 +41,13 @@ class _TradeStatusPageState extends State<TradeStatusPage> {
         backgroundColor: const Color(0xFFD8D5B3),
         leading: IconButton(
           icon: const Icon(Icons.home),
-          onPressed: () {
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                builder: (context) => HomePage()
+          onPressed: () async{
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (context) => HomePage(),
               ),
+                  (Route<dynamic> route) => false, // Remove todas as rotas anteriores
             );
           },
         ),
@@ -54,8 +55,9 @@ class _TradeStatusPageState extends State<TradeStatusPage> {
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('requests')
-            .where('status', isEqualTo: 'pending') // Status da troca
-            .where('requesterId', isEqualTo: userId) // Caso o usuário seja o solicitante
+            .where('status', isEqualTo: 'pending')
+            .where('requesterId', isEqualTo: userId)
+            .orderBy('createdAt', descending: true) // Ordenação por data de criação, mais recente primeiro
             .snapshots(),
         builder: (context, snapshotRequester) {
           if (snapshotRequester.connectionState == ConnectionState.waiting) {
@@ -71,8 +73,9 @@ class _TradeStatusPageState extends State<TradeStatusPage> {
           return StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
                 .collection('requests')
-                .where('status', isEqualTo: 'pending') // Status da troca
-                .where('ownerId', isEqualTo: userId) // Caso o usuário seja o dono do livro
+                .where('status', isEqualTo: 'pending')
+                .where('ownerId', isEqualTo: userId)
+                .orderBy('createdAt', descending: true) // Ordenação por data de criação, mais recente primeiro
                 .snapshots(),
             builder: (context, snapshotOwner) {
               if (snapshotOwner.connectionState == ConnectionState.waiting) {
@@ -98,6 +101,8 @@ class _TradeStatusPageState extends State<TradeStatusPage> {
                   final request = allRequests[index];
                   final bool isRequester = request['requesterId'] == userId;
                   final requesterId = request['requesterId'];
+                  final Timestamp createdAtTimestamp = request['createdAt'];
+                  final DateTime createdAt = createdAtTimestamp.toDate();
 
                   return GestureDetector(
                     onTap: () {
@@ -106,8 +111,8 @@ class _TradeStatusPageState extends State<TradeStatusPage> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => RequestDetailPage(
-                            requestId: request.id, // Passa o ID da solicitação
-                            isRequester: isRequester, // Passa se é o solicitante ou o dono do livro
+                            requestId: request.id,
+                            isRequester: isRequester,
                           ),
                         ),
                       );
@@ -115,18 +120,28 @@ class _TradeStatusPageState extends State<TradeStatusPage> {
                     child: Card(
                       child: ListTile(
                         title: Text('Livro: ${request['requestedBook']['title']}'),
-                        subtitle: FutureBuilder<String>(
-                          future: _getRequesterName(requesterId),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
-                              return const Text('Carregando nome...');
-                            } else if (snapshot.hasError) {
-                              return const Text('Erro ao buscar nome');
-                            } else {
-                              final requesterName = snapshot.data ?? 'Nome não encontrado';
-                              return Text('Solicitado por: ${isRequester ? 'Você' : requesterName}');
-                            }
-                          },
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            FutureBuilder<String>(
+                              future: _getRequesterName(requesterId),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState == ConnectionState.waiting) {
+                                  return const Text('Carregando nome...');
+                                } else if (snapshot.hasError) {
+                                  return const Text('Erro ao buscar nome');
+                                } else {
+                                  final requesterName = snapshot.data ?? 'Nome não encontrado';
+                                  return Text('Solicitado por: ${isRequester ? 'Você' : requesterName}');
+                                }
+                              },
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Data: ${createdAt.day}/${createdAt.month}/${createdAt.year}',
+                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            ),
+                          ],
                         ),
                       ),
                     ),

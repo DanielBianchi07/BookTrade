@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'home.page.dart';
 import 'notification.detail.page.dart';
 
 class NotificationsPage extends StatelessWidget {
@@ -13,9 +14,15 @@ class NotificationsPage extends StatelessWidget {
         backgroundColor: const Color(0xFFD8D5B3),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            Navigator.pop(context);
+          icon: const Icon(Icons.home),
+          onPressed: () async{
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (context) => HomePage(),
+              ),
+                  (Route<dynamic> route) => false, // Remove todas as rotas anteriores
+            );
           },
         ),
         title: const Text(
