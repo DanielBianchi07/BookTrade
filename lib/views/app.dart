@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:myapp/views/trade.history.page.dart';
 import '../models/book.model.dart';
-import 'chat.page.dart';
 import 'chats.page.dart';
 import 'edit.profile.page.dart';
 import 'exchanged.book.details.page.dart';

@@ -1,15 +1,22 @@
 // lib/services/message_service.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/message.model.dart';
 import 'firebase.service.dart';
+import 'package:image_picker/image_picker.dart'; // Importe o image_picker
+import 'dart:io';
 
 class MessageService {
   final CollectionReference messagesCollection = FirebaseService.firestore.collection('messages');
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   final CollectionReference conversationsCollection = FirebaseFirestore.instance.collection('conversations');
+
+String _generateConversationId(String user1, String user2) {
+    return user1.hashCode <= user2.hashCode ? '${user1}_$user2' : '${user2}_$user1';
+  }
 
   MessageService() {
     _initializeNotifications();
@@ -30,42 +37,35 @@ class MessageService {
     required String receiverName,
     required String receiverProfileUrl,
     required String content,
-    required FieldValue timestamp,
+    String? imageUrl,  // Parâmetro opcional para a URL da imagem
+    required timestamp,
   }) async {
     try {
-      // Gera o `conversationId` único com base nos IDs de `senderId` e `receiverId`
-      final conversationId = mergeConversationId(senderId, receiverId);
+      final conversationId = _generateConversationId(senderId, receiverId);
+      final newMessage = MessageModel(
+        id: '',
+        senderId: senderId,
+        receiverId: receiverId,
+        content: content,
+        timestamp: timestamp,
+        receiverName: receiverName,
+        receiverProfileUrl: receiverProfileUrl,
+        imageUrl: imageUrl, // Inclui a URL da imagem, se fornecida
+      );
 
-      // Verifica se o documento de conversa com o `conversationId` já existe
-      final conversationQuery = await conversationsCollection
-          .where('participants', isEqualTo: conversationId)
-          .limit(1)
-          .get();
+      final docRef = await messagesCollection.add(newMessage.toMap());
+      final messageId = docRef.id;
 
-      String finalConversationId;
-      finalConversationId = conversationQuery.docs.first.id;
-
-      // Cria a nova mensagem na coleção `messages`
-      final newMessage = await messagesCollection.add({
-        'conversationId': conversationId,
-        'senderId': senderId,
-        'receiverId': receiverId,
-        'receiverName': receiverName,
-        'receiverProfileUrl': receiverProfileUrl,
-        'content': content,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
-
-      // Atualiza o documento na coleção `conversations` com a última mensagem
-      await conversationsCollection.doc(finalConversationId).update({
-        'lastMessageId': newMessage.id,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
+      // Atualiza o lastMessageId na conversa
+      await FirebaseFirestore.instance
+          .collection('conversations')
+          .doc(conversationId)
+          .update({'lastMessageId': messageId});
     } catch (e) {
-      Fluttertoast.showToast(msg: 'Erro ao enviar mensagem e atualizar conversa: $e');
+      print('Erro ao enviar mensagem: $e');
+      // Lide com o erro adequadamente (exiba uma mensagem para o usuário, etc.)
     }
   }
-
   // Future<String> getConversationId(String senderId, String receiverId) async {
   //   try {
   //     // Gera o ID de conversa único e ordenado
@@ -155,8 +155,38 @@ class MessageService {
       final doc = await messagesCollection.doc(messageId).get();
       if (doc.exists) cachedMessages.add(MessageModel.fromDocument(doc));
     }
-
     return cachedMessages;
   }
+  Future<void> sendImageMessage(
+      {required String senderId,
+      required String receiverId,
+      required String receiverName,
+      required String receiverProfileUrl,
+      required XFile image, // Recebe o XFile da imagem
+      required Timestamp timestamp}) async {
+    try {
+      final String imageName = DateTime.now().millisecondsSinceEpoch.toString();
+      final Reference storageReference =
+          FirebaseStorage.instance.ref().child('chat_images/$imageName');
 
+      // Upload da imagem
+      final UploadTask uploadTask = storageReference.putFile(File(image.path));
+      await uploadTask;
+      final String imageUrl = await storageReference.getDownloadURL();
+
+      // Salva a mensagem com a URL da imagem
+      await sendMessage(
+        senderId: senderId,
+        receiverId: receiverId,
+        receiverName: receiverName,
+        receiverProfileUrl: receiverProfileUrl,
+        content: '', // Mensagem vazia, pois a imagem é o conteúdo principal
+        imageUrl: imageUrl, // Adiciona a URL da imagem
+        timestamp: timestamp
+      );
+    } catch (e) {
+      print('Erro ao enviar mensagem de imagem: $e');
+      // Lidar com o erro (exibir mensagem, etc.)
+    }
+  }
 }

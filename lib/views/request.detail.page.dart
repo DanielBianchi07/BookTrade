@@ -609,7 +609,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                         children: [
                           CircleAvatar(
                             backgroundImage: CachedNetworkImageProvider(
-                                ownerProfileUrl!),
+                                ownerProfileUrl),
                             radius: 20,
                           ),
                           const SizedBox(width: 8),

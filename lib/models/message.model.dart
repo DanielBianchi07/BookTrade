@@ -2,44 +2,48 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MessageModel {
   final String id;
-  final String conversationId;
   final String senderId;
   final String receiverId;
   final String content;
-  final bool read;
   final Timestamp timestamp;
+  final String receiverName;
+  final String receiverProfileUrl;
+  final String? imageUrl; // Novo campo para URL da imagem
 
-  MessageModel({
+   MessageModel({
     required this.id,
-    required this.conversationId,
     required this.senderId,
     required this.receiverId,
     required this.content,
-    required this.read,
     required this.timestamp,
+    required this.receiverName,
+    required this.receiverProfileUrl,
+    this.imageUrl,
   });
 
   factory MessageModel.fromDocument(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return MessageModel(
       id: doc.id,
-      conversationId: data['conversationId'] ?? '',
       senderId: data['senderId'],
       receiverId: data['receiverId'],
       content: data['content'],
-      read: data['read'] ?? false,
       timestamp: data['timestamp'],
+      receiverName: data['receiverName'],
+      receiverProfileUrl: data['receiverProfileUrl'],
+      imageUrl: data['imageUrl'],
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'conversationId': conversationId,
       'senderId': senderId,
       'receiverId': receiverId,
       'content': content,
-      'read': read,
       'timestamp': timestamp,
+      'receiverName': receiverName,
+      'receiverProfileUrl': receiverProfileUrl,
+      'imageUrl': imageUrl,
     };
   }
 }

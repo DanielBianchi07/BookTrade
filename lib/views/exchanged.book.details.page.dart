@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../models/book.model.dart';
 import '../user.dart';
+import 'request.page.dart';
 
 class ExchangedBookDetailsPage extends StatefulWidget {
   final String requestId;

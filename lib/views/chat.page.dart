@@ -6,6 +6,8 @@ import 'package:intl/intl.dart';
 import 'package:myapp/user.dart';
 import '../services/message.service.dart';
 import '../widgets/message.bubble.widget.dart';
+import '../widgets/chat.tile.widget.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ChatPage extends StatefulWidget {
   final String otherUserId;
@@ -62,6 +64,8 @@ class _ChatPageState extends State<ChatPage> {
       ),
     );
   }
+
+  
 
   @override
   Widget build(BuildContext context) {
@@ -127,6 +131,7 @@ class _ChatPageState extends State<ChatPage> {
                       message: messageContent,
                       isUser: isUser,
                       time: formattedTime,
+                      imageUrl: messageData['imageUrl'],
                     );
                   },
                 );
@@ -142,7 +147,7 @@ class _ChatPageState extends State<ChatPage> {
               children: [
                 IconButton(
                   icon: const Icon(Icons.add),
-                  onPressed: () {},
+                  onPressed: _pickImage,
                 ),
                 Expanded(
                   child: TextField(
@@ -191,4 +196,31 @@ class _ChatPageState extends State<ChatPage> {
   String _generateConversationId(String user1, String user2) {
     return user1.hashCode <= user2.hashCode ? '${user1}_$user2' : '${user2}_$user1';
   }
+ void _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    try {
+      final XFile? pickedImage = await picker.pickImage(source: ImageSource.gallery);
+      if (pickedImage != null) {
+        final user = _auth.currentUser;
+        if (user != null) {
+          try{
+            await _messageService.sendImageMessage(
+            senderId: user.uid,
+            receiverId: widget.otherUserId,
+            receiverName: _receiverName,
+            receiverProfileUrl: _receiverProfileImageUrl,
+            image: pickedImage,
+            timestamp: Timestamp.now(),
+          );
+          } catch (sendError) {
+            print('Erro ao enviar imagem: $sendError');
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro ao enviar imagem: $sendError')));
+          }
+        }
+      }
+    } catch (pickError) {
+      print('Erro ao selecionar imagem: $pickError');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro ao selecionar imagem: $pickError')));
+    }
+  } 
 }
