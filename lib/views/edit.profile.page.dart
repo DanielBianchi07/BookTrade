@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +10,8 @@ import '../services/image.service.dart';
 import '../user.dart';
 import 'change.email.page.dart';
 import 'change.password.page.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -20,6 +21,9 @@ class EditProfilePage extends StatefulWidget {
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
+  List<String> cities = [];
+  String? selectedCity;
+  bool isLoadingCities = false;
   final loginController = LoginController();
   final controller = EditProfileController();
   final imageUploadService = ImageUploadService();
@@ -41,6 +45,35 @@ class _EditProfilePageState extends State<EditProfilePage> {
   void initState() {
     super.initState();
     _inicializarDados();
+    fetchCities();
+  }
+
+  Future<void> fetchCities() async {
+    setState(() {
+      isLoadingCities = true;
+    });
+
+    try {
+      final response = await http.get(Uri.parse(
+          "https://servicodados.ibge.gov.br/api/v1/localidades/municipios"));
+      if (response.statusCode == 200) {
+        List<dynamic> data = json.decode(response.body);
+        setState(() {
+          cities = data
+              .map<String>((city) =>
+                  "${city['nome']} - ${city['microrregiao']['mesorregiao']['UF']['sigla']}")
+              .toList();
+        });
+      } else {
+        throw Exception("Erro ao carregar as cidades.");
+      }
+    } catch (error) {
+      print("Erro ao buscar cidades: $error");
+    } finally {
+      setState(() {
+        isLoadingCities = false;
+      });
+    }
   }
 
   _inicializarDados() async {
@@ -57,6 +90,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       phone.text = user.value.telephone;
       if (user.value.address != null) {
         address.text = user.value.address!;
+        selectedCity = user.value.address; // Sincroniza com a cidade existente
       } else {
         address.text = '';
       }
@@ -67,16 +101,22 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   Future<void> handleEditProfile() async {
+    if (selectedCity == null || selectedCity!.isEmpty) {
+      Fluttertoast.showToast(msg: "Por favor, selecione uma cidade válida.");
+      return;
+    }
     setState(() => busy = true);
 
     // Atualiza o perfil do usuário (nome, telefone e endereço)
     try {
-      await controller.updateUserProfile(context, name.text.trim(), phone.text.trim(), address.text.trim());
+      await controller.updateUserProfile(
+          context, name.text.trim(), phone.text.trim(), selectedCity,);
 
       // Se uma nova imagem foi selecionada, faça o upload e atualize a URL no Firestore
       if (selectedImage != null) {
         String userId = FirebaseAuth.instance.currentUser?.uid ?? '';
-        String? newProfileImageUrl = await imageUploadService.uploadProfileImage(selectedImage!, userId);
+        String? newProfileImageUrl =
+            await imageUploadService.uploadProfileImage(selectedImage!, userId);
 
         if (newProfileImageUrl != null) {
           setState(() {
@@ -86,8 +126,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       }
       // Atualiza o UserInfoModel na coleção de livros
       await updateUserInfoInBooks();
-
-      Fluttertoast.showToast(msg: "Perfil atualizado com sucesso!");
+      
     } catch (err) {
       onError(err);
     } finally {
@@ -98,12 +137,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Future<void> updateUserInfoInBooks() async {
     String userId = FirebaseAuth.instance.currentUser?.uid ?? '';
     // Carregar os valores atuais de customerRating e favoriteGenres
-    DocumentSnapshot userDoc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .get();
+    DocumentSnapshot userDoc =
+        await FirebaseFirestore.instance.collection('users').doc(userId).get();
     double currentCustomerRating = userDoc['customerRating'] ?? 0.0;
-    List<String> currentFavoriteGenres = List<String>.from(userDoc['favoriteGenres'] ?? []);
+    List<String> currentFavoriteGenres =
+        List<String>.from(userDoc['favoriteGenres'] ?? []);
     final userInfo = UInfo(
       id: userId,
       name: name.text,
@@ -173,9 +211,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
             Navigator.of(context).pop();
           },
         ),
-        title: const Text(
-            'Editar Perfil',
-            style: TextStyle(color: Colors.black)),
+        title:
+            const Text('Editar Perfil', style: TextStyle(color: Colors.black)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(10.0),
@@ -191,9 +228,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         radius: 40,
                         backgroundImage: selectedImage != null
                             ? FileImage(selectedImage!)
-                            : (profileImageUrl != null && profileImageUrl!.isNotEmpty
-                            ? NetworkImage(profileImageUrl!)
-                            : const NetworkImage('')),
+                            : (profileImageUrl != null &&
+                                    profileImageUrl!.isNotEmpty
+                                ? NetworkImage(profileImageUrl!)
+                                : const NetworkImage('')),
                       ),
                       Positioned(
                         bottom: 0,
@@ -241,46 +279,49 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
             const SizedBox(height: 5),
 
-            _buildEditableField(
-              label: 'Endereço:',
-              controller: address,
-            ),
+            _buildCityField(),
+
             const SizedBox(height: 5),
             // Campo de E-mail NÃO Editável
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-              Text(
-                'E-mail',
-                style: const TextStyle(
-                fontWeight: FontWeight.bold,
+                Text(
+                  'E-mail',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-      const SizedBox(height: 5),
-      TextFormField(
-        controller: email,
-        obscureText: false,
-        readOnly: true,
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: Colors.grey.shade200,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide.none,
+                const SizedBox(height: 5),
+                TextFormField(
+                  controller: email,
+                  obscureText: false,
+                  readOnly: true,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.grey.shade200,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-      ),],
-    ),
             const SizedBox(height: 10),
             Row(
-              mainAxisAlignment: MainAxisAlignment.center, // Centraliza os botões horizontalmente
+              mainAxisAlignment: MainAxisAlignment
+                  .center, // Centraliza os botões horizontalmente
               children: [
                 // Botão Alterar E-mail
                 SizedBox(
                   width: 150, // Largura fixa do botão
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => ChangeEmailPage()));
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => ChangeEmailPage()));
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFD8D5B3),
@@ -290,21 +331,28 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       ),
                     ),
                     child: const Padding(
-                      padding: EdgeInsets.all(10.0), // Ajusta o padding do botão
+                      padding:
+                          EdgeInsets.all(10.0), // Ajusta o padding do botão
                       child: Text(
                         'Alterar e-mail',
-                        style: TextStyle(fontSize: 12), // Ajuste do tamanho do texto
+                        style: TextStyle(
+                            fontSize: 12), // Ajuste do tamanho do texto
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 20), // Espaçamento entre os botões (ajuste conforme necessário)
+                const SizedBox(
+                    width:
+                        20), // Espaçamento entre os botões (ajuste conforme necessário)
                 // Botão Alterar Senha
                 SizedBox(
                   width: 150, // Largura fixa do botão
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => ChangePasswordPage()));
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => ChangePasswordPage()));
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFD8D5B3),
@@ -314,10 +362,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       ),
                     ),
                     child: const Padding(
-                      padding: EdgeInsets.all(10.0), // Ajusta o padding do botão
+                      padding:
+                          EdgeInsets.all(10.0), // Ajusta o padding do botão
                       child: Text(
                         'Alterar senha',
-                        style: TextStyle(fontSize: 12), // Ajuste do tamanho do texto
+                        style: TextStyle(
+                            fontSize: 12), // Ajuste do tamanho do texto
                       ),
                     ),
                   ),
@@ -331,7 +381,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
               child: ElevatedButton(
                 onPressed: () {
                   handleEditProfile();
-                  imageUploadService.uploadProfileImage(selectedImage!, user.value.uid); // Faz o upload da nova imagem de perfil
+                  imageUploadService.uploadProfileImage(selectedImage!,
+                      user.value.uid); // Faz o upload da nova imagem de perfil
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF77C593),
@@ -378,6 +429,63 @@ class _EditProfilePageState extends State<EditProfilePage> {
               borderSide: BorderSide.none,
             ),
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCityField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Cidade:',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 5),
+        Autocomplete<String>(
+          optionsBuilder: (TextEditingValue textEditingValue) {
+            if (textEditingValue.text.isEmpty) {
+              return const Iterable<String>.empty();
+            }
+            // Filtra as cidades conforme o texto digitado
+            return cities.where((city) {
+              return city.toLowerCase().contains(textEditingValue.text.toLowerCase());
+            }).toList();
+          },
+          onSelected: (String selection) {
+            setState(() {
+              selectedCity = selection; // Atualiza a cidade selecionada
+              address.text = selection;
+            });
+          },
+          fieldViewBuilder: (context, controller, focusNode, onEditingComplete) {
+            return TextField(
+              controller: controller,
+              focusNode: focusNode,
+              decoration: InputDecoration(
+                hintText: user.value.address ?? 'Digite sua cidade',
+                filled: true,
+                fillColor: Colors.grey.shade200,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide.none,
+                ),
+                errorText: selectedCity == null && controller.text.isNotEmpty
+                    ? 'Cidade inválida. Por favor, escolha da lista.'
+                    : null,
+              ),
+              onEditingComplete: onEditingComplete,
+              onChanged: (value) {
+                // Verifica se a cidade digitada é válida
+                if (!cities.contains(value.trim())) {
+                  setState(() {
+                    selectedCity = null; // Limpa a seleção se não for válido
+                  });
+                }
+              },
+            );
+          },
         ),
       ],
     );
