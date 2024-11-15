@@ -101,7 +101,7 @@ class ExchangeTrackingPage extends StatelessWidget {
               }
 
               if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const Center(child: Text('Nenhuma troca encontrada'));
+                return const Center(child: Text('Nenhuma troca em andamento'));
               }
 
               final tradeHistory = snapshot.data!;
@@ -188,96 +188,112 @@ class TradeHistoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Card(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          side: BorderSide(
-            color: Colors.grey.shade400,
-            width: 1.5,
+      child: SizedBox(
+        height: 180, // Altura fixa para manter o tamanho uniforme
+        child: Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10.0),
+            side: BorderSide(
+              color: Colors.grey.shade400,
+              width: 1.5,
+            ),
           ),
-        ),
-        margin: const EdgeInsets.only(bottom: 16.0),
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8.0),
-                    child: Image.network(
-                      bookImageUrl,
-                      height: 100,
-                      width: 80,
-                      fit: BoxFit.cover,
-                    ),
+          margin: const EdgeInsets.only(bottom: 16.0),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8.0),
+                  child: Image.network(
+                    bookImageUrl,
+                    height: 100,
+                    width: 80,
+                    fit: BoxFit.cover,
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1, // Limita a uma linha
+                        overflow: TextOverflow.ellipsis, // Adiciona "..." caso o texto ultrapasse o espaço
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        author,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.normal,
+                          color: Colors.grey,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Postado por:',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                      Row(
+                        children: [
+                          CircleAvatar(
+                            backgroundImage: NetworkImage(profileImageUrl),
+                            radius: 15,
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          author,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.normal,
-                            color: Colors.grey,
+                          const SizedBox(width: 8),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                postedBy,
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                              const SizedBox(height: 4),
+                              RatingBarIndicator(
+                                rating: rating,
+                                itemBuilder: (context, index) => const Icon(
+                                  Icons.star,
+                                  color: Colors.amber,
+                                ),
+                                itemCount: 5,
+                                itemSize: 16.0,
+                                direction: Axis.horizontal,
+                              ),
+                            ],
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Postado por:',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                        Row(
-                          children: [
-                            CircleAvatar(
-                              backgroundImage: NetworkImage(profileImageUrl),
-                              radius: 15,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              postedBy,
-                              style: const TextStyle(fontSize: 14),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        RatingBarIndicator(
-                          rating: rating,
-                          itemBuilder: (context, index) => const Icon(
-                            Icons.star,
-                            color: Colors.amber,
-                          ),
-                          itemCount: 5,
-                          itemSize: 16.0,
-                          direction: Axis.horizontal,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          deliveryStatus,
-                          style: TextStyle(
-                            fontSize: 14,
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
                             color: Colors.orange,
-                            fontWeight: FontWeight.bold,
+                            size: 12,
                           ),
-                        ),
-                      ],
-                    ),
+                          const SizedBox(width: 2),
+                          Text(
+                            deliveryStatus,
+                            style: TextStyle(
+                              fontSize: 12, // Fonte menor para o status
+                              color: Colors.orange,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

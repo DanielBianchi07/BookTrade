@@ -5,6 +5,7 @@ import 'package:myapp/views/exchange.tracking.page.dart';
 import '../models/book.model.dart';
 import '../models/user.info.model.dart';
 import 'chat.page.dart';
+import 'home.page.dart';
 
 class RequestDetailPage extends StatefulWidget {
   final String requestId;
@@ -161,6 +162,63 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
     }
   }
 
+  Future<void> _cancelTrade() async {
+    try {
+      // Atualiza o campo isAvailable para true em cada livro ofertado
+      for (var book in offeredBooks) {
+        await FirebaseFirestore.instance
+            .collection('books')
+            .doc(book.id)
+            .update({'isAvailable': true});
+      }
+
+      // Exclui o documento de solicitação da coleção requests
+      await FirebaseFirestore.instance
+          .collection('requests')
+          .doc(widget.requestId)
+          .delete();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Solicitação de troca cancelada com sucesso')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao cancelar a solicitação de troca')),
+      );
+    }
+  }
+
+  void _showCancelConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Cancelar Troca'),
+          content: Text('Tem certeza de que deseja cancelar esta troca? Esta ação não pode ser desfeita.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Não'),
+            ),
+            TextButton(
+              onPressed: () async {
+                await _cancelTrade();
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => HomePage(),
+                  ),
+                      (Route<dynamic> route) => false, // Remove todas as rotas anteriores
+                );
+              },
+              child: Text('Sim'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -172,164 +230,273 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
         body: const Center(child: CircularProgressIndicator()),
       );
     }
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text('Oferta de Troca'),
         backgroundColor: const Color(0xFFD8D5B3),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (widget.isRequester) ...[
-              const Text('Livro Solicitado',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 10),
-              _buildRequestedBookCard(requestedBook),
-              const SizedBox(height: 20),
-              const Text('Livros Disponíveis para Troca',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 10),
-              ...offeredBooks.map((offerbook) =>
-                  _buildOfferedBookCard(offerbook)).toList(),
-              const SizedBox(height: 20),
-              Text('Status: $status',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-            ] else
-              ...[
-                const Text(
-                    'Seu Livro', style: TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 10),
-                _buildRequestedBookCard(requestedBook),
-                const SizedBox(height: 20),
-                const Text('Livros Oferecidos',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 10),
-                ...offeredBooks.map((book) => _buildOfferedBookCard(book))
-                    .toList(),
-                const SizedBox(height: 20),
-                _buildRequesterInfo(),
-                const SizedBox(height: 20),
-                Row(
+      body: Column(
+        children: [
+          Expanded(
+            child: Stack(
+              children: [
+                Scrollbar(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (widget.isRequester) ...[
+                          const Text('Livro Solicitado', style: TextStyle(fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 10),
+                          _buildRequestedBookCard(requestedBook),
+                          Row(
+                            children: [
+                              const Icon(Icons.info_outline, color: Colors.orange),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Aguardando resposta de ${requestedBook.userInfo.name}...',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.orange,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          const Text('Livro(s) Enviado(s) para Troca', style: TextStyle(fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 10),
+                          Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey),
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            padding: const EdgeInsets.all(10.0),
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxHeight: 400,
+                              ),
+                              child: Scrollbar(
+                                child: SingleChildScrollView(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      ...offeredBooks.map(
+                                            (offerbook) => _buildOfferedBookCard(offerbook),
+                                      ).toList(),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 50), // Espaço extra para o botão fixo
+                        ] else ...[
+                          const Text('Seu Livro', style: TextStyle(fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 10),
+                          _buildRequestedBookCard(requestedBook),
+                          const SizedBox(height: 20),
+                          _buildRequesterInfo(),
+                          const SizedBox(height: 20),
+                          Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey),
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            padding: const EdgeInsets.all(10.0),
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxHeight: 400,
+                              ),
+                              child: Scrollbar(
+                                child: SingleChildScrollView(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text('Livro(s) Recebido(s) para Troca', style: TextStyle(fontWeight: FontWeight.bold)),
+                                      const SizedBox(height: 10),
+                                      Row(
+                                        children: [
+                                          Icon(Icons.info_outline, color: Colors.grey),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              'Selecione apenas um livro caso queira realizar a troca.',
+                                              style: TextStyle(
+                                                color: Colors.grey,
+                                                fontStyle: FontStyle.italic,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 10),
+                                      ...offeredBooks.map((book) => _buildOfferedBookCard(book)).toList(),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 10), // Espaço para manter os botões na posição fixa
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (widget.isRequester) // Botão fixo para o requester
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Container(
+                padding: const EdgeInsets.all(16.0),
+                color: Colors.white,
+                child: Center(
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      _showCancelConfirmationDialog();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 12.0),
+                    ),
+                    child: const Text(
+                      'Cancelar Troca',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          if (!widget.isRequester) // Botões "Rejeitar" e "Confirmar" fixos para quem não é requester
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 40.0, vertical: 20.0),
+                color: Colors.white,
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    ElevatedButton(
-                      onPressed: () async {
-                        try {
-                          // Define `isAvailable` para `true` em todos os livros oferecidos
-                          for (var book in offeredBooks) {
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          try {
+                            _showCancelConfirmationDialog();
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Erro ao rejeitar a troca')),
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFDD585B),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                        ),
+                        child: const Text(
+                          'Rejeitar',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 80),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: _selectedBook == null
+                            ? null
+                            : () async {
+                          try {
+                            await FirebaseFirestore.instance
+                                .collection('requests')
+                                .doc(widget.requestId)
+                                .update({
+                              'status': 'Aguardando confirmação do endereço',
+                              'offeredBooks': offeredBooks
+                                  .where((book) => book.id == _selectedBook!.id)
+                                  .map((book) => {
+                                'id': book.id,
+                                'title': book.title,
+                                'author': book.author,
+                                'imageUrl': book.bookImageUserUrls.isNotEmpty
+                                    ? book.bookImageUserUrls[0]
+                                    : '',
+                              })
+                                  .toList(),
+                            });
+
+                            for (var book in offeredBooks) {
+                              if (book.id != _selectedBook!.id) {
+                                await FirebaseFirestore.instance
+                                    .collection('books')
+                                    .doc(book.id)
+                                    .update({'isAvailable': true});
+                              }
+                            }
+
                             await FirebaseFirestore.instance
                                 .collection('books')
-                                .doc(book.id)
-                                .update({'isAvailable': true});
-                          }
-                          // Exclui o request
-                          await FirebaseFirestore.instance
-                              .collection('requests')
-                              .doc(widget.requestId)
-                              .delete();
+                                .doc(requestedBook.id)
+                                .update({'isAvailable': false});
 
-                          // Exibe uma mensagem de confirmação
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(
-                                'Troca rejeitada com sucesso')),
-                          );
-                          Navigator.pop(context);
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Erro ao rejeitar a troca')),
-                          );
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFDD585B),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(5),
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Troca confirmada, aguardando confirmação do endereço'),
+                              ),
+                            );
+
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ExchangeTrackingPage(),
+                              ),
+                            );
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Erro ao confirmar a troca')),
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF77C593),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                        ),
+                        child: const Text(
+                          'Confirmar',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                      child: const Text('Rejeitar'),
-                    ),
-                    ElevatedButton(
-                      onPressed: _selectedBook == null
-                          ? null
-                          : () async {
-                        try {
-                          // Atualiza o `status` para "Aguardando confirmação do endereço"
-                          await FirebaseFirestore.instance
-                              .collection('requests')
-                              .doc(widget.requestId)
-                              .update({
-                            'status': 'Aguardando confirmação do endereço',
-                            'offeredBooks': offeredBooks
-                                .where((book) => book.id == _selectedBook!.id)
-                                .map((book) => {
-                              'id': book.id,
-                              'title': book.title,
-                              'author': book.author,
-                              'imageUrl': book.bookImageUserUrls.isNotEmpty
-                                  ? book.bookImageUserUrls[0]
-                                  : '',
-                            })
-                                .toList(),
-                          });
-
-                          // Atualiza `isAvailable` para true para os livros não selecionados
-                          for (var book in offeredBooks) {
-                            if (book.id != _selectedBook!.id) {
-                              await FirebaseFirestore.instance
-                                  .collection('books')
-                                  .doc(book.id)
-                                  .update({'isAvailable': true});
-                            }
-                          }
-
-                          // Atualiza `isAvailable` para false para o `requestedBook` (livro que está recebendo a oferta)
-                          await FirebaseFirestore.instance
-                              .collection('books')
-                              .doc(requestedBook.id)
-                              .update({'isAvailable': false});
-
-                          // Exibe uma mensagem de confirmação
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Troca confirmada, aguardando confirmação do endereço'),
-                            ),
-                          );
-
-                          // Navega para a página de Acompanhamento de trocas
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ExchangeTrackingPage(),
-                            ),
-                          );
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Erro ao confirmar a troca')),
-                          );
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF77C593),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                      ),
-                      child: const Text('Confirmar'),
                     ),
                   ],
                 ),
-              ]
-          ],
-        ),
+              ),
+            ),
+        ],
       ),
     );
   }
 
-    Widget _buildOfferedBookCard(BookModel offerbook) {
+  Widget _buildOfferedBookCard(BookModel offerbook) {
     return GestureDetector(
       onTap: widget.isRequester ? null : () {
         setState(() {

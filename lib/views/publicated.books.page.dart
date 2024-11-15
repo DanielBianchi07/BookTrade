@@ -120,7 +120,7 @@ class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
       ),
       body: _isLoading
           ? const Center(
-        child: CircularProgressIndicator(), // Indicador de carregamento
+        child: CircularProgressIndicator(),
       )
           : _books.isEmpty
           ? const Center(child: Text('Nenhum livro publicado.'))
@@ -129,6 +129,8 @@ class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
         itemCount: _books.length,
         itemBuilder: (context, index) {
           final book = _books[index];
+          final isAvailable = book.isAvailable;
+
           return GestureDetector(
             onTap: () {
               // Navega para a DeleteBookPage e passa o livro como argumento
@@ -140,6 +142,7 @@ class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
               );
             },
             child: Card(
+              color: isAvailable ? Colors.white : Colors.grey.shade300, // Cor esmaecida se indisponível
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10.0),
               ),
@@ -148,7 +151,6 @@ class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
                 padding: const EdgeInsets.all(8.0),
                 child: Row(
                   children: [
-                    // Imagem do livro com CachedNetworkImage, similar ao BookCard
                     Container(
                       height: 100,
                       width: 80,
@@ -170,8 +172,6 @@ class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
                       ),
                     ),
                     const SizedBox(width: 16),
-
-                    // Informações do livro
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,12 +197,26 @@ class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
                               color: Colors.grey,
                             ),
                           ),
+                          if (!isAvailable)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4.0),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.info, color: Colors.red, size: 16),
+                                  const SizedBox(width: 4),
+                                  const Text(
+                                    'Indisponível',
+                                    style: TextStyle(color: Colors.red, fontSize: 12),
+                                  ),
+                                ],
+                              ),
+                            ),
                         ],
                       ),
                     ),
                     IconButton(
                       onPressed: () {
-                        _confirmDelete(context, book.id); // Confirmação antes de excluir
+                        _confirmDelete(context, book.id);
                       },
                       icon: const Icon(Icons.delete, color: Colors.red),
                     ),
