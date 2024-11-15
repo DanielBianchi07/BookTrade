@@ -2,8 +2,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:myapp/views/home.page.dart';
 import '../models/book.model.dart';
 import 'chat.page.dart';
+import 'exchange.tracking.page.dart';
 
 class TradeConfirmationPage extends StatefulWidget {
   final String requestId;
@@ -131,68 +134,79 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
         title: Text('Finalizar Troca'),
         backgroundColor: const Color(0xFFD8D5B3),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                if (requestedBook != null)
-                _buildBookImage(requestedBook!),
-                Icon(Icons.swap_horiz, size: 40, color: Colors.grey),
-                if (selectedOfferedBook != null)
-                  _buildBookImage(selectedOfferedBook!),
-              ],
-            ),
-            const SizedBox(height: 20),
-            _buildAddressSection(),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                ElevatedButton(
-                  onPressed: _showCancelConfirmationDialog,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                  ),
-                  child: const Text('Cancelar'),
-                ),
-                if (!widget.isRequester)
-                  ElevatedButton(
+      body: Scrollbar(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  if (requestedBook != null) _buildBookImage(requestedBook!),
+                  Icon(Icons.swap_horiz, size: 40, color: Colors.grey),
+                  if (selectedOfferedBook != null) _buildBookImage(selectedOfferedBook!),
+                ],
+              ),
+              const SizedBox(height: 5),
+              _buildAddressSection(),
+              const SizedBox(height: 5),
+              if (!widget.isRequester)
+                Center(
+                  child: ElevatedButton(
                     onPressed: _isAddressProvided ? _confirmAddress : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF77C593),
+                      backgroundColor: Colors.white,
+                      side: BorderSide(color: const Color(0xFF77C593), width: 1.5),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(5),
                       ),
                     ),
-                    child: const Text('Confirmar endereço'),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            if (!widget.isRequester) _buildRequesterInfo(),
-            const SizedBox(height: 20),
-            _buildTradeDetails(),
-            const SizedBox(height: 20),
-            Center(
-              child: ElevatedButton(
-                onPressed: _deliveryAddressList.isNotEmpty ? _showMarkAsCompletedDialog : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(5),
+                    child: const Text(
+                      'Confirmar endereço',
+                      style: TextStyle(color: Color(0xFF77C593)),
+                    ),
                   ),
                 ),
-                child: const Text('Marcar como concluído'),
+              const SizedBox(height: 5),
+              if (!widget.isRequester) _buildRequesterInfo(),
+              const SizedBox(height: 5),
+              _buildTradeDetails(),
+              const SizedBox(height: 5),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: _showCancelConfirmationDialog,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                    ),
+                    child: const Text(
+                      'Cancelar Troca',
+                      style: TextStyle(color: Colors.black),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  ElevatedButton(
+                    onPressed: _deliveryAddressList.isNotEmpty ? _showMarkAsCompletedDialog : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF77C593),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                    ),
+                    child: const Text(
+                      'Concluir Troca',
+                      style: TextStyle(color: Colors.black),
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -374,6 +388,13 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
               onPressed: () async {
                 Navigator.of(context).pop();
                 await _cancelTrade();
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => HomePage(),
+                  ),
+                      (Route<dynamic> route) => false, // Remove todas as rotas anteriores
+                );
               },
               child: Text('Sim'),
             ),
@@ -424,10 +445,8 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
             await requestRef.delete();
 
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Pedido excluído pois nenhum endereço foi registrado.')),
+              SnackBar(content: Text('Pedido excluído com sucesso!')),
             );
-
-            Navigator.of(context).pop();
             return;
           }
 
@@ -447,7 +466,7 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
           if (bothCancelled) {
             await requestRef.update({'status': 'cancelado'});
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Pedido marcado como cancelado com sucesso!')),
+              SnackBar(content: Text('Pedido cancelado com sucesso!')),
             );
           } else if (oneCancelledOneConfirmed) {
             await requestRef.update({
@@ -455,15 +474,13 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
               'completedAt': FieldValue.serverTimestamp(),
             });
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Pedido finalizado com divergência.')),
+              SnackBar(content: Text('Pedido cancelado com sucesso!')),
             );
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Cancelamento registrado com sucesso!')),
+              SnackBar(content: Text('Pedido cancelado com sucesso!')),
             );
           }
-
-          Navigator.of(context).pop();
         }
       }
     } catch (e) {
@@ -483,7 +500,13 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Endereço confirmado com sucesso! Aguardando confirmação do recebimento.')),
       );
-      Navigator.of(context).pop();
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          builder: (context) => HomePage(),
+        ),
+            (Route<dynamic> route) => false, // Remove todas as rotas anteriores
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro ao confirmar o endereço. Tente novamente.')),
@@ -565,9 +588,20 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
     }
   }
 
-  void _showRatingDialog() {
+  void _showRatingDialog() async {
     double rating = 3.0; // Avaliação inicial
     String otherUserId = widget.otherUserId;
+    String otherUserName = 'usuário'; // Nome padrão caso a busca falhe
+
+    // Busca o nome do outro usuário no Firestore
+    try {
+      final userDoc = await FirebaseFirestore.instance.collection('users').doc(otherUserId).get();
+      if (userDoc.exists) {
+        otherUserName = userDoc['name'] ?? 'usuário';
+      }
+    } catch (e) {
+      print('Erro ao buscar o nome do usuário: $e');
+    }
 
     showDialog(
       context: context,
@@ -575,19 +609,24 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text('Avalie o outro usuário'),
+              title: Text('Avalie $otherUserName'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('Por favor, avalie a experiência com o outro usuário.'),
+                  Text('Por favor, avalie a experiência com $otherUserName.'),
                   SizedBox(height: 10),
-                  Slider(
-                    value: rating,
-                    min: 1,
-                    max: 5,
-                    divisions: 4,
-                    label: rating.toString(),
-                    onChanged: (newRating) {
+                  RatingBar.builder(
+                    initialRating: rating,
+                    minRating: 1,
+                    maxRating: 5,
+                    direction: Axis.horizontal,
+                    allowHalfRating: true,
+                    itemCount: 5,
+                    itemBuilder: (context, _) => Icon(
+                      Icons.star,
+                      color: Colors.amber,
+                    ),
+                    onRatingUpdate: (newRating) {
                       setState(() {
                         rating = newRating;
                       });
@@ -597,15 +636,29 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () async{
+                    Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => HomePage(),
+                    ),
+                        (Route<dynamic> route) => false, // Remove todas as rotas anteriores
+                  );
+                },
                   child: Text('Cancelar'),
                 ),
                 TextButton(
                   onPressed: () async {
-                    Navigator.of(context).pop(); // Fecha o diálogo de avaliação
                     await _updateCustomerRating(rating, otherUserId); // Atualiza a avaliação do outro usuário
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => HomePage(),
+                      ),
+                          (Route<dynamic> route) => false, // Remove todas as rotas anteriores
+                    );
                   },
-                  child: Text('Enviar'),
+                  child: Text('Avaliar'),
                 ),
               ],
             );
@@ -628,17 +681,33 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
         final newTotalRatings = totalRatings + 1;
         final newRating = ((currentRating * totalRatings) + rating) / newTotalRatings;
 
+        // Atualiza o rating do usuário na coleção 'users'
         await userRef.update({
           'customerRating': newRating,
           'totalRatings': newTotalRatings,
         });
+
+        // Atualiza o rating em todos os livros do usuário na coleção 'books'
+        final booksQuery = FirebaseFirestore.instance
+            .collection('books')
+            .where('userId', isEqualTo: otherUserId);
+
+        final booksSnapshot = await booksQuery.get();
+        for (var bookDoc in booksSnapshot.docs) {
+          await bookDoc.reference.update({
+            'userInfo.customerRating': newRating, // Atualiza o rating em 'userInfo'
+            'userInfo.totalRatings': newTotalRatings,
+          });
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Avaliação registrada com sucesso!')));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erro: Usuário não encontrado.')),
         );
       }
     } catch (e) {
-      print("Erro ao atualizar a avaliação do usuário: $e"); // Log do erro
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro ao atualizar a avaliação do usuário: $e')),
       );
