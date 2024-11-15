@@ -7,6 +7,7 @@ class ChatTile extends StatelessWidget {
   final String time;
   final String avatarUrl;
   final VoidCallback onTap;
+  final VoidCallback onDelete;
 
   const ChatTile({
     super.key,
@@ -15,6 +16,7 @@ class ChatTile extends StatelessWidget {
     required this.time,
     required this.avatarUrl,
     required this.onTap,
+    required this.onDelete,
   });
 
   @override
@@ -28,7 +30,47 @@ class ChatTile extends StatelessWidget {
         ),
         title: Text(contactName),
         subtitle: Text(lastMessage),
-        trailing: Text(time),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(time),
+            IconButton(
+              icon: Icon(Icons.delete),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: Text('Excluir Conversa'),
+                      content: Text(
+                        'Tem certeza de que deseja excluir esta conversa? Esta ação não poderá ser desfeita, '
+                            'a menos que você faça uma nova solicitação de troca para esta pessoa.',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop(); // Fecha o popup
+                          },
+                          child: Text('Cancelar'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop(); // Fecha o popup
+                            onDelete(); // Executa a ação de exclusão
+                          },
+                          child: Text(
+                            'Excluir',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

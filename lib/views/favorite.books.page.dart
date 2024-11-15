@@ -4,6 +4,7 @@ import 'package:myapp/controller/books.controller.dart';
 import 'package:myapp/user.dart';
 import '../models/book.model.dart';
 import '../widgets/bookcard.widget.dart';
+import 'home.page.dart';
 import 'trade.offer.page.dart';
 
 class FavoriteBooksPage extends StatefulWidget {
@@ -76,9 +77,15 @@ class FavoriteBooksPageState extends State<FavoriteBooksPage> {
         backgroundColor: const Color(0xFFD8D5B3), // Cor amarelada da barra superior
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            Navigator.of(context).pop(); // Voltar para a página anterior
+          icon: const Icon(Icons.home),
+          onPressed: () async{
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (context) => HomePage(),
+              ),
+                  (Route<dynamic> route) => false, // Remove todas as rotas anteriores
+            );
           },
         ),
         title: const Text(

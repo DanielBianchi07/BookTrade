@@ -24,7 +24,13 @@ class ChatsService {
           .get();
 
       if (querySnapshot.docs.isNotEmpty) {
-        print('Conversa já existe, não é necessário criar uma nova.');
+        // Atualizar o status de user 1 e user 2 para true
+        final conversationDoc = querySnapshot.docs.first;
+
+        await conversationsCollection.doc(conversationDoc.id).update({
+          'isActiveForUser1': true,
+          'isActiveForUser2': true,
+        });
         return;
       }
 
@@ -61,6 +67,22 @@ class ChatsService {
     } catch (e) {
       Fluttertoast.showToast(msg: 'Erro ao obter a última mensagem.');
       return null;
+    }
+  }
+
+  Future<void> updateConversationStatus(String conversationId, String userId) async {
+    try {
+      final conversationDoc = await conversationsCollection.doc(conversationId).get();
+      if (conversationDoc.exists) {
+        final participants = (conversationDoc['participants'] as String).split('_');
+        final isUser1 = participants[0] == userId;
+
+        await conversationsCollection.doc(conversationId).update({
+          isUser1 ? 'isActiveForUser1' : 'isActiveForUser2': false,
+        });
+      }
+    } catch (e) {
+      print('Erro ao atualizar status da conversa: $e');
     }
   }
 }

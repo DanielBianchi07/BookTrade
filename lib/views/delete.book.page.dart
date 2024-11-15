@@ -1,5 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:myapp/controller/books.controller.dart';
+import '../controller/books.controller.dart';
 import '../models/book.model.dart';
 
 class DeleteBookPage extends StatefulWidget {
@@ -15,6 +16,38 @@ class _DeleteBookPageState extends State<DeleteBookPage> {
   final BooksController booksController = BooksController();
   int _currentPage = 0; // Página atual no carrossel
   final PageController _pageController = PageController();
+
+  // Função para confirmar a exclusão com validação
+  Future<void> _confirmDeleteWithCheck(BuildContext context, String bookId) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // O usuário deve interagir com o pop-up
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirmar exclusão'),
+          content: const Text(
+            'Você tem certeza que deseja excluir este livro?',
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancelar'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Fecha o pop-up sem excluir
+              },
+            ),
+            TextButton(
+              child: const Text('Excluir'),
+              onPressed: () async{
+                Navigator.of(context).pop(); // Fecha o pop-up
+                booksController.checkAndDeleteBook(context, bookId); // Verifica e exclui o livro
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -134,10 +167,10 @@ class _DeleteBookPageState extends State<DeleteBookPage> {
               children: [
                 ElevatedButton(
                   onPressed: () {
-                    booksController.confirmDelete(context, widget.book.id); // Chama a função de confirmação
+                    _confirmDeleteWithCheck(context, widget.book.id); // Chama o pop-up de confirmação
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFFDD585B),
+                    backgroundColor: const Color(0xFFDD585B),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
@@ -165,3 +198,4 @@ class _DeleteBookPageState extends State<DeleteBookPage> {
     );
   }
 }
+

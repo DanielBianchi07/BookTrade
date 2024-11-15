@@ -7,6 +7,7 @@ import '../controller/books.controller.dart';
 import '../controller/login.controller.dart';
 import '../models/book.model.dart';
 import 'delete.book.page.dart';
+import 'home.page.dart';
 
 class PublicatedBooksPage extends StatefulWidget {
   const PublicatedBooksPage({super.key});
@@ -56,6 +57,40 @@ class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
     }
   }
 
+  Future<void> _checkAndDeleteBook(BuildContext context, String bookId) async {
+    try {
+      // Consulta a coleção de requests para verificar se o livro está em uma solicitação
+      final requestSnapshot = await FirebaseFirestore.instance
+          .collection('requests')
+          .where('requestedBook.id', isEqualTo: bookId)
+          .get();
+
+      // Verifica se existem solicitações relacionadas ao livro
+      if (requestSnapshot.docs.isNotEmpty) {
+        final requestData = requestSnapshot.docs.first.data();
+
+        // Verifica se o campo ownerConfirmationStatus existe e se está concluído
+        final ownerConfirmationStatus = requestData['ownerConfirmationStatus'];
+        if (ownerConfirmationStatus == 'concluído') {
+          await _deleteBook(bookId); // Chama a função de exclusão do livro
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('O livro não pode ser excluído porque está em uma solicitação de troca pendente.'),
+            ),
+          );
+        }
+      } else {
+        // Caso não haja solicitações relacionadas, exclui o livro
+        await _deleteBook(bookId);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao verificar solicitações: $e')),
+      );
+    }
+  }
+
   // Função para excluir um livro
   Future<void> _deleteBook(String bookId) async {
     await FirebaseFirestore.instance.collection('books').doc(bookId).delete();
@@ -66,32 +101,28 @@ class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
   }
 
   // Função para confirmar a exclusão do livro
-  Future<void> _confirmDelete(BuildContext context, String bookId) async {
+  Future<void> _confirmDeleteWithCheck(BuildContext context, String bookId) async {
     return showDialog<void>(
       context: context,
-      barrierDismissible: false, // O usuário deve tocar em um botão
+      barrierDismissible: false, // O usuário deve interagir com o pop-up
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Confirmar exclusão'),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: const <Widget>[
-                Text('Você tem certeza que deseja excluir este livro?'),
-              ],
-            ),
+          content: const Text(
+            'Você tem certeza que deseja excluir este livro?',
           ),
           actions: <Widget>[
             TextButton(
               child: const Text('Cancelar'),
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(); // Fecha o pop-up sem excluir
               },
             ),
             TextButton(
               child: const Text('Excluir'),
-              onPressed: () {
-                Navigator.of(context).pop();
-                _deleteBook(bookId); // Chama a função de exclusão
+              onPressed: () async{
+                Navigator.of(context).pop(); // Fecha o pop-up
+                _checkAndDeleteBook(context, bookId); // Verifica e exclui o livro
               },
             ),
           ],
@@ -108,9 +139,15 @@ class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
         backgroundColor: const Color(0xFFD8D5B3),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            Navigator.of(context).pop();
+          icon: const Icon(Icons.home),
+          onPressed: () async{
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (context) => HomePage(),
+              ),
+                  (Route<dynamic> route) => false, // Remove todas as rotas anteriores
+            );
           },
         ),
         title: const Text(
@@ -216,7 +253,7 @@ class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
                     ),
                     IconButton(
                       onPressed: () {
-                        _confirmDelete(context, book.id);
+                        _confirmDeleteWithCheck(context, book.id); // Chama o pop-up antes de verificar e excluir
                       },
                       icon: const Icon(Icons.delete, color: Colors.red),
                     ),
