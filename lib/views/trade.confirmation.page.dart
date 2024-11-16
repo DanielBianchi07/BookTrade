@@ -543,12 +543,16 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
           final oneCancelledOneConfirmed =
               (requesterConfirmationStatus == 'concluído' && ownerConfirmationStatus == 'cancelado') ||
                   (requesterConfirmationStatus == 'cancelado' && ownerConfirmationStatus == 'concluído');
+          final onlyOnecancelled = requesterConfirmationStatus == 'cancelado' || ownerConfirmationStatus == 'cancelado';
 
           // Define o campo de data com o nome correspondente
           String completionField = widget.isRequester ? 'completedByRequesterAt' : 'completedByOwnerAt';
 
           if (bothCancelled) {
-            await requestRef.update({'status': 'cancelado'});
+            await requestRef.update({
+              'status': 'cancelado',
+              'completionField': FieldValue.serverTimestamp()
+            });
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Pedido cancelado com sucesso!')),
             );
@@ -560,7 +564,8 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Pedido cancelado com sucesso!')),
             );
-          } else {
+          }
+          if (onlyOnecancelled) {
             await requestRef.update({
               completionField: FieldValue.serverTimestamp(),
             });
@@ -649,6 +654,7 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
         final oneCancelledOneConfirmed =
             (requesterConfirmationStatus == 'concluído' && ownerConfirmationStatus == 'cancelado') ||
                 (requesterConfirmationStatus == 'cancelado' && ownerConfirmationStatus == 'concluído');
+        final onlyOneconfirmed = requesterConfirmationStatus == 'concluído' || ownerConfirmationStatus == 'concluído';
 
         // Define o campo de data com o nome correspondente
         String completionField = widget.isRequester ? 'completedByRequesterAt' : 'completedByOwnerAt';
@@ -665,12 +671,13 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
             'status': 'Finalizado com divergência',
             'completionField': FieldValue.serverTimestamp(),
           });
-        }else {
+        }
+        if (onlyOneconfirmed) {
           await requestRef.update({
             completionField: FieldValue.serverTimestamp(),
           });
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Confirmação de troca registrada com sucesso!')),
+            SnackBar(content: Text('Pedido cancelado com sucesso!')),
           );
         }
       }
@@ -685,15 +692,17 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
     double rating = 3.0; // Avaliação inicial
     String otherUserId = widget.otherUserId;
     String otherUserName = 'usuário'; // Nome padrão caso a busca falhe
+    String otherUserProfileUrl = widget.requesterProfileUrl; // Foto de perfil do outro usuário
 
-    // Busca o nome do outro usuário no Firestore
+    // Busca o nome e a URL do perfil do outro usuário no Firestore
     try {
       final userDoc = await FirebaseFirestore.instance.collection('users').doc(otherUserId).get();
       if (userDoc.exists) {
         otherUserName = userDoc['name'] ?? 'usuário';
+        otherUserProfileUrl = userDoc['profileImageUrl'] ?? ''; // Atualiza a foto de perfil, se disponível
       }
     } catch (e) {
-      print('Erro ao buscar o nome do usuário: $e');
+      print('Erro ao buscar os dados do usuário: $e');
     }
 
     showDialog(
@@ -702,12 +711,52 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text('Avalie $otherUserName'),
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Texto "Avalie,"
+                  const Text(
+                    'Avalie,',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 10),
+
+                  // Foto de perfil e nome do usuário
+                  Column(
+                    children: [
+                      CircleAvatar(
+                        radius: 20,
+                        backgroundImage: otherUserProfileUrl.isNotEmpty
+                            ? NetworkImage(otherUserProfileUrl)
+                            : null,
+                        child: otherUserProfileUrl.isEmpty
+                            ? const Icon(Icons.person, color: Colors.grey)
+                            : null,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        otherUserName,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text('Por favor, avalie a experiência com $otherUserName.'),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   RatingBar.builder(
                     initialRating: rating,
                     minRating: 1,
@@ -715,7 +764,7 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
                     direction: Axis.horizontal,
                     allowHalfRating: true,
                     itemCount: 5,
-                    itemBuilder: (context, _) => Icon(
+                    itemBuilder: (context, _) => const Icon(
                       Icons.star,
                       color: Colors.amber,
                     ),
@@ -729,16 +778,16 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
               ),
               actions: [
                 TextButton(
-                  onPressed: () async{
+                  onPressed: () {
                     Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => HomePage(),
-                    ),
-                        (Route<dynamic> route) => false, // Remove todas as rotas anteriores
-                  );
-                },
-                  child: Text('Cancelar'),
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => HomePage(),
+                      ),
+                          (Route<dynamic> route) => false, // Remove todas as rotas anteriores
+                    );
+                  },
+                  child: const Text('Não, obrigado(a)'),
                 ),
                 TextButton(
                   onPressed: () async {
@@ -751,7 +800,7 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
                           (Route<dynamic> route) => false, // Remove todas as rotas anteriores
                     );
                   },
-                  child: Text('Avaliar'),
+                  child: const Text('Avaliar'),
                 ),
               ],
             );

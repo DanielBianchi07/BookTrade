@@ -120,6 +120,8 @@ class ChatsPage extends StatelessWidget {
                               lastMessage: lastMessage,
                               time: formattedTime,
                               avatarUrl: otherUserImage,
+                              senderId: message!.senderId,
+                              currentUserId: user.value.uid,
                               onTap: () {
                                 Navigator.push(
                                   context,

@@ -208,9 +208,9 @@ class BooksController {
             ),
             TextButton(
               child: const Text('Excluir'),
-              onPressed: () {
+              onPressed: () async{
+                await updateBookAvailability(bookId, false, context);
                 Navigator.of(context).pop();
-                _deleteBook(bookId, context); // Chama a função de exclusão
               },
             ),
           ],
@@ -219,66 +219,55 @@ class BooksController {
     );
   }
 
-
-  // Função para excluir o livro
-  Future<void> _deleteBook(String bookId, BuildContext context) async {
+  Future<void> updateBookAvailability(String bookId, bool isAvailable, BuildContext context) async {
     try {
-      // Obtém o usuário logado
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Usuário não está logado')),
-        );
-        return;
-      }
+      await FirebaseFirestore.instance
+          .collection('books')
+          .doc(bookId)
+          .update({'isAvailable': isAvailable});
 
-      // Exclui o livro da coleção Firestore
-      await FirebaseFirestore.instance.collection('books').doc(bookId).delete();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Livro removido com sucesso!')),
       );
-
-      // Retorna para a página anterior (opcional)
-      Navigator.of(context).pop();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao excluir o livro: $e')),
-      );
+      throw Exception("Erro ao atualizar disponibilidade: $e");
     }
   }
 
-  // Função para verificar e excluir o livro
-  Future<void> checkAndDeleteBook(BuildContext context, String bookId) async {
+  Future<String> getBookRequestStatus(String bookId) async {
     try {
-      // Consulta a coleção de requests para verificar se o livro está em uma solicitação
-      final requestSnapshot = await FirebaseFirestore.instance
-          .collection('requests')
-          .where('requestedBook.id', isEqualTo: bookId)
-          .get();
+      // Consulta na coleção de requests para verificar o status do livro
+      final requestSnapshot =
+      await FirebaseFirestore.instance.collection('requests').get();
 
-      // Verifica se existem solicitações relacionadas ao livro
-      if (requestSnapshot.docs.isNotEmpty) {
-        final requestData = requestSnapshot.docs.first.data();
+      for (var doc in requestSnapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
 
-        // Verifica se o campo ownerConfirmationStatus existe e se está concluído
-        final ownerConfirmationStatus = requestData['ownerConfirmationStatus'];
-        if (ownerConfirmationStatus == 'concluído') {
-          await _deleteBook(bookId, context); // Chama a função de exclusão do livro
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('O livro não pode ser excluído porque está em uma solicitação de troca pendente.'),
-            ),
-          );
+        // Verificar se o livro está no campo offeredBooks
+        if (data['offeredBooks'] != null) {
+          for (var offeredBook in data['offeredBooks']) {
+            if (offeredBook['id'] == bookId) {
+              // O usuário é o requester neste caso
+              if (data['requesterConfirmationStatus'] == 'concluído') {
+                return 'concluído';
+              }
+              return data['status']; // Retorna o status do request
+            }
+          }
         }
-      } else {
-        // Caso não haja solicitações relacionadas, exclui o livro
-        await _deleteBook(bookId, context);
+        // Verificar se o livro está no campo requestedBook
+        if (data['requestedBook'] != null &&
+            data['requestedBook']['id'] == bookId) {
+          // O usuário é o owner neste caso
+          if (data['ownerConfirmationStatus'] == 'concluído') {
+            return 'concluído';
+          }
+          return data['status']; // Retorna o status do request
+        }
       }
+      return 'not_found'; // Retorna 'not_found' se o livro não estiver em nenhum request
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao verificar solicitações: $e')),
-      );
+      throw Exception('Erro ao buscar status do request: $e');
     }
   }
 }
