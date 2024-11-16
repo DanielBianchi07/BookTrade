@@ -59,7 +59,7 @@ class _NewBookPageState extends State<NewBookPage> {
             _publicationYearController.text = volumeInfo['publishedDate']?.split('-')[0] ?? '';
             _publisherController.text = volumeInfo['publisher'] ?? '';
             _genres = List<String>.from(volumeInfo['categories'] ?? []);
-            _description = volumeInfo['descripion'] ?? '';
+            _description = volumeInfo['description'] ?? '';
 
             // Carregar imagem do livro da API
             if (volumeInfo['imageLinks']?['thumbnail'] != null) {
@@ -93,6 +93,10 @@ class _NewBookPageState extends State<NewBookPage> {
   }
 
   bool _validateFields() {
+    if (_selectedImages.isEmpty) {
+      _showError('Adicione pelo menos uma foto do livro.');
+      return false;
+    }
     if (_titleController.text.isEmpty) {
       _showError('O campo "Nome do Livro" é obrigatório.');
       return false;
@@ -150,11 +154,11 @@ class _NewBookPageState extends State<NewBookPage> {
 
       if (userDoc.exists && userDoc.data() != null) {
         Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
-        
+
 
         // Cria o documento do livro no Firestore (sem imagens inicialmente)
         DocumentReference bookDoc =
-            await FirebaseFirestore.instance.collection('books').add({
+        await FirebaseFirestore.instance.collection('books').add({
           'title': _titleController.text.trim(),
           'author': _authorController.text.trim(),
           'edition': _editionController.text.trim(),
@@ -184,7 +188,7 @@ class _NewBookPageState extends State<NewBookPage> {
         // Faz o upload de cada imagem selecionada e armazena a URL
         for (var image in _selectedImages) {
           String? imageUrl =
-              await _imageUploadService.uploadBookImage(image, userId, bookId);
+          await _imageUploadService.uploadBookImage(image, userId, bookId);
           if (imageUrl != null) {
             bookImageUserUrls.add(imageUrl);
           }
@@ -197,17 +201,6 @@ class _NewBookPageState extends State<NewBookPage> {
           'bookImageUserUrls': bookImageUserUrls,
           // 'imageApiUrl': apiImageUrl ?? '',
         });
-
-        // // Se houver uma imagem da API, você pode definir `apiImageUrl`
-        // if (_apiImage != null) {
-        //   apiImageUrl = await _imageUploadService.uploadBookImage(_apiImage!, userId, bookId);
-        // }
-        //
-        // // Atualiza o documento do livro com as URLs das imagens
-        // await FirebaseFirestore.instance.collection('books').doc(bookId).update({
-        //   'bookImageUserUrls': bookImageUserUrls,
-        //   'imageApiUrl': apiImageUrl ?? '',
-        // });
 
         // Navega para a página de livros publicados
         Navigator.push(
@@ -249,39 +242,21 @@ class _NewBookPageState extends State<NewBookPage> {
             /// Carrossel de imagens
             SizedBox(
               height: 200,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: _selectedImages.length + 1,
-                itemBuilder: (context, index) {
-                  if (index == _selectedImages.length) {
-                    return GestureDetector(
-                      onTap: () {
-                        if (_selectedImages.length < 5) {
-                          _addImage();
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text(
-                                    'Você pode adicionar no máximo 5 fotos.')),
-                          );
-                        }
-                      },
-                      child: Container(
-                        height: 200,
-                        width: 150,
-                        margin: const EdgeInsets.only(right: 10),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.black, width: 2),
-                          borderRadius: BorderRadius.circular(10),
-                          color: Colors.grey[200],
-                        ),
-                        child: const Center(
-                            child: Icon(Icons.add_a_photo,
-                                size: 50, color: Colors.black)),
-                      ),
-                    );
-                  } else {
-                    return Container(
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      if (_selectedImages.length < 5) {
+                        _addImage();
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text(
+                                  'Você pode adicionar no máximo 5 fotos.')),
+                        );
+                      }
+                    },
+                    child: Container(
                       height: 200,
                       width: 150,
                       margin: const EdgeInsets.only(right: 10),
@@ -290,29 +265,77 @@ class _NewBookPageState extends State<NewBookPage> {
                         borderRadius: BorderRadius.circular(10),
                         color: Colors.grey[200],
                       ),
-                      child: Image.file(
-                        _selectedImages[index],
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Center(
-                          child: Icon(Icons.broken_image,
-                              color: Colors.red, size: 50),
-                        ),
-                      ),
-                    );
-                  }
-                },
+                      child: const Center(
+                          child: Icon(Icons.add_a_photo,
+                              size: 50, color: Colors.black)),
+                    ),
+                  ),
+                  Expanded(
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _selectedImages.length,
+                      itemBuilder: (context, index) {
+                        return Stack(
+                          children: [
+                            Container(
+                              height: 200,
+                              width: 150,
+                              margin: const EdgeInsets.only(right: 10),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.black, width: 2),
+                                borderRadius: BorderRadius.circular(10),
+                                color: Colors.grey[200],
+                              ),
+                              child: Image.file(
+                                _selectedImages[index],
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                const Center(
+                                  child: Icon(Icons.broken_image,
+                                      color: Colors.red, size: 50),
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _selectedImages.removeAt(index);
+                                  });
+                                },
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(0.6),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.close,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 20),
+
+            /// ISBN Field
             _buildTextField('ISBN', _isbnController,
-                enabled:
-                    !_noIsbn, // Desabilitar ISBN se "Não possui ISBN" for marcado
+                enabled: !_noIsbn, // Desabilitar ISBN se "Não possui ISBN" for marcado
                 onChanged: (value) {
-              if (_validateISBN(value)) {
-                _fetchBookData(value.trim());
-              }
-            }),
+                  if (_validateISBN(value)) {
+                    _fetchBookData(value.trim());
+                  }
+                }),
             Row(
               children: [
                 Checkbox(
@@ -330,6 +353,8 @@ class _NewBookPageState extends State<NewBookPage> {
               ],
             ),
             const SizedBox(height: 20),
+
+            /// Other fields
             _buildTextField('Nome do Livro', _titleController),
             _buildTextField('Nome do Autor', _authorController),
             _buildTextField('Edição', _editionController),
@@ -339,9 +364,10 @@ class _NewBookPageState extends State<NewBookPage> {
             const SizedBox(height: 10),
             Autocomplete<String>(
               optionsBuilder: (TextEditingValue textEditingValue) {
-                // Filtra os gêneros conforme o que é digitado
                 return BookGenres.genres.where((genre) {
-                  return genre.toLowerCase().contains(textEditingValue.text.toLowerCase());
+                  return genre
+                      .toLowerCase()
+                      .contains(textEditingValue.text.toLowerCase());
                 }).toList();
               },
               onSelected: (String selection) {
@@ -365,7 +391,7 @@ class _NewBookPageState extends State<NewBookPage> {
                   onEditingComplete: onEditingComplete,
                   onChanged: (value) {
                     // Verifica se o gênero digitado é válido
-                    if (!BookGenres.genres.contains(value.trim())) {
+                    if (!BookGenres.genres.contains(value.trim())){
                       setState(() {
                         _selectedGenre = null; // Limpa a seleção se não for válido
                       });
@@ -379,11 +405,10 @@ class _NewBookPageState extends State<NewBookPage> {
             if (_selectedGenre != null)
               Text('Gênero selecionado: $_selectedGenre', style: TextStyle(fontSize: 16)),
             const SizedBox(height: 20),
-            // Dropdown para Estado de Conservação
-            Text(
-              'Estado de conservação',
-              style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-            ),
+
+            /// Book Condition Dropdown
+            const Text('Estado de conservação',
+                style: TextStyle(fontSize: 14, color: Colors.grey)),
             const SizedBox(height: 5),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -415,6 +440,8 @@ class _NewBookPageState extends State<NewBookPage> {
               ),
             ),
             const SizedBox(height: 30),
+
+            /// Confirm Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -458,5 +485,5 @@ class _NewBookPageState extends State<NewBookPage> {
 
   bool _validateISBN(String isbn) =>
       (isbn.length == 10 || isbn.length == 13) &&
-      isbn.contains(RegExp(r'^\d+$'));
+          isbn.contains(RegExp(r'^\d+$'));
 }

@@ -38,93 +38,115 @@ class BookCard extends StatelessWidget {
           width: 1.5,
         ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                // Imagem do livro com CachedNetworkImage
-                Container(
-                  height: 100,
-                  width: 80,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(5),
-                    color: Colors.grey[200],
-                  ),
-                  child: CachedNetworkImage(
-                    imageUrl: imageUserUrl,
-                    placeholder: (context, url) => const Center(
-                      child: CircularProgressIndicator(),
-                    ),
-                    errorWidget: (context, url, error) => const Icon(
-                      Icons.image_not_supported,
-                      size: 50,
-                      color: Colors.grey,
-                    ),
-                    fit: BoxFit.cover,
-                  ),
+      child: SizedBox(
+        height: 150, // Altura fixa do card
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Imagem do livro com CachedNetworkImage
+              Container(
+                height: 130,
+                width: 90,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(5),
+                  color: Colors.grey[200],
                 ),
-                const SizedBox(width: 16),
-
-                // Informações do livro
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        author,
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Postado por:',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 15,
-                            backgroundImage: profileImageUrl != null && profileImageUrl!.isNotEmpty
-                                ? CachedNetworkImageProvider(profileImageUrl!)
-                                : null,
-                            child: profileImageUrl == null || profileImageUrl!.isEmpty
-                                ? const Icon(Icons.person, color: Colors.grey)
-                                : null,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            postedBy,
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      // Estrelas de avaliação
-                      RatingBarIndicator(
-                        rating: customerRating ?? 0.0,
-                        itemBuilder: (context, index) => const Icon(
-                          Icons.star,
-                          color: Colors.amber,
-                        ),
-                        itemCount: 5,
-                        itemSize: 18.0,
-                        direction: Axis.horizontal,
-                      ),
-                    ],
+                child: CachedNetworkImage(
+                  imageUrl: imageUserUrl,
+                  placeholder: (context, url) => const Center(
+                    child: CircularProgressIndicator(),
                   ),
+                  errorWidget: (context, url, error) => const Icon(
+                    Icons.image_not_supported,
+                    size: 50,
+                    color: Colors.grey,
+                  ),
+                  fit: BoxFit.cover,
                 ),
+              ),
+              const SizedBox(width: 16),
 
-                // Botão de coração
-                IconButton(
+              // Informações do livro
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Título com no máximo 2 linhas e truncado com "..."
+                    Text(
+                      title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    // Autor com no máximo 2 linhas e truncado com "..."
+                    Text(
+                      author,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Postado por:',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Imagem de perfil
+                        CircleAvatar(
+                          radius: 15,
+                          backgroundImage: profileImageUrl != null &&
+                              profileImageUrl!.isNotEmpty
+                              ? CachedNetworkImageProvider(profileImageUrl!)
+                              : null,
+                          child: profileImageUrl == null ||
+                              profileImageUrl!.isEmpty
+                              ? const Icon(Icons.person, color: Colors.grey)
+                              : null,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Nome do usuário
+                              Text(
+                                postedBy,
+                                style: const TextStyle(fontSize: 14),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              // Estrelas de avaliação alinhadas verticalmente
+                              RatingBarIndicator(
+                                rating: customerRating ?? 0.0,
+                                itemBuilder: (context, index) => const Icon(
+                                  Icons.star,
+                                  color: Colors.amber,
+                                ),
+                                itemCount: 5,
+                                itemSize: 16.0,
+                                direction: Axis.horizontal,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Botão de coração centralizado verticalmente
+              Align(
+                alignment: Alignment.center,
+                child: IconButton(
                   onPressed: onFavoritePressed,
                   icon: Icon(
                     isFavorite ? Icons.favorite : Icons.favorite_border,
@@ -132,9 +154,9 @@ class BookCard extends StatelessWidget {
                     size: 24,
                   ),
                 ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );

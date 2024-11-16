@@ -6,6 +6,8 @@ class ChatTile extends StatelessWidget {
   final String lastMessage;
   final String time;
   final String avatarUrl;
+  final String senderId;
+  final String currentUserId;
   final VoidCallback onTap;
   final VoidCallback onDelete;
 
@@ -15,12 +17,17 @@ class ChatTile extends StatelessWidget {
     required this.lastMessage,
     required this.time,
     required this.avatarUrl,
+    required this.senderId,
+    required this.currentUserId,
     required this.onTap,
     required this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
+    // Determina quem enviou a última mensagem
+    final isCurrentUserSender = senderId == currentUserId;
+    final senderName = isCurrentUserSender ? 'Você' : contactName;
     return InkWell(
       onTap: onTap,
       child: ListTile(
@@ -29,7 +36,9 @@ class ChatTile extends StatelessWidget {
           backgroundImage: NetworkImage(avatarUrl),
         ),
         title: Text(contactName),
-        subtitle: Text(lastMessage),
+        subtitle: Text(
+          isCurrentUserSender ? 'Você: $lastMessage' : lastMessage,
+        ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [

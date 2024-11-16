@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../controller/books.controller.dart';
 import '../models/book.model.dart';
@@ -16,38 +15,6 @@ class _DeleteBookPageState extends State<DeleteBookPage> {
   final BooksController booksController = BooksController();
   int _currentPage = 0; // Página atual no carrossel
   final PageController _pageController = PageController();
-
-  // Função para confirmar a exclusão com validação
-  Future<void> _confirmDeleteWithCheck(BuildContext context, String bookId) async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false, // O usuário deve interagir com o pop-up
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Confirmar exclusão'),
-          content: const Text(
-            'Você tem certeza que deseja excluir este livro?',
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancelar'),
-              onPressed: () {
-                Navigator.of(context).pop(); // Fecha o pop-up sem excluir
-              },
-            ),
-            TextButton(
-              child: const Text('Excluir'),
-              onPressed: () async{
-                Navigator.of(context).pop(); // Fecha o pop-up
-                booksController.checkAndDeleteBook(context, bookId); // Verifica e exclui o livro
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,7 +48,8 @@ class _DeleteBookPageState extends State<DeleteBookPage> {
                       });
                     },
                     itemBuilder: (context, index) {
-                      return _buildBookImage(widget.book.bookImageUserUrls[index]);
+                      return _buildBookImage(
+                          widget.book.bookImageUserUrls[index]);
                     },
                   ),
                 ),
@@ -106,7 +74,8 @@ class _DeleteBookPageState extends State<DeleteBookPage> {
                     right: 10,
                     top: 125,
                     child: IconButton(
-                      icon: const Icon(Icons.arrow_forward_ios, color: Colors.black),
+                      icon:
+                      const Icon(Icons.arrow_forward_ios, color: Colors.black),
                       onPressed: () {
                         _pageController.nextPage(
                           duration: const Duration(milliseconds: 300),
@@ -135,7 +104,7 @@ class _DeleteBookPageState extends State<DeleteBookPage> {
                 height: 1.5,
               ),
             ),
-            const SizedBox(height: 0),
+            const SizedBox(height: 10),
             Text(
               'Condição: ${widget.book.condition}\nEdição: ${widget.book.edition}\nGêneros: ${widget.book.genres?.join(', ') ?? 'N/A'}\nISBN: ${widget.book.isbn ?? 'N/A'}\nAno de publicação: ${widget.book.publicationYear}\nEditora: ${widget.book.publisher}',
               style: const TextStyle(
@@ -161,24 +130,29 @@ class _DeleteBookPageState extends State<DeleteBookPage> {
 
             const SizedBox(height: 20),
 
-            // Botões de Solicitar e Chat
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    _confirmDeleteWithCheck(context, widget.book.id); // Chama o pop-up de confirmação
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFDD585B),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+            // Botão Excluir apenas quando isAvailable = true
+            if (widget.book.isAvailable)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  ElevatedButton(
+                    onPressed: () async{
+                      await booksController.confirmDelete(
+                        context,
+                        widget.book.id); // Chama o pop-up de confirmação
+                      // Após a exclusão, navega para '/publicatedBooks'
+                      Navigator.popAndPushNamed(context, '/publicatedBooks');
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFDD585B),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                     ),
+                    child: const Text('Excluir'),
                   ),
-                  child: const Text('Excluir'),
-                ),
-              ],
-            ),
+                ],
+              ),
           ],
         ),
       ),
