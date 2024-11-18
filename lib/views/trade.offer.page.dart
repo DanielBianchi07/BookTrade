@@ -86,7 +86,7 @@ class _TradeOfferPageState extends State<TradeOfferPage> {
         ),
         const SizedBox(height: 10),
         Container(
-          height: 100, // Altura fixa para os itens
+          height: 115, // Altura fixa para os itens
           child: ListView.builder(
             controller: _scrollController,
             scrollDirection: Axis.horizontal,

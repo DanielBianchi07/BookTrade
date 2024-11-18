@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:myapp/views/publicated.books.page.dart';
 import '../models/book.model.dart';
 import '../models/user.info.model.dart';
 
@@ -211,7 +212,13 @@ class BooksController {
               child: const Text('Excluir'),
               onPressed: () async{
                 await updateBookAvailability(bookId, false, context);
-                Navigator.of(context).pop();
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PublicatedBooksPage(),
+                  ),
+                      (Route<dynamic> route) => false, // Remove todas as rotas anteriores
+                );
               },
             ),
           ],

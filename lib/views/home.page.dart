@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:myapp/controller/login.controller.dart';
+import 'package:myapp/views/favorite.books.page.dart';
 import 'package:myapp/views/trade.offer.page.dart';
 import '../controller/books.controller.dart';
 import '../models/book.model.dart';
@@ -176,13 +177,27 @@ class _HomePageState extends State<HomePage> {
     // Ordena os livros primeiro pelos gêneros favoritos e depois pela avaliação, do maior para o menor
     books.sort((a, b) {
       // Ordena pelo gênero se precisar, mas é opcional e depende da estrutura desejada
-      int genreComparison = favoriteGenres.indexOf(a['genres'].first).compareTo(
-        favoriteGenres.indexOf(b['genres'].first),
-      );
+      // Verifica se os gêneros existem e têm elementos
+      String genreA = (a['genres'] != null && a['genres'].isNotEmpty) ? a['genres'].first : '';
+      String genreB = (b['genres'] != null && b['genres'].isNotEmpty) ? b['genres'].first : '';
+
+      // Obtem os índices dos gêneros favoritos, tratando valores que podem ser -1
+      int indexA = favoriteGenres.indexOf(genreA);
+      int indexB = favoriteGenres.indexOf(genreB);
+
+      // Ajusta índices ausentes para o final da lista
+      indexA = indexA == -1 ? favoriteGenres.length : indexA;
+      indexB = indexB == -1 ? favoriteGenres.length : indexB;
+
+      int genreComparison = indexA.compareTo(indexB);
+
+      // Verifica se o customerRating não é null
+      double ratingA = a['customerRating'] ?? 0.0;
+      double ratingB = b['customerRating'] ?? 0.0;
 
       // Em caso de empate de gênero, ordena pela avaliação (rating) do maior para o menor
       if (genreComparison == 0) {
-        return b['customerRating'].compareTo(a['customerRating']);
+        return ratingB.compareTo(ratingA);
       } else {
         return genreComparison;
       }
@@ -319,6 +334,7 @@ class _HomePageState extends State<HomePage> {
                     profileImageUrl: book.userInfo.profileImageUrl,
                     customerRating: book.userInfo.customerRating,
                     isFavorite: favoriteStatus[index],
+                    addres: book.userInfo.address!,
                     onFavoritePressed: () async {
                       toggleFavoriteStatus(book.id, index);
                       // Atualiza os livros após a alteração do favorito
@@ -361,6 +377,7 @@ class _HomePageState extends State<HomePage> {
                     profileImageUrl: book.userInfo.profileImageUrl,
                     customerRating: book.userInfo.customerRating,
                     isFavorite: favoriteStatus[index],
+                    addres: book.userInfo.address!,
                     onFavoritePressed: () async {
                       toggleFavoriteStatus(book.id, index);
                       await _loadBooks();
@@ -492,7 +509,13 @@ class _HomePageState extends State<HomePage> {
                   leading: const Icon(Icons.favorite, color: Colors.black),
                   title: const Text('Lista de desejos'),
                   onTap: () {
-                    Navigator.pushNamed(context, '/favoriteBooks');
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => FavoriteBooksPage(),
+                      ),
+                          (Route<dynamic> route) => false, // Remove todas as rotas anteriores
+                    );
                   },
                 ),
                 ListTile(

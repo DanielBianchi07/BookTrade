@@ -36,7 +36,7 @@ class UInfo {
     return UInfo(
       id: map['userId'],
       profileImageUrl: map['profileImageUrl'] ?? '',
-      address: map['address'],
+      address: map['address'] ?? '',
       customerRating: map['customerRating']?.toDouble() ?? 0.0,
       favoriteGenres: List<String>.from(map['favoriteGenres'] ?? []),
       name: map['name'] ?? '',
