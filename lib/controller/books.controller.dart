@@ -83,6 +83,7 @@ class BooksController {
           edition: data['edition'] ?? 'Edição não especificada',
           genres: List<String>.from(data['genres'] ?? []),
           isbn: data['isbn'],
+          description: data['description'],
           publicationYear: data['publicationYear'] ?? 'Ano não especificado',
           publisher: data['publisher'] ?? 'Editora não especificada',
           isAvailable: data['isAvailable'] ?? true,
