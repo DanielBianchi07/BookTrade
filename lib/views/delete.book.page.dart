@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:myapp/views/publicated.books.page.dart';
 import '../controller/books.controller.dart';
 import '../models/book.model.dart';
 
@@ -244,7 +245,6 @@ class _DeleteBookPageState extends State<DeleteBookPage> {
                       context,
                       widget.book.id,
                     );
-                    Navigator.popAndPushNamed(context, '/publicatedBooks');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,

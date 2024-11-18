@@ -179,6 +179,7 @@ class _NewBookPageState extends State<NewBookPage> {
             'customerRating': userData['customerRating'] ?? 0.0,
             'name': userData['name'] ?? '',
             'userId': userId,
+            'favoriteGenres': userData['favoriteGenres'] ?? [''],
           },
         });
 
@@ -203,11 +204,12 @@ class _NewBookPageState extends State<NewBookPage> {
         });
 
         // Navega para a página de livros publicados
-        Navigator.push(
+        Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
             builder: (context) => PublicatedBooksPage(),
           ),
+              (Route<dynamic> route) => false, // Remove todas as rotas anteriores
         );
       } else {
         _showError('Erro: Dados do usuário não encontrados.');

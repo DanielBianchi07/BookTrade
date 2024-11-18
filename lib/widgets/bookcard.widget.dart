@@ -13,6 +13,7 @@ class BookCard extends StatelessWidget {
   final bool isFavorite;
   final double? customerRating;
   final VoidCallback onFavoritePressed;
+  final String addres;
 
   const BookCard({
     super.key,
@@ -26,6 +27,7 @@ class BookCard extends StatelessWidget {
     required this.isFavorite,
     this.customerRating,
     required this.onFavoritePressed,
+    required this.addres,
   });
 
   @override
@@ -39,11 +41,11 @@ class BookCard extends StatelessWidget {
         ),
       ),
       child: SizedBox(
-        height: 150, // Altura fixa do card
+        height: 170, // Altura fixa do card
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center, // Centraliza verticalmente no Row
             children: [
               // Imagem do livro com CachedNetworkImage
               Container(
@@ -139,8 +141,16 @@ class BookCard extends StatelessWidget {
                         ),
                       ],
                     ),
+                    Text(
+                      addres,
+                      style: const TextStyle(
+                          fontSize: 12, color: Colors.grey),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    )
                   ],
                 ),
+
               ),
 
               // Botão de coração centralizado verticalmente
