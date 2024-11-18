@@ -89,7 +89,7 @@ class BookModel {
       isbn: data['isbn'],
       publicationYear: data['publicationYear'] ?? 'Ano de publicação não disponível',
       publisher: data['publisher'] ?? 'Editora não disponível',
-      description: data['description'], // Carrega a sinopse
+      description: data['description'] ?? 'Sinopse não disponível', // Carrega a sinopse
       isAvailable: data['isAvailable'] ?? true,
       userInfo: data['userInfo'] != null
           ? UInfo.fromMap(data['userInfo'])
@@ -126,7 +126,7 @@ class BookModel {
       isbn: data['isbn'],
       publicationYear: data['publicationYear'] ?? 'Ano de publicação não disponível',
       publisher: data['publisher'] ?? 'Editora não disponível',
-      description: data['description'], // Carrega a sinopse
+      description: data['description'] ?? 'Sinopse não disponível', // Carrega a sinopse
       isAvailable: data['isAvailable'] ?? true,
       userInfo: data['userInfo'] != null
           ? UInfo.fromMap(data['userInfo'])

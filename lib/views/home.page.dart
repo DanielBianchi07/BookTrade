@@ -125,6 +125,7 @@ class _HomePageState extends State<HomePage> {
             edition: data['edition'] ?? 'Edição não disponível',
             genres: data['genres'] != null ? List<String>.from(data['genres']) : [],
             isbn: data['isbn'],
+            description: data['description'],
             publicationYear: data['publicationYear'] ?? 'Ano de publicação não disponível',
             publisher: data['publisher'] ?? 'Editora não disponível',
             isAvailable: data['isAvailable'] ?? true,
