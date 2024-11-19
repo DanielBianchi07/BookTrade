@@ -232,6 +232,16 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<bool> checkAddress () async {
+    // Obtenha os gêneros favoritos do usuário
+    final userDoc = await FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser?.uid).get();
+    if (userDoc.exists && userDoc.data()?['address'] != null && userDoc.data()?['address'].isNotEmpty) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -390,8 +400,18 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(context, '/newBook');
+        onPressed: () async {
+          bool hasAddress = await checkAddress();
+
+          if (hasAddress) {
+            Navigator.pushNamed(context, '/newBook');
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Você precisa cadastrar um endereço para publicar um novo livro.'),
+              ),
+            );
+          }
         },
         backgroundColor: const Color(0xFF77C593),
         child: const Icon(Icons.add, color: Colors.white),

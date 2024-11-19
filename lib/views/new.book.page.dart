@@ -33,6 +33,7 @@ class _NewBookPageState extends State<NewBookPage> {
   final List<File> _selectedImages = [];
   File? _apiImage;
   String _description = '';
+  bool _isProcessing = false;
 
   final loginController = LoginController();
   // Método para buscar informações do livro pelo ISBN
@@ -130,92 +131,104 @@ class _NewBookPageState extends State<NewBookPage> {
   }
 
   Future<void> _onConfirm() async {
-    if (!_validateFields()) {
-      return; // Parar se a validação falhar
-    }
+    if (_isProcessing) return; // Impede execuções simultâneas
+    setState(() {
+      _isProcessing = true; // Inicia o bloqueio
+    });
 
-    User? currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser != null) {
-      String userId = currentUser.uid;
-
-      // Limite de 5 imagens para cada livro
-      if (_selectedImages.length > 5) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Você pode adicionar no máximo 5 fotos.')),
-        );
-        return; // Interrompe a execução se o limite for excedido
+    try {
+      if (!_validateFields()) {
+        return; // Para se a validação falhar
       }
 
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .get();
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        String userId = currentUser.uid;
 
-      if (userDoc.exists && userDoc.data() != null) {
-        Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
-
-
-        // Cria o documento do livro no Firestore (sem imagens inicialmente)
-        DocumentReference bookDoc =
-        await FirebaseFirestore.instance.collection('books').add({
-          'title': _titleController.text.trim(),
-          'author': _authorController.text.trim(),
-          'edition': _editionController.text.trim(),
-          'isbn': _noIsbn ? '' : _isbnController.text.trim(),
-          'publicationYear': _publicationYearController.text.trim(),
-          'publisher': _publisherController.text.trim(),
-          'condition': _condition,
-          'description': _description,
-          'genres': _selectedGenre != null ? [_selectedGenre!] : [],
-          'bookImageUserUrls': [''], // Inicialmente uma lista vazia
-          'publishedDate': FieldValue.serverTimestamp(),
-          'imageApiUrl': '', // Será atualizado se houver uma imagem da API
-          'isAvailable': true,
-          'userId': userId,
-          'userInfo': {
-            'profileImageUrl': userData['profileImageUrl'] ?? '',
-            'address': userData['address'] ?? '',
-            'customerRating': userData['customerRating'] ?? 0.0,
-            'name': userData['name'] ?? '',
-            'userId': userId,
-            'favoriteGenres': userData['favoriteGenres'] ?? [''],
-          },
-        });
-
-        String bookId = bookDoc.id;
-        List<String> bookImageUserUrls = [];
-
-        // Faz o upload de cada imagem selecionada e armazena a URL
-        for (var image in _selectedImages) {
-          String? imageUrl =
-          await _imageUploadService.uploadBookImage(image, userId, bookId);
-          if (imageUrl != null) {
-            bookImageUserUrls.add(imageUrl);
-          }
+        // Limite de 10 imagens para cada livro
+        if (_selectedImages.length > 10) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Você pode adicionar no máximo 10 fotos.'),
+            ),
+          );
+          return; // Interrompe a execução se o limite for excedido
         }
 
-        await FirebaseFirestore.instance
-            .collection('books')
-            .doc(bookId)
-            .update({
-          'bookImageUserUrls': bookImageUserUrls,
-          // 'imageApiUrl': apiImageUrl ?? '',
-        });
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .get();
 
-        // Navega para a página de livros publicados
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(
-            builder: (context) => PublicatedBooksPage(),
-          ),
-              (Route<dynamic> route) => false, // Remove todas as rotas anteriores
-        );
+        if (userDoc.exists && userDoc.data() != null) {
+          Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+
+          // Cria o documento do livro no Firestore (sem imagens inicialmente)
+          DocumentReference bookDoc =
+          await FirebaseFirestore.instance.collection('books').add({
+            'title': _titleController.text.trim(),
+            'author': _authorController.text.trim(),
+            'edition': _editionController.text.trim(),
+            'isbn': _noIsbn ? '' : _isbnController.text.trim(),
+            'publicationYear': _publicationYearController.text.trim(),
+            'publisher': _publisherController.text.trim(),
+            'condition': _condition,
+            'description': _description,
+            'genres': _selectedGenre != null ? [_selectedGenre!] : [],
+            'bookImageUserUrls': [''], // Inicialmente uma lista vazia
+            'publishedDate': FieldValue.serverTimestamp(),
+            'imageApiUrl': '', // Será atualizado se houver uma imagem da API
+            'isAvailable': true,
+            'userId': userId,
+            'userInfo': {
+              'profileImageUrl': userData['profileImageUrl'] ?? '',
+              'address': userData['address'] ?? '',
+              'customerRating': userData['customerRating'] ?? 0.0,
+              'name': userData['name'] ?? '',
+              'userId': userId,
+              'favoriteGenres': userData['favoriteGenres'] ?? [''],
+            },
+          });
+
+          String bookId = bookDoc.id;
+          List<String> bookImageUserUrls = [];
+
+          // Faz o upload de cada imagem selecionada e armazena a URL
+          for (var image in _selectedImages) {
+            String? imageUrl =
+            await _imageUploadService.uploadBookImage(image, userId, bookId);
+            if (imageUrl != null) {
+              bookImageUserUrls.add(imageUrl);
+            }
+          }
+
+          await FirebaseFirestore.instance
+              .collection('books')
+              .doc(bookId)
+              .update({
+            'bookImageUserUrls': bookImageUserUrls,
+          });
+
+          // Navega para a página de livros publicados
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PublicatedBooksPage(),
+            ),
+                (Route<dynamic> route) => false,
+          );
+        } else {
+          _showError('Erro: Dados do usuário não encontrados.');
+        }
       } else {
-        _showError('Erro: Dados do usuário não encontrados.');
+        _showError('Erro: Nenhum usuário autenticado.');
       }
-    } else {
-      _showError('Erro: Nenhum usuário autenticado.');
+    } catch (e) {
+      _showError('Erro ao processar a solicitação.');
+    } finally {
+      setState(() {
+        _isProcessing = false; // Libera o botão após finalizar
+      });
     }
   }
 
@@ -248,13 +261,13 @@ class _NewBookPageState extends State<NewBookPage> {
                 children: [
                   GestureDetector(
                     onTap: () {
-                      if (_selectedImages.length < 5) {
+                      if (_selectedImages.length < 10) {
                         _addImage();
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                               content: Text(
-                                  'Você pode adicionar no máximo 5 fotos.')),
+                                  'Você pode adicionar no máximo 10 fotos.')),
                         );
                       }
                     },
@@ -300,7 +313,7 @@ class _NewBookPageState extends State<NewBookPage> {
                             ),
                             Positioned(
                               top: 8,
-                              right: 8,
+                              right: 18,
                               child: GestureDetector(
                                 onTap: () {
                                   setState(() {
@@ -447,17 +460,22 @@ class _NewBookPageState extends State<NewBookPage> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _onConfirm,
+                onPressed: _isProcessing ? null : _onConfirm, // Desativa o botão se em processamento
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF77C593),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
-                child: const Padding(
-                  padding: EdgeInsets.all(15.0),
-                  child: Text('Confirmar',
-                      style: TextStyle(
-                          color: Colors.black, fontWeight: FontWeight.bold)),
+                child: Padding(
+                  padding: const EdgeInsets.all(15.0),
+                  child: Text(
+                    _isProcessing ? 'Processando...' : 'Confirmar', // Mostra estado do processo
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
             ),
