@@ -3,7 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:myapp/controller/edit.profile.controller.dart';
+import 'package:myapp/views/home.page.dart';
 import '../controller/login.controller.dart';
 import '../models/user.info.model.dart';
 import '../services/image.service.dart';
@@ -190,13 +192,40 @@ class _EditProfilePageState extends State<EditProfilePage> {
     });
   }
 
-  Future<void> selectImage() async {
-    final image = await imageUploadService.pickImage();
-    if (image != null) {
-      setState(() {
-        selectedImage = image;
-      });
+  Future<void> _addImage() async {
+    final source = await _showImageSourceDialog();
+    if (source != null) {
+      final pickedImage  = await imageUploadService.pickImage(source);
+      if (pickedImage  != null) {
+        setState(() {
+          selectedImage = pickedImage ;
+        });
+      }
     }
+  }
+
+  Future<ImageSource?> _showImageSourceDialog() async {
+    return showDialog<ImageSource>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Escolha por onde deseja carregar a foto'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Câmera'),
+              onTap: () => Navigator.of(context).pop(ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo),
+              title: const Text('Galeria'),
+              onTap: () => Navigator.of(context).pop(ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -206,9 +235,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
         backgroundColor: const Color(0xFFD8D5B3),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            Navigator.of(context).pop();
+          icon: const Icon(Icons.home),
+          onPressed: () async{
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (context) => HomePage(),
+              ),
+                  (Route<dynamic> route) => false, // Remove todas as rotas anteriores
+            );
           },
         ),
         title:
@@ -237,7 +272,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         bottom: 0,
                         right: 0,
                         child: GestureDetector(
-                          onTap: selectImage, // Selecionar nova imagem
+                          onTap: _addImage, // Selecionar nova imagem
                           child: Container(
                             decoration: const BoxDecoration(
                               shape: BoxShape.circle,

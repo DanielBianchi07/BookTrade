@@ -9,8 +9,8 @@ class ImageUploadService {
   final FirebaseStorage _storage = FirebaseStorage.instanceFor(
       bucket: "gs://booktrade-c6ed3.firebasestorage.app");
 
-  Future<File?> pickImage() async {
-    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+  Future<File?> pickImage(ImageSource source) async {
+    final pickedFile = await ImagePicker().pickImage(source: source);
     return pickedFile != null ? File(pickedFile.path) : null;
   }
 
@@ -18,8 +18,25 @@ class ImageUploadService {
   // Método para upload de imagem de perfil do usuário
   Future<String?> uploadProfileImage(File imageFile, String userId) async {
     try {
-      final ref = _storage.ref().child('profileImages').child(userId);
-      final downloadUrl = await _uploadImage(ref, imageFile);
+      // Verifica se `userId` é válido
+      if (userId.isEmpty) {
+        return null;
+      }
+
+      final ref = _storage
+          .ref()
+          .child('profileImages')
+          .child(userId)
+          .child(DateTime.now().millisecondsSinceEpoch.toString());
+
+      // Faz o upload do arquivo e captura o snapshot
+      final uploadTask = ref.putFile(imageFile);
+
+      // Aguardar até o upload ser concluído e pegar o snapshot
+      final TaskSnapshot snapshot = await uploadTask.whenComplete(() => null);
+
+      // Pega a URL de download do arquivo carregado
+      final downloadUrl = await snapshot.ref.getDownloadURL();
 
       // Atualiza a URL da imagem de perfil no Firestore
       await FirebaseFirestore.instance.collection('users').doc(userId).update({

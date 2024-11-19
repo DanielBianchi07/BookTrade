@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:myapp/utils/books.genres.dart';
 import 'package:myapp/views/publicated.books.page.dart';
 import '../controller/login.controller.dart';
@@ -85,12 +86,39 @@ class _NewBookPageState extends State<NewBookPage> {
   }
 
   Future<void> _addImage() async {
-    final selectedImage = await _imageUploadService.pickImage();
-    if (selectedImage != null) {
-      setState(() {
-        _selectedImages.add(selectedImage);
-      });
+    final source = await _showImageSourceDialog();
+    if (source != null) {
+      final selectedImage = await _imageUploadService.pickImage(source);
+      if (selectedImage != null) {
+        setState(() {
+          _selectedImages.add(selectedImage);
+        });
+      }
     }
+  }
+
+  Future<ImageSource?> _showImageSourceDialog() async {
+    return showDialog<ImageSource>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Escolha por onde deseja carregar a foto'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Câmera'),
+              onTap: () => Navigator.of(context).pop(ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo),
+              title: const Text('Galeria'),
+              onTap: () => Navigator.of(context).pop(ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   bool _validateFields() {
