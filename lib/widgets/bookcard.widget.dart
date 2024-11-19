@@ -85,10 +85,10 @@ class BookCard extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    // Autor com no máximo 2 linhas e truncado com "..."
+                    // Autor com no máximo 1 linhas e truncado com "..."
                     Text(
                       author,
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontSize: 14),
                     ),

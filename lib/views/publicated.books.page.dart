@@ -125,7 +125,7 @@ class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
                       child: Switch(
                         value: switchValue,
                         onChanged: onSwitchChanged,
-                        activeColor: Colors.grey,
+                        activeColor: const Color(0xFF77C593),
                       ),
                     ),
                   ],
@@ -172,6 +172,7 @@ class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
                 ),
                 child: Scrollbar(
                   thumbVisibility: true,
+                  trackVisibility: true,
                   thickness: 6,
                   radius: const Radius.circular(10),
                   child: SingleChildScrollView(

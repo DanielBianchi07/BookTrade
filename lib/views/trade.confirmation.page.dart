@@ -677,7 +677,7 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
             completionField: FieldValue.serverTimestamp(),
           });
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Pedido cancelado com sucesso!')),
+            SnackBar(content: Text('Pedido concluído com sucesso!')),
           );
         }
       }

@@ -34,10 +34,12 @@ class _LoginPageState extends State<LoginPage> {
   onSuccess() {
     _email = TextEditingController();
     _password = TextEditingController();
-    Navigator.push(
+    Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (context) => HomePage(),
+      MaterialPageRoute(
+        builder: (context) => HomePage(),
       ),
+          (Route<dynamic> route) => false, // Remove todas as rotas anteriores
     );
   }
 

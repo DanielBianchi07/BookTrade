@@ -248,7 +248,7 @@ class _TradeOfferPageState extends State<TradeOfferPage> {
                 Divider(color: Colors.grey.shade400, thickness: 1),
                 const SizedBox(height: 10),
                 const Text(
-                  'Dono do Livro',
+                  'Dono(a) do Livro',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
