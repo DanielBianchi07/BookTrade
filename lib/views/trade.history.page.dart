@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:myapp/controller/login.controller.dart';
 import 'package:myapp/views/exchanged.book.details.page.dart';
-import '../models/book.model.dart';
 import '../user.dart';
 import 'home.page.dart';
 
