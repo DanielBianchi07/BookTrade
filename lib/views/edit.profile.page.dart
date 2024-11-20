@@ -10,6 +10,7 @@ import '../controller/login.controller.dart';
 import '../models/user.info.model.dart';
 import '../services/image.service.dart';
 import '../user.dart';
+import '../widgets/busy.widget.dart';
 import 'change.email.page.dart';
 import 'change.password.page.dart';
 import 'dart:convert';
@@ -112,7 +113,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     // Atualiza o perfil do usuário (nome, telefone e endereço)
     try {
       await controller.updateUserProfile(
-          context, name.text.trim(), phone.text.trim(), selectedCity,);
+          context, name.text.trim(), phone.text.trim(), selectedCity);
 
       // Se uma nova imagem foi selecionada, faça o upload e atualize a URL no Firestore
       if (selectedImage != null) {
@@ -128,7 +129,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
       }
       // Atualiza o UserInfoModel na coleção de livros
       await updateUserInfoInBooks();
-      
+      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => HomePage()), (Route<dynamic> route) => false,);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Perfil atualizado com sucesso!')),
+      );
     } catch (err) {
       onError(err);
     } finally {
@@ -187,9 +191,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   onComplete() {
-    setState(() {
-      busy = false;
-    });
+    if (mounted) {
+      setState(() {
+        busy = false;
+      });
+    }
   }
 
   Future<void> _addImage() async {
@@ -230,7 +236,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return TDBusy(busy: busy, child: Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFFD8D5B3),
         elevation: 0,
@@ -434,6 +440,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ],
         ),
       ),
+    )
     );
   }
 

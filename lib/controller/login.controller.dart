@@ -95,6 +95,10 @@ class LoginController {
     );
   }
 
+  void DrawerUpdateData(BuildContext context) {
+    AssignUserData(context);
+  }
+
   Future AssignUserData(BuildContext context) async {
     final userCredential = FirebaseAuth.instance.currentUser;
     if (userCredential != null) {

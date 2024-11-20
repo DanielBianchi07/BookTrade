@@ -6,9 +6,14 @@
   <component name="ChangeListManager">
     <list default="true" id="4e9ea88f-7afb-495a-8062-f1ce7860c332" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/controller/edit.profile.controller.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/controller/edit.profile.controller.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/controller/login.controller.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/controller/login.controller.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/views/app.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/app.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/views/edit.profile.page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/edit.profile.page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/views/favorite.books.page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/favorite.books.page.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/views/home.page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/home.page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/views/request.page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/request.page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/views/trade.offer.page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/trade.offer.page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/widgets/bookcard.widget.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/widgets/bookcard.widget.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/widgets/busy.widget.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/widgets/busy.widget.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -57,7 +62,7 @@
     "com.android.tools.idea.streaming.zoom.toolbar.visible": "false",
     "com.google.services.firebase.aqiPopupShown": "true",
     "dart.analysis.tool.window.visible": "false",
-    "git-widget-placeholder": "main",
+    "git-widget-placeholder": "Daniel",
     "ignore.virus.scanning.warn.message": "true",
     "io.flutter.reload.alreadyRun": "true",
     "kotlin-language-version-configured": "true",

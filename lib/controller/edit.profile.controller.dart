@@ -56,14 +56,10 @@ class EditProfileController {
           'phone': phone,
           'address': address,
         });
-        Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage()));
       } else {
           throw Exception('Os campos de Nome e Telefone não podem ser vazios');
       }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Perfil atualizado com sucesso!')),
-        );
-      } catch (e) {
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro ao atualizar perfil: $e')),
       );
