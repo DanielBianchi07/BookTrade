@@ -74,11 +74,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
   }
 
   onSuccess() {
-    loginController.loginWithEmail(email.text, password.text);
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => HomePage()),
-    );
+    Navigator.pushAndRemoveUntil(context,
+      MaterialPageRoute(builder: (context) => HomePage()), (Route<dynamic> route) => false);
   }
 
 
@@ -244,7 +241,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
               // Link para entrar
               TextButton(
                 onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => LoginPage()));
+                  Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => LoginPage()), (Route<dynamic> route) => false);
                 },
                 child: const Text(
                   'Já possui conta? Entre aqui',

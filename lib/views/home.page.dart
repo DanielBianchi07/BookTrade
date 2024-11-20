@@ -3,13 +3,23 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:myapp/controller/login.controller.dart';
+import 'package:myapp/views/chat.page.dart';
+import 'package:myapp/views/edit.profile.page.dart';
+import 'package:myapp/views/exchange.tracking.page.dart';
 import 'package:myapp/views/favorite.books.page.dart';
+import 'package:myapp/views/favorite.genres.page.dart';
+import 'package:myapp/views/new.book.page.dart';
+import 'package:myapp/views/notifications.page.dart';
+import 'package:myapp/views/publicated.books.page.dart';
+import 'package:myapp/views/trade.history.page.dart';
 import 'package:myapp/views/trade.offer.page.dart';
+import 'package:myapp/views/trade.status.page.dart';
 import '../controller/books.controller.dart';
 import '../models/book.model.dart';
 import '../models/user.info.model.dart';
 import '../user.dart';
 import '../widgets/bookcard.widget.dart';
+import 'chats.page.dart';
 import 'login.page.dart';
 
 class HomePage extends StatefulWidget {
@@ -310,20 +320,6 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
-            const SizedBox(height: 5),
-            Row(
-              children: [
-                const Icon(Icons.location_on, color: Colors.green, size: 18),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    user.value.address ?? 'Endereço não cadastrado',
-                    style: const TextStyle(color: Colors.black, fontSize: 12),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
           ],
         ),
       ),
@@ -426,7 +422,7 @@ class _HomePageState extends State<HomePage> {
           bool hasAddress = await checkAddress();
 
           if (hasAddress) {
-            Navigator.pushNamed(context, '/newBook');
+            Navigator.push(context, MaterialPageRoute(builder: (context) => NewBookPage()));
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -502,7 +498,7 @@ class _HomePageState extends State<HomePage> {
                         size: 18,
                       ),
                       onPressed: () {
-                        Navigator.pushNamed(context, '/editProfile');
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => EditProfilePage()));
                       },
                     ),
                   ),
@@ -518,62 +514,56 @@ class _HomePageState extends State<HomePage> {
                   leading: const Icon(Icons.book, color: Colors.black),
                   title: const Text('Meus livros'),
                   onTap: () {
-                    Navigator.pushNamed(context, '/publicatedBooks');
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => PublicatedBooksPage()));
                   },
                 ),
                 ListTile(
                   leading: const Icon(Icons.swap_horiz, color: Colors.black),
                   title: const Text('Trocas em Andamento'),
                   onTap: () {
-                    Navigator.pushNamed(context, '/exchangeTracking');
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => ExchangeTrackingPage()));
                   },
                 ),
                 ListTile(
                   leading: const Icon(Icons.history, color: Colors.black),
                   title: const Text('Histórico de Trocas'),
                   onTap: () {
-                    Navigator.pushNamed(context, '/tradeHistory');
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => TradeHistoryPage()));
                   },
                 ),
                 ListTile(
                   leading: const Icon(Icons.notifications, color: Colors.black),
                   title: const Text('Notificações'),
                   onTap: () {
-                    Navigator.pushNamed(context, '/notifications');
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationsPage()));
                   },
                 ),
                 ListTile(
                   leading: const Icon(Icons.question_mark_rounded, color: Colors.black),
                   title: const Text('Trocas pendentes'),
                   onTap: () {
-                    Navigator.pushNamed(context, '/tradeStatus');
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => TradeStatusPage()));
                   },
                 ),
                 ListTile(
                   leading: const Icon(Icons.favorite, color: Colors.black),
                   title: const Text('Lista de desejos'),
                   onTap: () {
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => FavoriteBooksPage(),
-                      ),
-                          (Route<dynamic> route) => false, // Remove todas as rotas anteriores
-                    );
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => FavoriteBooksPage()));
                   },
                 ),
                 ListTile(
                   leading: const Icon(Icons.chat, color: Colors.black),
                   title: const Text('Chat'),
                   onTap: () {
-                    Navigator.pushNamed(context, '/chats');
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => ChatsPage()));
                   },
                 ),
                 ListTile(
                   leading: const Icon(Icons.star, color: Colors.black),
                   title: const Text('Gêneros Favoritos'),
                   onTap: () {
-                    Navigator.pushNamed(context, '/favoriteGenres');
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => FavoriteGenresPage()));
                   },
                 ),
                 const Divider(), // Adicione um divisor para separar os itens

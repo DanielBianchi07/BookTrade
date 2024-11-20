@@ -85,8 +85,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     setState(() {
       _isLoading = false;
     });
-    // Outra ação a ser realizada após a função assíncrona
-    print('Função assíncrona executada');
 
     if (_isLoading == false) {
       name.text = user.value.name;
