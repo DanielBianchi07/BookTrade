@@ -39,10 +39,14 @@ class _HomePageState extends State<HomePage> {
     print('-----====Valor estrelas-----==== ${user.value.customerRating}');
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose(); // Libere o controlador de texto
+    super.dispose();
+  }
+
   handleSignOut() {
-    setState(() {
-      busy = true;
-    });
+    busy = true;
     loginController.logout(context).then((data) {
       onSuccess();
     }).catchError((err) {
@@ -53,7 +57,11 @@ class _HomePageState extends State<HomePage> {
         onError("Erro inesperado: $err");
       }
     }).whenComplete(() {
-      onComplete();
+      if (mounted) {
+        setState(() {
+          busy = false;
+        });
+      }
     });
   }
 
@@ -69,12 +77,6 @@ class _HomePageState extends State<HomePage> {
       msg: err,
       toastLength: Toast.LENGTH_LONG,
     );
-  }
-
-  onComplete() {
-    setState(() {
-      busy = false;
-    });
   }
 
   Future<void> _loadBooks() async {
@@ -94,50 +96,60 @@ class _HomePageState extends State<HomePage> {
           .get();
 
       setState(() {
-        favoriteGenreBooks = recommendedBooks.map((data) {
-          // Transforme o map do Firestore em BookModel
-          return BookModel.fromMap(data);
-        }).toList();
+        if (mounted) {
+          favoriteGenreBooks = recommendedBooks.map((data) {
+            return BookModel.fromMap(data);
+          }).toList();
+        }
       });
       setState(() {
-        allBooks = snapshot.docs
-            .where((doc) => (doc.data() as Map<String, dynamic>)['userId'] != userId)
-            .map((doc) {
-          final data = doc.data() as Map<String, dynamic>;
+        if (mounted) {
+          allBooks = snapshot.docs
+              .where((doc) =>
+          (doc.data() as Map<String, dynamic>)['userId'] != userId)
+              .map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
 
-          var bookImageUserUrls = data['bookImageUserUrls'];
-          if (bookImageUserUrls is String) {
-            bookImageUserUrls = [bookImageUserUrls];
-          } else if (bookImageUserUrls is List) {
-            bookImageUserUrls = bookImageUserUrls.map((item) => item.toString()).toList();
-          } else {
-            bookImageUserUrls = ['https://via.placeholder.com/100'];
-          }
+            var bookImageUserUrls = data['bookImageUserUrls'];
+            if (bookImageUserUrls is String) {
+              bookImageUserUrls = [bookImageUserUrls];
+            } else if (bookImageUserUrls is List) {
+              bookImageUserUrls =
+                  bookImageUserUrls.map((item) => item.toString()).toList();
+            } else {
+              bookImageUserUrls = ['https://via.placeholder.com/100'];
+            }
 
-          return BookModel(
-            userId: data['userId'] ?? '',
-            id: doc.id,
-            title: data['title'] ?? 'Título não disponível',
-            author: data['author'] ?? 'Autor desconhecido',
-            bookImageUserUrls: bookImageUserUrls,
-            imageApiUrl: data['imageApiUrl'],
-            publishedDate: (data['publishedDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
-            condition: data['condition'] ?? 'Condição não disponível',
-            edition: data['edition'] ?? 'Edição não disponível',
-            genres: data['genres'] != null ? List<String>.from(data['genres']) : [],
-            isbn: data['isbn'],
-            description: data['description'],
-            publicationYear: data['publicationYear'] ?? 'Ano de publicação não disponível',
-            publisher: data['publisher'] ?? 'Editora não disponível',
-            isAvailable: data['isAvailable'] ?? true,
-            userInfo: UInfo.fromMap(data['userInfo'] ?? {}),
-          );
-        }).toList();
+            return BookModel(
+              userId: data['userId'] ?? '',
+              id: doc.id,
+              title: data['title'] ?? 'Título não disponível',
+              author: data['author'] ?? 'Autor desconhecido',
+              bookImageUserUrls: bookImageUserUrls,
+              imageApiUrl: data['imageApiUrl'],
+              publishedDate: (data['publishedDate'] as Timestamp?)?.toDate() ??
+                  DateTime.now(),
+              condition: data['condition'] ?? 'Condição não disponível',
+              edition: data['edition'] ?? 'Edição não disponível',
+              genres: data['genres'] != null
+                  ? List<String>.from(data['genres'])
+                  : [],
+              isbn: data['isbn'],
+              description: data['description'],
+              publicationYear: data['publicationYear'] ??
+                  'Ano de publicação não disponível',
+              publisher: data['publisher'] ?? 'Editora não disponível',
+              isAvailable: data['isAvailable'] ?? true,
+              userInfo: UInfo.fromMap(data['userInfo'] ?? {}),
+            );
+          }).toList();
 
-        // Inicialmente, `books` contém todos os livros
-        books = List.from(allBooks);
+          // Inicialmente, `books` contém todos os livros
+          books = List.from(allBooks);
 
-        favoriteStatus = List.generate(books.length, (index) => favoriteBooks.contains(books[index].id));
+          favoriteStatus = List.generate(
+              books.length, (index) => favoriteBooks.contains(books[index].id));
+        }
       });
     } catch (e) {
       print('Erro ao carregar livros: $e');
@@ -145,16 +157,20 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _filterBooks(String query) {
-    setState(() {
-      books = allBooks
-          .where((book) => book.title.toLowerCase().contains(query.toLowerCase()) ||
-          book.author.toLowerCase().contains(query.toLowerCase()))
-          .toList();
-      favoriteGenreBooks = favoriteGenreBooks
-          .where((book) => book.title.toLowerCase().contains(query.toLowerCase()) ||
-          book.author.toLowerCase().contains(query.toLowerCase()))
-          .toList();
-    });
+    if (mounted) {
+      setState(() {
+        books = allBooks
+            .where((book) =>
+        book.title.toLowerCase().contains(query.toLowerCase()) ||
+            book.author.toLowerCase().contains(query.toLowerCase()))
+            .toList();
+        favoriteGenreBooks = favoriteGenreBooks
+            .where((book) =>
+        book.title.toLowerCase().contains(query.toLowerCase()) ||
+            book.author.toLowerCase().contains(query.toLowerCase()))
+            .toList();
+      });
+    }
   }
 
   Future<List<Map<String, dynamic>>> getRecommendedBooks(String userId) async {
@@ -206,12 +222,18 @@ class _HomePageState extends State<HomePage> {
     return books;
   }
 
+  void safeSetState(VoidCallback callback) {
+    if (mounted) {
+      setState(callback);
+    }
+  }
+
   void toggleFavoriteStatus(String bookId, int index) async {
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId == null) return; // Certifique-se de que o usuário está logado
 
     // Alterna o estado local
-    setState(() {
+    safeSetState(() {
       favoriteStatus[index] = !favoriteStatus[index];
     });
 
@@ -344,7 +366,7 @@ class _HomePageState extends State<HomePage> {
                     profileImageUrl: book.userInfo.profileImageUrl,
                     customerRating: book.userInfo.customerRating,
                     isFavorite: favoriteStatus[index],
-                    addres: book.userInfo.address!,
+                    address: book.userInfo.address!,
                     onFavoritePressed: () async {
                       toggleFavoriteStatus(book.id, index);
                       // Atualiza os livros após a alteração do favorito
@@ -387,7 +409,7 @@ class _HomePageState extends State<HomePage> {
                     profileImageUrl: book.userInfo.profileImageUrl,
                     customerRating: book.userInfo.customerRating,
                     isFavorite: favoriteStatus[index],
-                    addres: book.userInfo.address!,
+                    address: book.userInfo.address!,
                     onFavoritePressed: () async {
                       toggleFavoriteStatus(book.id, index);
                       await _loadBooks();
@@ -433,7 +455,9 @@ class _HomePageState extends State<HomePage> {
                   children: [
                      Center(
                       child: CircleAvatar(
-                        backgroundImage: NetworkImage(user.value.picture),
+                        backgroundImage: NetworkImage(
+                          "${user.value.picture}?t=${DateTime.now().millisecondsSinceEpoch}",
+                        ),
                         radius: 40,
                       ),
                     ),

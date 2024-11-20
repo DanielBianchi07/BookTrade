@@ -1,8 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:myapp/views/trade.history.page.dart';
-import '../models/book.model.dart';
-import 'chat.page.dart';
 import 'chats.page.dart';
 import 'edit.profile.page.dart';
 import 'exchanged.book.details.page.dart';
@@ -43,7 +41,7 @@ class BookTradeApp extends StatelessWidget {
         "/chats": (context) => ChatsPage(),
         "/favoriteGenres": (context) => FavoriteGenresPage(),
       },
-      home: StreamBuilder(
+      home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -51,7 +49,7 @@ class BookTradeApp extends StatelessWidget {
           } else if (snapshot.connectionState == ConnectionState.active) {
             return snapshot.data == null ? LoginPage() : HomePage();
           } else {
-            return SplashScreen();
+            return const Center(child: Text("Erro ao carregar o estado do usuário."));
           }
         },
       ),
@@ -68,7 +66,7 @@ class BookTradeApp extends StatelessWidget {
               );
             },
           );
-        }else if (settings.name == '/exchangedBookDetails') {
+        } else if (settings.name == '/exchangedBookDetails') {
           final requestId = settings.arguments as String;
 
           return MaterialPageRoute(
@@ -79,37 +77,6 @@ class BookTradeApp extends StatelessWidget {
         }
         return null; // Adicione outras rotas dinâmicas aqui, se necessário
       },
-    );
-  }
-}
-
-class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
-
-  @override
-  _SplashScreenState createState() => _SplashScreenState();
-}
-
-class _SplashScreenState extends State<SplashScreen> {
-  @override
-  void initState() {
-    super.initState();
-    // Adicionar um delay para mostrar a tela de carregamento
-    Future.delayed(const Duration(seconds: 3), () {
-      // Aqui o StreamBuilder no home do MaterialApp já redireciona
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFD8D5B3),
-      body: Center(
-        child: Image.asset(
-          'assets/logo_transparent.png',
-          height: 200,
-        ),
-      ),
     );
   }
 }

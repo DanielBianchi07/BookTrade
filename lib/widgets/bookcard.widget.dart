@@ -13,7 +13,7 @@ class BookCard extends StatelessWidget {
   final bool isFavorite;
   final double? customerRating;
   final VoidCallback onFavoritePressed;
-  final String addres;
+  final String address;
 
   const BookCard({
     super.key,
@@ -27,7 +27,7 @@ class BookCard extends StatelessWidget {
     required this.isFavorite,
     this.customerRating,
     required this.onFavoritePressed,
-    required this.addres,
+    required this.address,
   });
 
   @override
@@ -142,7 +142,7 @@ class BookCard extends StatelessWidget {
                       ],
                     ),
                     Text(
-                      addres,
+                      address,
                       style: const TextStyle(
                           fontSize: 12, color: Colors.grey),
                       maxLines: 1,

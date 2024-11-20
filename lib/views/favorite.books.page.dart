@@ -121,7 +121,7 @@ class FavoriteBooksPageState extends State<FavoriteBooksPage> {
               postedBy: book.userInfo.name,
               profileImageUrl: book.userInfo.profileImageUrl,
               customerRating: book.userInfo.customerRating,
-              addres: book.userInfo.address!,
+              address: book.userInfo.address!,
               isFavorite: true, // Sempre é favorito na página de favoritos
               onFavoritePressed: () => toggleFavoriteStatus(book.id, index),
             ),
