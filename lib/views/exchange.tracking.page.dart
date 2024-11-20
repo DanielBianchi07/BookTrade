@@ -17,7 +17,7 @@ class ExchangeTrackingPage extends StatelessWidget {
   Future<List<Map<String, dynamic>>> _fetchTradeHistory(LoginController loginController) async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('requests')
-        .where('status', whereIn: ['Aguardando confirmação do recebimento', 'Aguardando confirmação do endereço'])
+        .where('status', whereIn: ['Aguardando recebimento', 'Aguardando confirmação do endereço'])
         .orderBy('createdAt', descending: true) // Ordena pelo campo createdAt em ordem decrescente
         .get();
 
@@ -94,7 +94,7 @@ class ExchangeTrackingPage extends StatelessWidget {
               },
             ),
             title: const Text(
-              'Acompanhe suas trocas',
+              'Trocas em Andamento',
               style: TextStyle(color: Colors.black),
             ),
           ),

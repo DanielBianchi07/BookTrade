@@ -384,7 +384,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
             Align(
               alignment: Alignment.bottomCenter,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 40.0, vertical: 20.0),
+                padding: const EdgeInsets.symmetric(horizontal: 45.0, vertical: 20.0),
                 color: Colors.white,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,

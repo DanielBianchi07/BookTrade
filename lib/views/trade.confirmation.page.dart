@@ -586,7 +586,7 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
     try {
       _deliveryAddressList.add(_addressController.text);
       await FirebaseFirestore.instance.collection('requests').doc(widget.requestId).update({
-        'status': 'Aguardando confirmação do recebimento',
+        'status': 'Aguardando recebimento',
         'deliveryAddress': _deliveryAddressList,
       });
       ScaffoldMessenger.of(context).showSnackBar(
