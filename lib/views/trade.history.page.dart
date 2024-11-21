@@ -33,6 +33,12 @@ class TradeHistoryPage extends StatelessWidget {
 
       final requesterId = data['requesterId'] ?? '';
       final ownerId = data['ownerId'] ?? '';
+
+      // Garantir que o usuário logado seja participante da troca
+      if (requesterId != userId && ownerId != userId) {
+        continue;
+      }
+
       final requestedBookData = data['requestedBook'] ?? {};
       final offeredBooksData = List<Map<String, dynamic>>.from(data['offeredBooks'] ?? []);
 

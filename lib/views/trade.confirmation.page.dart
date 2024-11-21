@@ -300,6 +300,7 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
     // Define quando mostrar a mensagem de cancelamento
     bool showCancelInfoMessage = _isTradeCancelled && _deliveryAddressList.isNotEmpty && !widget.isRequester;
     bool showConfirmationInfoMessage = _isTradeConcluded && _deliveryAddressList.isNotEmpty && !widget.isRequester;
+    bool showNoAddressInfoConfirmation = !_isTradeCancelled && !_isTradeConcluded;
 
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -359,6 +360,22 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
                         child: Text(
                           'A troca foi concluída pelo outro usuário. Caso a troca não tenha sido realizada com sucesso, cancele normalmente, pois pode ter sido um erro do outro usuário.',
                           style: TextStyle(color: Colors.orange, fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                if (showNoAddressInfoConfirmation) ...[
+                  const SizedBox(height: 5),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.info, color: Colors.grey),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Você pode mudar o endereço até que a troca seja concluída ou cancelada.',
+                          style: TextStyle(color: Colors.grey, fontSize: 12),
                         ),
                       ),
                     ],
@@ -590,7 +607,7 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
         'deliveryAddress': _deliveryAddressList,
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Endereço confirmado com sucesso! Aguardando confirmação do recebimento.')),
+        SnackBar(content: Text('Endereço confirmado com sucesso! Acompanhe sua troca na aba "Trocas em Andamento".')),
       );
       Navigator.pushAndRemoveUntil(
         context,
