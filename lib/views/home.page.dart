@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:myapp/controller/login.controller.dart';
-import 'package:myapp/views/chat.page.dart';
 import 'package:myapp/views/edit.profile.page.dart';
 import 'package:myapp/views/exchange.tracking.page.dart';
 import 'package:myapp/views/favorite.books.page.dart';
@@ -35,6 +34,7 @@ class _HomePageState extends State<HomePage> {
   final loginController = LoginController();
   final booksController = BooksController(); // Instância do BooksController
   final TextEditingController _searchController = TextEditingController();
+  ScrollController _scrollController = ScrollController();
   List<BookModel> favoriteGenreBooks = [];
   List<BookModel> allBooks = []; // Lista que armazena todos os livros
   bool busy = false;
@@ -52,6 +52,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void dispose() {
     _searchController.dispose(); // Libere o controlador de texto
+    _scrollController.dispose(); // Libere o ScrollController
     super.dispose();
   }
 
@@ -104,16 +105,15 @@ class _HomePageState extends State<HomePage> {
           .collection('books')
           .where('isAvailable', isEqualTo: true)
           .get();
-
-      setState(() {
-        if (mounted) {
+      if (mounted) {
+        setState(() {
           favoriteGenreBooks = recommendedBooks.map((data) {
             return BookModel.fromMap(data);
           }).toList();
-        }
-      });
+        });
+      }
+      if (mounted) {
       setState(() {
-        if (mounted) {
           allBooks = snapshot.docs
               .where((doc) =>
           (doc.data() as Map<String, dynamic>)['userId'] != userId)
@@ -159,8 +159,8 @@ class _HomePageState extends State<HomePage> {
 
           favoriteStatus = List.generate(
               books.length, (index) => favoriteBooks.contains(books[index].id));
-        }
-      });
+        });
+      }
     } catch (e) {
       print('Erro ao carregar livros: $e');
     }
@@ -258,9 +258,12 @@ class _HomePageState extends State<HomePage> {
     } catch (e) {
       print('Erro ao atualizar favoritos: $e');
       // Reverte a mudança em caso de erro
-      setState(() {
-        favoriteStatus[index] = !favoriteStatus[index]; // Reverte o estado local
-      });
+      if (mounted) {
+        setState(() {
+          favoriteStatus[index] =
+          !favoriteStatus[index]; // Reverte o estado local
+        });
+      }
     }
   }
 
@@ -351,6 +354,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                 )
                     : ListView.builder(
+                  controller: _scrollController,
                   shrinkWrap: true,
                   itemCount: books.length,
                   itemBuilder: (context, index) {
@@ -408,9 +412,13 @@ class _HomePageState extends State<HomePage> {
                   ),
                 )
                     : ListView.builder(
+                  controller: _scrollController,
                   shrinkWrap: true,
-                  itemCount: favoriteGenreBooks.length,
+                  itemCount: favoriteGenreBooks.length,  // Verifique se o itemCount é igual ao tamanho de favoriteGenreBooks
                   itemBuilder: (context, index) {
+                    if (index >= favoriteGenreBooks.length) {
+                      return const SizedBox.shrink();  // Evita acessar um índice inválido
+                    }
                     final book = favoriteGenreBooks[index];
                     return InkWell(
                       onTap: () {
@@ -430,7 +438,7 @@ class _HomePageState extends State<HomePage> {
                         postedBy: book.userInfo.name,
                         profileImageUrl: book.userInfo.profileImageUrl,
                         customerRating: book.userInfo.customerRating,
-                        isFavorite: favoriteStatus[index],
+                        isFavorite: favoriteStatus.isNotEmpty && index < favoriteStatus.length ? favoriteStatus[index] : false,
                         address: book.userInfo.address!,
                         onFavoritePressed: () async {
                           toggleFavoriteStatus(book.id, index);
