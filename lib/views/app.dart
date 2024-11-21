@@ -68,6 +68,7 @@ class BookTradeApp extends StatelessWidget {
           return MaterialPageRoute(
             builder: (context) {
               return NotificationDetailPage(
+                notificationId: args['id'] ?? '',
                 title: args['title'] ?? 'Notificação',
                 message: args['message'] ?? 'Sem mensagem',
                 time: args['time'] ?? 'Sem data',
