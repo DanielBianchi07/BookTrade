@@ -567,11 +567,46 @@ class _HomePageState extends State<HomePage> {
                     Navigator.push(context, MaterialPageRoute(builder: (context) => TradeHistoryPage()));
                   },
                 ),
-                ListTile(
-                  leading: const Icon(Icons.notifications, color: Colors.black),
-                  title: const Text('Notificações'),
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationsPage()));
+                StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('notifications')
+                      .where('userId', isEqualTo: FirebaseAuth.instance.currentUser!.uid) // Filtra notificações do usuário logado
+                      .where('isUnread', isEqualTo: true) // Apenas notificações não lidas
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return ListTile(
+                        leading: const Icon(Icons.notifications, color: Colors.black),
+                        title: const Text('Notificações'),
+                        trailing: const Text('...'), // Mostra um indicador de carregamento
+                        onTap: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationsPage()));
+                        },
+                      );
+                    }
+
+                    final unreadCount = snapshot.data!.docs.length;
+
+                    return ListTile(
+                      leading: const Icon(Icons.notifications, color: Colors.black),
+                      title: const Text('Notificações'),
+                      trailing: unreadCount > 0
+                          ? Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          unreadCount.toString(),
+                          style: const TextStyle(color: Colors.white, fontSize: 12),
+                        ),
+                      )
+                          : null, // Não mostra nada se não houver notificações não lidas
+                      onTap: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationsPage()));
+                      },
+                    );
                   },
                 ),
                 ListTile(
@@ -588,11 +623,43 @@ class _HomePageState extends State<HomePage> {
                     Navigator.push(context, MaterialPageRoute(builder: (context) => FavoriteBooksPage()));
                   },
                 ),
-                ListTile(
-                  leading: const Icon(Icons.chat, color: Colors.black),
-                  title: const Text('Chat'),
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => ChatsPage()));
+                StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('messages')
+                      .where('isRead', isEqualTo: false)
+                      .where('receiverId', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+                      .snapshots(),
+                  builder: (context, unreadSnapshot) {
+                    if (unreadSnapshot.connectionState == ConnectionState.waiting) {
+                      return const ListTile(
+                        leading: Icon(Icons.chat, color: Colors.black),
+                        title: Text('Chat'),
+                        trailing: Text('...'), // Indicador de carregamento
+                        onTap: null,
+                      );
+                    }
+                    final unreadCount = unreadSnapshot.data?.docs.length ?? 0;
+
+                    return ListTile(
+                      leading: const Icon(Icons.chat, color: Colors.black),
+                      title: const Text('Chat'),
+                      trailing: unreadCount > 0
+                          ? Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          unreadCount.toString(),
+                          style: const TextStyle(color: Colors.white, fontSize: 12),
+                        ),
+                      )
+                          : null, // Não mostra nada se não houver mensagens não lidas
+                      onTap: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => ChatsPage()));
+                      },
+                    );
                   },
                 ),
                 ListTile(

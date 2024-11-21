@@ -143,6 +143,7 @@ class NotificationCard extends StatelessWidget {
           context,
           MaterialPageRoute(
             builder: (context) => NotificationDetailPage(
+              notificationId: notificationId,
               title: title,
               message: body,
               time: formattedTime,

@@ -270,7 +270,7 @@ class _NewBookPageState extends State<NewBookPage> {
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Cadastro do Livro',
+        title: const Text('Cadastrar Livro',
             style: TextStyle(color: Colors.black)),
       ),
       body: SingleChildScrollView(
