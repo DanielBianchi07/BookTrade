@@ -1,6 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:myapp/views/trade.history.page.dart';
+import '../user.dart';
 import 'chats.page.dart';
 import 'edit.profile.page.dart';
 import 'exchanged.book.details.page.dart';
@@ -47,6 +49,7 @@ class BookTradeApp extends StatelessWidget {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.connectionState == ConnectionState.active) {
+            user.value.uid = FirebaseAuth.instance.currentUser!.uid;
             return snapshot.data == null ? LoginPage() : HomePage();
           } else {
             return const Center(child: Text("Erro ao carregar o estado do usuário."));

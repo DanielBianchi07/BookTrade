@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:myapp/controller/login.controller.dart';
-import 'package:myapp/views/chat.page.dart';
 import 'package:myapp/views/edit.profile.page.dart';
 import 'package:myapp/views/exchange.tracking.page.dart';
 import 'package:myapp/views/favorite.books.page.dart';
@@ -184,6 +183,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<List<Map<String, dynamic>>> getRecommendedBooks(String userId) async {
+    List<Map<String, dynamic>> bookGenres;
     // Obtenha os gêneros favoritos do usuário
     final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
     List<String> favoriteGenres = List<String>.from(userDoc['favoriteGenres'] ?? []);
@@ -196,13 +196,13 @@ class _HomePageState extends State<HomePage> {
           .get();
 
       // Filtra para excluir livros do próprio usuário e converte para Map<String, dynamic>
-      List<Map<String, dynamic>> books = booksQuery.docs
+      bookGenres = booksQuery.docs
           .where((doc) => doc['userInfo']['userId'] != userId)
           .map((doc) => doc.data())
           .toList();
 
       // Ordena os livros primeiro pelos gêneros favoritos e depois pela avaliação, do maior para o menor
-      books.sort((a, b) {
+      bookGenres.sort((a, b) {
         // Ordena pelo gênero se precisar, mas é opcional e depende da estrutura desejada
         // Verifica se os gêneros existem e têm elementos
         String genreA = (a['genres'] != null && a['genres'].isNotEmpty)
@@ -233,8 +233,10 @@ class _HomePageState extends State<HomePage> {
           return genreComparison;
         }
       });
-    } 
-    return [];
+    } else {
+      bookGenres = [];
+    }
+    return bookGenres;
   }
 
   void safeSetState(VoidCallback callback) {
@@ -443,6 +445,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildDrawer() {
+    print('UserID ${user.value.uid}');
+    print('UserName ${user.value.name}');
+    print('UserAddress ${user.value.address}');
+
     return Drawer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
