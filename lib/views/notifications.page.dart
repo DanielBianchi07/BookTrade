@@ -48,6 +48,14 @@ class NotificationsPage extends StatelessWidget {
 
           final notifications = snapshot.data!.docs;
 
+          if (notifications.isEmpty) {
+            return const Center(
+              child: Text(
+                'Nenhuma notificação recebida',
+              ),
+            );
+          }
+
           return ListView.builder(
             padding: const EdgeInsets.all(16.0),
             itemCount: notifications.length,
