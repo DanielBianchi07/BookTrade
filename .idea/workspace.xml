@@ -5,8 +5,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4e9ea88f-7afb-495a-8062-f1ce7860c332" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/assets/acceptance_request_icon.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/new_message_icon.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/new_request_icon.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/rejected_request_icon.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/set_address_icon.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/views/home.page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/home.page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/functions/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/functions/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/services/notification.service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/services/notification.service.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/views/notifications.page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/notifications.page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/views/publicated.books.page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/publicated.books.page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -55,11 +64,11 @@
     "com.android.tools.idea.streaming.zoom.toolbar.visible": "false",
     "com.google.services.firebase.aqiPopupShown": "true",
     "dart.analysis.tool.window.visible": "false",
-    "git-widget-placeholder": "Daniel",
+    "git-widget-placeholder": "Gustavo",
     "ignore.virus.scanning.warn.message": "true",
     "io.flutter.reload.alreadyRun": "true",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "F:/Clone Daniel/BookTrade",
+    "last_opened_file_path": "C:/Users/Pichau/Documents/GitHub/BookTrade/assets",
     "project.structure.last.edited": "Project",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.2",
