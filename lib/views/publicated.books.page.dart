@@ -1,5 +1,4 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
@@ -185,7 +184,7 @@ class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
                                 ? 'Você não possui nenhum livro publicado'
                                 : title == 'Livros em Transação'
                                 ? 'Você não possui nenhum pedido ativo'
-                                : 'Você ainda não concluiu nenhuma troca.',
+                                : 'Você ainda não concluiu nenhuma troca',
                             style: const TextStyle(
                               fontSize: 14,
                               color: Colors.black,
@@ -211,66 +210,62 @@ class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
                                   );
                                 },
                                 child: Card(
-                                  color: isAvailable
-                                      ? Colors.white
-                                      : Colors.grey.shade300,
+                                  color: isAvailable ? Colors.white : Colors.grey.shade300,
                                   shape: RoundedRectangleBorder(
-                                    borderRadius:
-                                    BorderRadius.circular(10.0),
+                                    borderRadius: BorderRadius.circular(10.0),
                                   ),
-                                  margin: const EdgeInsets.symmetric(
-                                      vertical: 4.0, horizontal: 8.0),
+                                  margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
                                   child: Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: Row(
                                       children: [
+                                        // Imagem do livro
                                         Container(
                                           height: 100,
                                           width: 80,
                                           decoration: BoxDecoration(
-                                            borderRadius:
-                                            BorderRadius.circular(8.0),
+                                            borderRadius: BorderRadius.circular(8.0),
                                             color: Colors.grey[200],
                                           ),
                                           child: CachedNetworkImage(
-                                            imageUrl:
-                                            book.bookImageUserUrls[0],
-                                            placeholder: (context, url) =>
-                                            const Center(
-                                              child:
-                                              CircularProgressIndicator(),
+                                            imageUrl: book.bookImageUserUrls[0],
+                                            placeholder: (context, url) => const Center(
+                                              child: CircularProgressIndicator(),
                                             ),
-                                            errorWidget: (context, url,
-                                                error) =>
-                                            const Icon(
-                                                Icons
-                                                    .image_not_supported,
-                                                size: 50,
-                                                color: Colors.grey),
+                                            errorWidget: (context, url, error) => const Icon(
+                                              Icons.image_not_supported,
+                                              size: 50,
+                                              color: Colors.grey,
+                                            ),
                                             fit: BoxFit.cover,
                                           ),
                                         ),
                                         const SizedBox(width: 8),
                                         Expanded(
                                           child: Column(
-                                            crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                            crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
+                                              // Nome do livro (máximo 2 linhas)
                                               Text(
                                                 book.title,
                                                 style: const TextStyle(
                                                   fontSize: 16,
-                                                  fontWeight:
-                                                  FontWeight.bold,
+                                                  fontWeight: FontWeight.bold,
                                                 ),
+                                                maxLines: 2, // Limita o texto a 2 linhas
+                                                overflow: TextOverflow.ellipsis, // Adiciona "..." no final se exceder
                                               ),
+                                              // Nome do autor (máximo 1 linha)
                                               Text(
                                                 'De ${book.author}',
                                                 style: const TextStyle(
                                                   fontSize: 14,
                                                 ),
+                                                maxLines: 1, // Limita o texto a 1 linha
+                                                overflow: TextOverflow.ellipsis, // Adiciona "..." no final se exceder
                                               ),
                                               const SizedBox(height: 4),
+                                              // Data de publicação
                                               Text(
                                                 'Postado em: ${DateFormat.yMMMd().format(book.publishedDate)}',
                                                 style: const TextStyle(
@@ -278,24 +273,17 @@ class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
                                                   color: Colors.grey,
                                                 ),
                                               ),
+                                              // Indisponível (se aplicável)
                                               if (!isAvailable)
                                                 Padding(
-                                                  padding:
-                                                  const EdgeInsets.only(
-                                                      top: 4.0),
+                                                  padding: const EdgeInsets.only(top: 4.0),
                                                   child: Row(
                                                     children: [
-                                                      const Icon(Icons.info,
-                                                          color: Colors.red,
-                                                          size: 16),
-                                                      const SizedBox(
-                                                          width: 4),
+                                                      const Icon(Icons.info, color: Colors.red, size: 16),
+                                                      const SizedBox(width: 4),
                                                       const Text(
                                                         'Indisponível',
-                                                        style: TextStyle(
-                                                            color:
-                                                            Colors.red,
-                                                            fontSize: 12),
+                                                        style: TextStyle(color: Colors.red, fontSize: 12),
                                                       ),
                                                     ],
                                                   ),
@@ -303,16 +291,14 @@ class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
                                             ],
                                           ),
                                         ),
+                                        // Botão de deletar (se aplicável)
                                         if (showDelete)
                                           IconButton(
-                                            onPressed: () async{
-                                             await booksController
-                                                  .confirmDelete(
-                                                  context, book.id);
+                                            onPressed: () async {
+                                              await booksController.confirmDelete(context, book.id);
                                               _fetchBooks();
                                             },
-                                            icon: const Icon(Icons.delete,
-                                                color: Colors.red),
+                                            icon: const Icon(Icons.delete, color: Colors.red),
                                           ),
                                       ],
                                     ),

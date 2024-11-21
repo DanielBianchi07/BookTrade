@@ -71,6 +71,11 @@ flutter:
     - assets/image.jpg
     - assets/logo.png
     - assets/logo_transparent.png
+    - assets/new_message_icon.png
+    - assets/new_request_icon.png
+    - assets/acceptance_request_icon.png
+    - assets/rejected_request_icon.png
+    - assets/set_address_icon.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:
