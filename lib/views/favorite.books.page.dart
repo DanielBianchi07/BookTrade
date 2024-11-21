@@ -96,7 +96,7 @@ class FavoriteBooksPageState extends State<FavoriteBooksPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator()) // Exibe um indicador de carregamento enquanto os livros são carregados
           : books.isEmpty
-          ? const Center(child: Text('Nenhum livro favorito encontrado.')) // Mensagem se não houver favoritos
+          ? const Center(child: Text('Nenhum livro favorito selecionado.')) // Mensagem se não houver favoritos
           : ListView.builder(
         padding: const EdgeInsets.all(16.0),
         itemCount: books.length,
