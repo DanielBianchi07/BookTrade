@@ -97,7 +97,7 @@ class _HomePageState extends State<HomePage> {
       List<String> favoriteBooks = [];
       if (userId != null) {
         favoriteBooks = await booksController.getFavoriteBookIds(userId);
-      }
+
 
       final recommendedBooks = await getRecommendedBooks(user.value.uid);
       // Consulta para carregar apenas livros com isAvailable = true
@@ -105,61 +105,61 @@ class _HomePageState extends State<HomePage> {
           .collection('books')
           .where('isAvailable', isEqualTo: true)
           .get();
-      if (mounted) {
-        setState(() {
-          favoriteGenreBooks = recommendedBooks.map((data) {
-            return BookModel.fromMap(data);
-          }).toList();
-        });
-      }
-      if (mounted) {
-      setState(() {
-          allBooks = snapshot.docs
-              .where((doc) =>
-          (doc.data() as Map<String, dynamic>)['userId'] != userId)
-              .map((doc) {
-            final data = doc.data() as Map<String, dynamic>;
+        if (mounted) {
+          setState(() {
+            favoriteGenreBooks = recommendedBooks.map((data) {
+              return BookModel.fromMap(data);
+            }).toList();
+          });
+        }
+        if (mounted) {
+          setState(() {
+            allBooks = snapshot.docs
+                .where((doc) => (doc.data() as Map<String, dynamic>)['userId'] != userId)
+                .map((doc) {
+              final data = doc.data() as Map<String, dynamic>;
 
-            var bookImageUserUrls = data['bookImageUserUrls'];
-            if (bookImageUserUrls is String) {
-              bookImageUserUrls = [bookImageUserUrls];
-            } else if (bookImageUserUrls is List) {
-              bookImageUserUrls =
-                  bookImageUserUrls.map((item) => item.toString()).toList();
-            } else {
-              bookImageUserUrls = ['https://via.placeholder.com/100'];
-            }
+              var bookImageUserUrls = data['bookImageUserUrls'];
+              if (bookImageUserUrls is String) {
+                bookImageUserUrls = [bookImageUserUrls];
+              } else if (bookImageUserUrls is List) {
+                bookImageUserUrls =
+                    bookImageUserUrls.map((item) => item.toString()).toList();
+              } else {
+                bookImageUserUrls = ['https://via.placeholder.com/100'];
+              }
 
-            return BookModel(
-              userId: data['userId'] ?? '',
-              id: doc.id,
-              title: data['title'] ?? 'Título não disponível',
-              author: data['author'] ?? 'Autor desconhecido',
-              bookImageUserUrls: bookImageUserUrls,
-              imageApiUrl: data['imageApiUrl'],
-              publishedDate: (data['publishedDate'] as Timestamp?)?.toDate() ??
-                  DateTime.now(),
-              condition: data['condition'] ?? 'Condição não disponível',
-              edition: data['edition'] ?? 'Edição não disponível',
-              genres: data['genres'] != null
-                  ? List<String>.from(data['genres'])
-                  : [],
-              isbn: data['isbn'],
-              description: data['description'],
-              publicationYear: data['publicationYear'] ??
-                  'Ano de publicação não disponível',
-              publisher: data['publisher'] ?? 'Editora não disponível',
-              isAvailable: data['isAvailable'] ?? true,
-              userInfo: UInfo.fromMap(data['userInfo'] ?? {}),
-            );
-          }).toList();
+              return BookModel(
+                userId: data['userId'] ?? '',
+                id: doc.id,
+                title: data['title'] ?? 'Título não disponível',
+                author: data['author'] ?? 'Autor desconhecido',
+                bookImageUserUrls: bookImageUserUrls,
+                imageApiUrl: data['imageApiUrl'],
+                publishedDate: (data['publishedDate'] as Timestamp?)?.toDate() ??
+                    DateTime.now(),
+                condition: data['condition'] ?? 'Condição não disponível',
+                edition: data['edition'] ?? 'Edição não disponível',
+                genres: data['genres'] != null
+                    ? List<String>.from(data['genres'])
+                    : [],
+                isbn: data['isbn'],
+                description: data['description'],
+                publicationYear: data['publicationYear'] ??
+                    'Ano de publicação não disponível',
+                publisher: data['publisher'] ?? 'Editora não disponível',
+                isAvailable: data['isAvailable'] ?? true,
+                userInfo: UInfo.fromMap(data['userInfo'] ?? {}),
+              );
+            }).toList();
 
-          // Inicialmente, `books` contém todos os livros
-          books = List.from(allBooks);
+            // Inicialmente, `books` contém todos os livros
+            books = List.from(allBooks);
 
-          favoriteStatus = List.generate(
-              books.length, (index) => favoriteBooks.contains(books[index].id));
-        });
+            favoriteStatus = List.generate(
+                books.length, (index) => favoriteBooks.contains(books[index].id));
+          });
+        }
       }
     } catch (e) {
       print('Erro ao carregar livros: $e');
@@ -184,10 +184,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<List<Map<String, dynamic>>> getRecommendedBooks(String userId) async {
+    List<Map<String, dynamic>> books;
     // Obtenha os gêneros favoritos do usuário
     final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
     List<String> favoriteGenres = List<String>.from(userDoc['favoriteGenres'] ?? []);
 
+    if (favoriteGenres.isNotEmpty) {
     // Consulta os livros que têm pelo menos um dos gêneros favoritos
     final booksQuery = await FirebaseFirestore.instance
         .collection('books')
@@ -195,7 +197,7 @@ class _HomePageState extends State<HomePage> {
         .get();
 
     // Filtra para excluir livros do próprio usuário e converte para Map<String, dynamic>
-    List<Map<String, dynamic>> books = booksQuery.docs
+    books = booksQuery.docs
         .where((doc) => doc['userInfo']['userId'] != userId)
         .map((doc) => doc.data())
         .toList();
@@ -204,8 +206,12 @@ class _HomePageState extends State<HomePage> {
     books.sort((a, b) {
       // Ordena pelo gênero se precisar, mas é opcional e depende da estrutura desejada
       // Verifica se os gêneros existem e têm elementos
-      String genreA = (a['genres'] != null && a['genres'].isNotEmpty) ? a['genres'].first : '';
-      String genreB = (b['genres'] != null && b['genres'].isNotEmpty) ? b['genres'].first : '';
+      String genreA = (a['genres'] != null && a['genres'].isNotEmpty)
+          ? a['genres'].first
+          : '';
+      String genreB = (b['genres'] != null && b['genres'].isNotEmpty)
+          ? b['genres'].first
+          : '';
 
       // Obtem os índices dos gêneros favoritos, tratando valores que podem ser -1
       int indexA = favoriteGenres.indexOf(genreA);
@@ -228,6 +234,9 @@ class _HomePageState extends State<HomePage> {
         return genreComparison;
       }
     });
+    } else {
+      books = [];
+    }
 
     return books;
   }
@@ -439,7 +448,7 @@ class _HomePageState extends State<HomePage> {
                         profileImageUrl: book.userInfo.profileImageUrl,
                         customerRating: book.userInfo.customerRating,
                         isFavorite: favoriteStatus.isNotEmpty && index < favoriteStatus.length ? favoriteStatus[index] : false,
-                        address: book.userInfo.address!,
+                        address: book.userInfo.address,
                         onFavoritePressed: () async {
                           toggleFavoriteStatus(book.id, index);
                           await _loadBooks();
