@@ -39,6 +39,8 @@ class ChatsService {
         'participants': participantsIds,  // Usando o ID combinado
         'lastMessageId': lastMessageId ?? '',
         'timestamp': timestamp,
+        'isActiveForUser1': true,
+        'isActiveForUser2': true,
       });
     } catch (e) {
       print('Erro ao criar novo chat: $e');

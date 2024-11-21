@@ -31,6 +31,7 @@ class MessageService {
     required String receiverProfileUrl,
     required String content,
     required FieldValue timestamp,
+    required bool isRead,
   }) async {
     try {
       // Gera o `conversationId` único com base nos IDs de `senderId` e `receiverId`
@@ -54,6 +55,7 @@ class MessageService {
         'receiverProfileUrl': receiverProfileUrl,
         'content': content,
         'timestamp': FieldValue.serverTimestamp(),
+        'isRead': false,
       });
 
       // Atualiza o documento na coleção `conversations` com a última mensagem
@@ -65,25 +67,6 @@ class MessageService {
       Fluttertoast.showToast(msg: 'Erro ao enviar mensagem e atualizar conversa: $e');
     }
   }
-
-  // Future<String> getConversationId(String senderId, String receiverId) async {
-  //   try {
-  //     // Gera o ID de conversa único e ordenado
-  //     String conversationId = mergeConversationId(senderId, receiverId);
-  //
-  //     final querySnapshot = await conversationsCollection
-  //         .where('conversationId', isEqualTo: conversationId)
-  //         .get();
-  //
-  //     if (querySnapshot.docs.isNotEmpty) {
-  //       return querySnapshot.docs.first.id;
-  //     } else {
-  //       throw Exception('Conversa não encontrada');
-  //     }
-  //   } catch (e) {
-  //     throw Exception('Erro ao obter conversa: $e');
-  //   }
-  // }
 
   // Função para gerar um ID de conversa consistente entre dois usuários
   String mergeConversationId(String user1, String user2) {
