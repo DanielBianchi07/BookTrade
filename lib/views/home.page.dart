@@ -314,7 +314,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                       onChanged: (query) {
                         _filterBooks(query);
-                        },
+                      },
                     ),
                   ),
                 ],
@@ -334,43 +334,56 @@ class _HomePageState extends State<HomePage> {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            books.isEmpty
-                ? const Center(child: CircularProgressIndicator()) // Exibe um carregador enquanto os livros não são carregados
-                : ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: books.length,
-              itemBuilder: (context, index) {
-                final book = books[index];
-                return InkWell(
-                  onTap: () {
-                    // Navegando para a TradeOfferPage e passando o livro selecionado
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => TradeOfferPage(book: book),
+            ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxHeight: 300, // Altura máxima da área de rolagem
+              ),
+              child: Scrollbar(
+                thumbVisibility: true, // Mostra a barra de rolagem
+                child: books.isEmpty
+                    ? const SizedBox(
+                  height: 50,
+                  child: Center(
+                    child: Text(
+                      'Nenhum livro selecionado ainda',
+                      style: TextStyle(color: Colors.grey, fontSize: 14),
+                    ),
+                  ),
+                )
+                    : ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: books.length,
+                  itemBuilder: (context, index) {
+                    final book = books[index];
+                    return InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => TradeOfferPage(book: book),
+                          ),
+                        );
+                      },
+                      child: BookCard(
+                        id: book.id,
+                        userId: book.userId,
+                        title: book.title,
+                        author: book.author,
+                        imageUserUrl: book.bookImageUserUrls[0],
+                        postedBy: book.userInfo.name,
+                        profileImageUrl: book.userInfo.profileImageUrl,
+                        customerRating: book.userInfo.customerRating,
+                        isFavorite: favoriteStatus[index],
+                        address: book.userInfo.address!,
+                        onFavoritePressed: () async {
+                          toggleFavoriteStatus(book.id, index);
+                          await _loadBooks();
+                        },
                       ),
                     );
                   },
-                  child: BookCard(
-                    id: book.id,
-                    userId: book.userId,
-                    title: book.title,
-                    author: book.author,
-                    imageUserUrl: book.bookImageUserUrls[0],
-                    postedBy: book.userInfo.name,
-                    profileImageUrl: book.userInfo.profileImageUrl,
-                    customerRating: book.userInfo.customerRating,
-                    isFavorite: favoriteStatus[index],
-                    address: book.userInfo.address!,
-                    onFavoritePressed: () async {
-                      toggleFavoriteStatus(book.id, index);
-                      // Atualiza os livros após a alteração do favorito
-                      await _loadBooks();
-                    },
-                  ),
-                );
-              },
+                ),
+              ),
             ),
             const SizedBox(height: 32),
             const Text(
@@ -378,41 +391,56 @@ class _HomePageState extends State<HomePage> {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            favoriteGenreBooks.isEmpty
-                ? const Center(child: Text('Não foi encontrado livros.'))
-                : ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: favoriteGenreBooks.length,
-              itemBuilder: (context, index) {
-                final book = favoriteGenreBooks[index];
-                return InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => TradeOfferPage(book: book),
+            ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxHeight: 300, // Altura máxima da área de rolagem
+              ),
+              child: Scrollbar(
+                thumbVisibility: true, // Mostra a barra de rolagem
+                child: favoriteGenreBooks.isEmpty
+                    ? const SizedBox(
+                  height: 50,
+                  child: Center(
+                    child: Text(
+                      'Não foi encontrado livros.',
+                      style: TextStyle(color: Colors.grey, fontSize: 14),
+                    ),
+                  ),
+                )
+                    : ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: favoriteGenreBooks.length,
+                  itemBuilder: (context, index) {
+                    final book = favoriteGenreBooks[index];
+                    return InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => TradeOfferPage(book: book),
+                          ),
+                        );
+                      },
+                      child: BookCard(
+                        id: book.id,
+                        userId: book.userId,
+                        title: book.title,
+                        author: book.author,
+                        imageUserUrl: book.bookImageUserUrls[0],
+                        postedBy: book.userInfo.name,
+                        profileImageUrl: book.userInfo.profileImageUrl,
+                        customerRating: book.userInfo.customerRating,
+                        isFavorite: favoriteStatus[index],
+                        address: book.userInfo.address!,
+                        onFavoritePressed: () async {
+                          toggleFavoriteStatus(book.id, index);
+                          await _loadBooks();
+                        },
                       ),
                     );
                   },
-                  child: BookCard(
-                    id: book.id,
-                    userId: book.userId,
-                    title: book.title,
-                    author: book.author,
-                    imageUserUrl: book.bookImageUserUrls[0],
-                    postedBy: book.userInfo.name,
-                    profileImageUrl: book.userInfo.profileImageUrl,
-                    customerRating: book.userInfo.customerRating,
-                    isFavorite: favoriteStatus[index],
-                    address: book.userInfo.address!,
-                    onFavoritePressed: () async {
-                      toggleFavoriteStatus(book.id, index);
-                      await _loadBooks();
-                    },
-                  ),
-                );
-              },
+                ),
+              ),
             ),
           ],
         ),
@@ -449,7 +477,7 @@ class _HomePageState extends State<HomePage> {
               children: [
                 Column(
                   children: [
-                     Center(
+                    Center(
                       child: CircleAvatar(
                         backgroundImage: NetworkImage(
                           "${user.value.picture}?t=${DateTime.now().millisecondsSinceEpoch}",
