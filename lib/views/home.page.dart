@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:myapp/controller/login.controller.dart';
-import 'package:myapp/views/chat.page.dart';
 import 'package:myapp/views/edit.profile.page.dart';
 import 'package:myapp/views/exchange.tracking.page.dart';
 import 'package:myapp/views/favorite.books.page.dart';
@@ -184,52 +183,60 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<List<Map<String, dynamic>>> getRecommendedBooks(String userId) async {
+    List<Map<String, dynamic>> bookGenres;
     // Obtenha os gêneros favoritos do usuário
     final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
     List<String> favoriteGenres = List<String>.from(userDoc['favoriteGenres'] ?? []);
 
-    // Consulta os livros que têm pelo menos um dos gêneros favoritos
-    final booksQuery = await FirebaseFirestore.instance
-        .collection('books')
-        .where('genres', arrayContainsAny: favoriteGenres)
-        .get();
+    if (favoriteGenres.isNotEmpty) {
+      // Consulta os livros que têm pelo menos um dos gêneros favoritos
+      final booksQuery = await FirebaseFirestore.instance
+          .collection('books')
+          .where('genres', arrayContainsAny: favoriteGenres)
+          .get();
 
-    // Filtra para excluir livros do próprio usuário e converte para Map<String, dynamic>
-    List<Map<String, dynamic>> books = booksQuery.docs
-        .where((doc) => doc['userInfo']['userId'] != userId)
-        .map((doc) => doc.data())
-        .toList();
+      // Filtra para excluir livros do próprio usuário e converte para Map<String, dynamic>
+      bookGenres = booksQuery.docs
+          .where((doc) => doc['userInfo']['userId'] != userId)
+          .map((doc) => doc.data())
+          .toList();
 
-    // Ordena os livros primeiro pelos gêneros favoritos e depois pela avaliação, do maior para o menor
-    books.sort((a, b) {
-      // Ordena pelo gênero se precisar, mas é opcional e depende da estrutura desejada
-      // Verifica se os gêneros existem e têm elementos
-      String genreA = (a['genres'] != null && a['genres'].isNotEmpty) ? a['genres'].first : '';
-      String genreB = (b['genres'] != null && b['genres'].isNotEmpty) ? b['genres'].first : '';
+      // Ordena os livros primeiro pelos gêneros favoritos e depois pela avaliação, do maior para o menor
+      bookGenres.sort((a, b) {
+        // Ordena pelo gênero se precisar, mas é opcional e depende da estrutura desejada
+        // Verifica se os gêneros existem e têm elementos
+        String genreA = (a['genres'] != null && a['genres'].isNotEmpty)
+            ? a['genres'].first
+            : '';
+        String genreB = (b['genres'] != null && b['genres'].isNotEmpty)
+            ? b['genres'].first
+            : '';
 
-      // Obtem os índices dos gêneros favoritos, tratando valores que podem ser -1
-      int indexA = favoriteGenres.indexOf(genreA);
-      int indexB = favoriteGenres.indexOf(genreB);
+        // Obtem os índices dos gêneros favoritos, tratando valores que podem ser -1
+        int indexA = favoriteGenres.indexOf(genreA);
+        int indexB = favoriteGenres.indexOf(genreB);
 
-      // Ajusta índices ausentes para o final da lista
-      indexA = indexA == -1 ? favoriteGenres.length : indexA;
-      indexB = indexB == -1 ? favoriteGenres.length : indexB;
+        // Ajusta índices ausentes para o final da lista
+        indexA = indexA == -1 ? favoriteGenres.length : indexA;
+        indexB = indexB == -1 ? favoriteGenres.length : indexB;
 
-      int genreComparison = indexA.compareTo(indexB);
+        int genreComparison = indexA.compareTo(indexB);
 
-      // Verifica se o customerRating não é null
-      double ratingA = a['customerRating'] ?? 0.0;
-      double ratingB = b['customerRating'] ?? 0.0;
+        // Verifica se o customerRating não é null
+        double ratingA = a['customerRating'] ?? 0.0;
+        double ratingB = b['customerRating'] ?? 0.0;
 
-      // Em caso de empate de gênero, ordena pela avaliação (rating) do maior para o menor
-      if (genreComparison == 0) {
-        return ratingB.compareTo(ratingA);
-      } else {
-        return genreComparison;
-      }
-    });
-
-    return books;
+        // Em caso de empate de gênero, ordena pela avaliação (rating) do maior para o menor
+        if (genreComparison == 0) {
+          return ratingB.compareTo(ratingA);
+        } else {
+          return genreComparison;
+        }
+      });
+    } else {
+      bookGenres = [];
+    }
+    return bookGenres;
   }
 
   void safeSetState(VoidCallback callback) {
@@ -438,6 +445,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildDrawer() {
+    print('UserID ${user.value.uid}');
+    print('UserName ${user.value.name}');
+    print('UserAddress ${user.value.address}');
+
     return Drawer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
