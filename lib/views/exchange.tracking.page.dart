@@ -140,8 +140,8 @@ class ExchangeTrackingPage extends StatelessWidget {
                       createdAt: trade['createdAt'],
                       onTap: () {
                         // Definindo as variáveis necessárias para passar para a página de confirmação
-                        final requestedBook = isRequester ? requestedBookData : offeredBooksData;
-                        final selectedOfferedBook = isRequester ? offeredBooksData : requestedBookData;
+                        final requestedBook = isRequester ? offeredBooksData : requestedBookData;
+                        final selectedOfferedBook = isRequester ? requestedBookData : offeredBooksData;
                         final requesterName = isRequester ? trade['postedBy'] : otherUserData['name'];
                         final requesterProfileUrl = isRequester ? trade['profileImageUrl'] : otherUserData['profileImageUrl'];
 

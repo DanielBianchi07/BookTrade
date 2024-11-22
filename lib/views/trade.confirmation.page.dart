@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
@@ -525,8 +526,28 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
         final updatedRequestData = await requestRef.get();
         if (updatedRequestData.exists) {
           final updatedData = updatedRequestData.data();
+          final requesterId = updatedData?['requesterId'];
+          final ownerId = updatedData?['ownerId'];
           final requesterConfirmationStatus = updatedData?['requesterConfirmationStatus'];
           final ownerConfirmationStatus = updatedData?['ownerConfirmationStatus'];
+
+          // Identifica o usuário logado
+          final currentUserId = FirebaseAuth.instance.currentUser!.uid;
+
+          // Atualiza o status do livro pertencente ao usuário logado
+          if (currentUserId == requesterId) {
+            // O usuário logado é o requester
+            await FirebaseFirestore.instance
+                .collection('books')
+                .doc(widget.selectedOfferedBook.id)
+                .update({'isAvailable': true});
+          } else if (currentUserId == ownerId) {
+            // O usuário logado é o owner
+            await FirebaseFirestore.instance
+                .collection('books')
+                .doc(widget.requestedBook.id)
+                .update({'isAvailable': true});
+          }
 
           // Se nenhum endereço foi adicionado, atualiza ambos os livros para isAvailable: true e exclui o request
           if (isAddressEmpty) {
@@ -547,13 +568,6 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
             );
             return;
           }
-
-          // Atualiza apenas o livro do usuário que está cancelando para isAvailable: true
-          final bookIdToUpdate = widget.isRequester ? widget.selectedOfferedBook.id : widget.requestedBook.id;
-          await FirebaseFirestore.instance
-              .collection('books')
-              .doc(bookIdToUpdate)
-              .update({'isAvailable': true});
 
           // Checa se ambos os status estão como "cancelado" e muda o status do request para "cancelado" se necessário
           final bothCancelled = requesterConfirmationStatus == 'cancelado' && ownerConfirmationStatus == 'cancelado';

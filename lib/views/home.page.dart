@@ -371,7 +371,7 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 16),
               ConstrainedBox(
                 constraints: const BoxConstraints(
-                  maxHeight: 300, // Altura máxima da área de rolagem
+                  maxHeight: 600, // Altura máxima da área de rolagem
                 ),
                 child: Scrollbar(
                   thumbVisibility: true, // Mostra a barra de rolagem
@@ -429,7 +429,7 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 16),
               ConstrainedBox(
                 constraints: const BoxConstraints(
-                  maxHeight: 300, // Altura máxima da área de rolagem
+                  maxHeight: 500, // Altura máxima da área de rolagem
                 ),
                 child: Scrollbar(
                   thumbVisibility: true, // Mostra a barra de rolagem
