@@ -63,11 +63,11 @@ class _NewBookPageState extends State<NewBookPage> {
             _genres = List<String>.from(volumeInfo['categories'] ?? []);
             _description = volumeInfo['description'] ?? '';
 
-            // Carregar imagem do livro da API
-            if (volumeInfo['imageLinks']?['thumbnail'] != null) {
-              _apiImage = File.fromUri(
-                  Uri.parse(volumeInfo['imageLinks']['thumbnail']));
-            }
+            // // Carregar imagem do livro da API
+            // if (volumeInfo['imageLinks']?['thumbnail'] != null) {
+            //   _apiImage = File.fromUri(
+            //       Uri.parse(volumeInfo['imageLinks']['thumbnail']));
+            // }
           });
         } else {
           _showError('Nenhum livro encontrado para o ISBN fornecido.');

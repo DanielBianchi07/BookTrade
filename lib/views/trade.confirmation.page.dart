@@ -577,12 +577,13 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
             await requestRef.update({
               'status': 'Finalizado com divergência',
               'completionField': FieldValue.serverTimestamp(),
+              completionField: FieldValue.serverTimestamp(),
             });
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Pedido cancelado com sucesso!')),
             );
           }
-          if (onlyOnecancelled) {
+          if (onlyOnecancelled && !oneCancelledOneConfirmed) {
             await requestRef.update({
               completionField: FieldValue.serverTimestamp(),
             });
@@ -686,10 +687,11 @@ class _TradeConfirmationPageState extends State<TradeConfirmationPage> {
           // Um confirmou e o outro cancelou, atualiza o status para "Finalizado com divergência"
           await requestRef.update({
             'status': 'Finalizado com divergência',
+            completionField: FieldValue.serverTimestamp(),
             'completionField': FieldValue.serverTimestamp(),
           });
         }
-        if (onlyOneconfirmed) {
+        if (onlyOneconfirmed && !oneCancelledOneConfirmed) {
           await requestRef.update({
             completionField: FieldValue.serverTimestamp(),
           });
