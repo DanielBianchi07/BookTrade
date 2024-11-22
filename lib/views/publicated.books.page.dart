@@ -61,11 +61,11 @@ class _PublicatedBooksPageState extends State<PublicatedBooksPage> {
 
             if (book.isAvailable) {
               available.add(book);
+            }else if (requestStatus == 'concluído' || requestStatus == 'Finalizado com divergência') {
+              exchanged.add(book);
             } else if (requestStatus != 'concluído' &&
                 requestStatus != 'not_found') {
               inTransaction.add(book);
-            } else if (requestStatus == 'concluído') {
-              exchanged.add(book);
             }
           } catch (e) {
             print('Erro ao verificar status do livro ${book.id}: $e');
