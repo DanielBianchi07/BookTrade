@@ -200,7 +200,7 @@ class _DeleteBookPageState extends State<DeleteBookPage> {
               textAlign: TextAlign.left,
             ),
             Text(
-              'De: ${widget.book.author}, ${widget.book.publishedDate.year}',
+              'De: ${widget.book.author}, ${widget.book.publicationYear}',
               style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.normal,
