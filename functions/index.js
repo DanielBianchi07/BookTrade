@@ -266,7 +266,7 @@ exports.notifyAddressChange = onDocumentUpdated("requests/{requestId}", async (e
     const beforeAddress = Array.isArray(before.deliveryAddress) ? before.deliveryAddress : [];
     const afterAddress = Array.isArray(after.deliveryAddress) ? after.deliveryAddress : [];
 
-    if (beforeAddress.length + 1 === afterAddress.length) {
+    if (beforeAddress.length + 1 === afterAddress.length && beforeAddress.length !== 0) {
         const requesterId = after.requesterId;
 
         // Obter o token do requester
@@ -319,11 +319,27 @@ exports.notifyRequesterCancellation = onDocumentUpdated("requests/{requestId}", 
     const before = event.data.before.data();
     const after = event.data.after.data();
 
+    // Verificar se a troca foi finalizada com divergência (não enviar notificação neste caso)
+    if (
+        before.status === "Aguardando recebimento" &&
+        after.status === "Finalizado com divergência"
+    ) {
+        console.log("Troca finalizada com divergência. Notificação não enviada.");
+        return;
+    }
+
+    // Verificar se o requester cancelou a troca
     if (
         before.requesterConfirmationStatus !== "cancelado" &&
         after.requesterConfirmationStatus === "cancelado" &&
         after.status === "Aguardando recebimento"
     ) {
+        // Evitar notificação se o owner já confirmou o status
+        if (before.ownerConfirmationStatus === "confirmado") {
+            console.log("Owner já confirmou. Notificação de cancelamento não enviada.");
+            return;
+        }
+
         const ownerId = after.ownerId;
 
         // Obter o token do owner
@@ -376,11 +392,27 @@ exports.notifyOwnerCancellation = onDocumentUpdated("requests/{requestId}", asyn
     const before = event.data.before.data();
     const after = event.data.after.data();
 
+    // Verificar se a troca foi finalizada com divergência (não enviar notificação neste caso)
+    if (
+        before.status === "Aguardando recebimento" &&
+        after.status === "Finalizado com divergência"
+    ) {
+        console.log("Troca finalizada com divergência. Notificação não enviada.");
+        return;
+    }
+
+    // Verificar se o owner cancelou a troca
     if (
         before.ownerConfirmationStatus !== "cancelado" &&
         after.ownerConfirmationStatus === "cancelado" &&
         after.status === "Aguardando recebimento"
     ) {
+        // Evitar notificação se o requester já confirmou o status
+        if (before.requesterConfirmationStatus === "confirmado") {
+            console.log("Requester já confirmou. Notificação de cancelamento não enviada.");
+            return;
+        }
+
         const requesterId = after.requesterId;
 
         // Obter o token do requester
@@ -388,7 +420,7 @@ exports.notifyOwnerCancellation = onDocumentUpdated("requests/{requestId}", asyn
         const deviceToken = requesterDoc.exists ? requesterDoc.data().deviceToken : null;
 
         const title = "Troca Cancelada";
-        const body = `O proprietário do livro, "${after.requestedBook?.title}" cancelou a troca.`;
+        const body = `O proprietário do livro "${after.requestedBook?.title}" cancelou a troca.`;
         const icon = "assets/rejected_request_icon.png"; // Caminho ou URL do ícone
 
         if (deviceToken) {
@@ -427,6 +459,7 @@ exports.notifyOwnerCancellation = onDocumentUpdated("requests/{requestId}", asyn
         }
     }
 });
+
 
 // Cancelamento pelo requester antes do Endereço Definido
 exports.notifyRequesterCancellationBeforeAddress = onDocumentDeleted("requests/{requestId}", async (event) => {
