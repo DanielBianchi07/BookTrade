@@ -37,6 +37,7 @@ class _HomePageState extends State<HomePage> {
   ScrollController _scrollController = ScrollController();
   List<BookModel> favoriteGenreBooks = [];
   List<BookModel> allBooks = []; // Lista que armazena todos os livros
+  List<BookModel> nearBooks = [];
   bool busy = false;
   List<BookModel> books = [];
   List<bool> favoriteStatus = [];
@@ -102,7 +103,9 @@ class _HomePageState extends State<HomePage> {
       List<String> favoriteBooks = [];
       if (userId != null) {
         favoriteBooks = await booksController.getFavoriteBookIds(userId);
-
+        // Obtenha o endereço (cidade) do usuário logado
+        final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+        final userCity = userDoc.data()?['address'] ?? '';
 
       final recommendedBooks = await getRecommendedBooks(user.value.uid);
       // Consulta para carregar apenas livros com isAvailable = true
@@ -114,6 +117,14 @@ class _HomePageState extends State<HomePage> {
           setState(() {
             favoriteGenreBooks = recommendedBooks.map((data) {
               return BookModel.fromMap(data);
+            }).toList();
+          });
+        }
+        if (mounted) {
+          setState(() {
+            nearBooks = allBooks.where((book) {
+              final bookCity = book.userInfo.address ?? '';
+              return bookCity == userCity && book.userId != userId;
             }).toList();
           });
         }
@@ -180,6 +191,11 @@ class _HomePageState extends State<HomePage> {
             book.author.toLowerCase().contains(query.toLowerCase()))
             .toList();
         favoriteGenreBooks = favoriteGenreBooks
+            .where((book) =>
+        book.title.toLowerCase().contains(query.toLowerCase()) ||
+            book.author.toLowerCase().contains(query.toLowerCase()))
+            .toList();
+        nearBooks = nearBooks
             .where((book) =>
         book.title.toLowerCase().contains(query.toLowerCase()) ||
             book.author.toLowerCase().contains(query.toLowerCase()))
@@ -341,130 +357,189 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       drawer: _buildDrawer(),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Recomendados:',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxHeight: 300, // Altura máxima da área de rolagem
+      body: RefreshIndicator(
+        onRefresh: _onRefresh,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Recomendados:',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
-              child: Scrollbar(
-                thumbVisibility: true, // Mostra a barra de rolagem
-                child: books.isEmpty
-                    ? const SizedBox(
-                  height: 50,
-                  child: Center(
-                    child: Text(
-                      'Nenhum livro selecionado ainda',
-                      style: TextStyle(color: Colors.grey, fontSize: 14),
-                    ),
-                  ),
-                )
-                    : ListView.builder(
-                  controller: _scrollController,
-                  shrinkWrap: true,
-                  itemCount: books.length,
-                  itemBuilder: (context, index) {
-                    final book = books[index];
-                    return InkWell(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => TradeOfferPage(book: book),
-                          ),
-                        );
-                      },
-                      child: BookCard(
-                        id: book.id,
-                        userId: book.userId,
-                        title: book.title,
-                        author: book.author,
-                        imageUserUrl: book.bookImageUserUrls[0],
-                        postedBy: book.userInfo.name,
-                        profileImageUrl: book.userInfo.profileImageUrl,
-                        customerRating: book.userInfo.customerRating,
-                        isFavorite: favoriteStatus[index],
-                        address: book.userInfo.address!,
-                        onFavoritePressed: () async {
-                          toggleFavoriteStatus(book.id, index);
-                          await _loadBooks();
-                        },
+              const SizedBox(height: 16),
+              ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxHeight: 300, // Altura máxima da área de rolagem
+                ),
+                child: Scrollbar(
+                  thumbVisibility: true, // Mostra a barra de rolagem
+                  child: books.isEmpty
+                      ? const SizedBox(
+                    height: 50,
+                    child: Center(
+                      child: Text(
+                        'Nenhum livro selecionado ainda',
+                        style: TextStyle(color: Colors.grey, fontSize: 14),
                       ),
-                    );
-                  },
+                    ),
+                  )
+                      : ListView.builder(
+                    controller: _scrollController,
+                    shrinkWrap: true,
+                    itemCount: books.length,
+                    itemBuilder: (context, index) {
+                      final book = books[index];
+                      return InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => TradeOfferPage(book: book),
+                            ),
+                          );
+                        },
+                        child: BookCard(
+                          id: book.id,
+                          userId: book.userId,
+                          title: book.title,
+                          author: book.author,
+                          imageUserUrl: book.bookImageUserUrls[0],
+                          postedBy: book.userInfo.name,
+                          profileImageUrl: book.userInfo.profileImageUrl,
+                          customerRating: book.userInfo.customerRating,
+                          isFavorite: favoriteStatus[index],
+                          address: book.userInfo.address!,
+                          onFavoritePressed: () async {
+                            toggleFavoriteStatus(book.id, index);
+                            await _loadBooks();
+                          },
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 32),
-            const Text(
-              'Baseado nos seus gêneros favoritos:',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxHeight: 300, // Altura máxima da área de rolagem
+              const SizedBox(height: 32),
+              const Text(
+                'Baseado nos seus gêneros favoritos:',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
-              child: Scrollbar(
-                thumbVisibility: true, // Mostra a barra de rolagem
-                child: favoriteGenreBooks.isEmpty
-                    ? const SizedBox(
-                  height: 50,
-                  child: Center(
-                    child: Text(
-                      'Não foi encontrado livros.',
-                      style: TextStyle(color: Colors.grey, fontSize: 14),
-                    ),
-                  ),
-                )
-                    : ListView.builder(
-                  controller: _scrollController,
-                  shrinkWrap: true,
-                  itemCount: favoriteGenreBooks.length,  // Verifique se o itemCount é igual ao tamanho de favoriteGenreBooks
-                  itemBuilder: (context, index) {
-                    if (index >= favoriteGenreBooks.length) {
-                      return const SizedBox.shrink();  // Evita acessar um índice inválido
-                    }
-                    final book = favoriteGenreBooks[index];
-                    return InkWell(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => TradeOfferPage(book: book),
-                          ),
-                        );
-                      },
-                      child: BookCard(
-                        id: book.id,
-                        userId: book.userId,
-                        title: book.title,
-                        author: book.author,
-                        imageUserUrl: book.bookImageUserUrls[0],
-                        postedBy: book.userInfo.name,
-                        profileImageUrl: book.userInfo.profileImageUrl,
-                        customerRating: book.userInfo.customerRating,
-                        isFavorite: favoriteStatus.isNotEmpty && index < favoriteStatus.length ? favoriteStatus[index] : false,
-                        address: book.userInfo.address,
-                        onFavoritePressed: () async {
-                          toggleFavoriteStatus(book.id, index);
-                          await _loadBooks();
-                        },
+              const SizedBox(height: 16),
+              ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxHeight: 300, // Altura máxima da área de rolagem
+                ),
+                child: Scrollbar(
+                  thumbVisibility: true, // Mostra a barra de rolagem
+                  child: favoriteGenreBooks.isEmpty
+                      ? const SizedBox(
+                    height: 50,
+                    child: Center(
+                      child: Text(
+                        'Não foi encontrado livros.',
+                        style: TextStyle(color: Colors.grey, fontSize: 14),
                       ),
-                    );
-                  },
+                    ),
+                  )
+                      : ListView.builder(
+                    controller: _scrollController,
+                    shrinkWrap: true,
+                    itemCount: favoriteGenreBooks.length,  // Verifique se o itemCount é igual ao tamanho de favoriteGenreBooks
+                    itemBuilder: (context, index) {
+                      if (index >= favoriteGenreBooks.length) {
+                        return const SizedBox.shrink();  // Evita acessar um índice inválido
+                      }
+                      final book = favoriteGenreBooks[index];
+                      return InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => TradeOfferPage(book: book),
+                            ),
+                          );
+                        },
+                        child: BookCard(
+                          id: book.id,
+                          userId: book.userId,
+                          title: book.title,
+                          author: book.author,
+                          imageUserUrl: book.bookImageUserUrls[0],
+                          postedBy: book.userInfo.name,
+                          profileImageUrl: book.userInfo.profileImageUrl,
+                          customerRating: book.userInfo.customerRating,
+                          isFavorite: favoriteStatus.isNotEmpty && index < favoriteStatus.length ? favoriteStatus[index] : false,
+                          address: book.userInfo.address,
+                          onFavoritePressed: () async {
+                            toggleFavoriteStatus(book.id, index);
+                            await _loadBooks();
+                          },
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 32),
+              const Text(
+                'Perto de você',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxHeight: 300, // Altura máxima da área de rolagem
+                ),
+                child: nearBooks.isEmpty
+                      ? const SizedBox(
+                    height: 50,
+                    child: Center(
+                      child: Text(
+                        'Não foi encontrado livros.',
+                        style: TextStyle(color: Colors.grey, fontSize: 14),
+                      ),
+                    ),
+                  )
+                  : ListView.builder(
+                    controller: _scrollController,
+                    shrinkWrap: true,
+                    itemCount: nearBooks.length,
+                    itemBuilder: (context, index) {
+                      final book = nearBooks[index];
+                      return InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => TradeOfferPage(book: book),
+                            ),
+                          );
+                        },
+                        child: BookCard(
+                          id: book.id,
+                          userId: book.userId,
+                          title: book.title,
+                          author: book.author,
+                          imageUserUrl: book.bookImageUserUrls[0],
+                          postedBy: book.userInfo.name,
+                          profileImageUrl: book.userInfo.profileImageUrl,
+                          customerRating: book.userInfo.customerRating,
+                          isFavorite: favoriteStatus.isNotEmpty && index < favoriteStatus.length ? favoriteStatus[index] : false,
+                          address: book.userInfo.address,
+                          onFavoritePressed: () async {
+                            toggleFavoriteStatus(book.id, index);
+                            await _loadBooks();
+                          },
+                        ),
+                      );
+                    },
+                  ),
+              ),
+              const SizedBox(height: 32),
+            ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
