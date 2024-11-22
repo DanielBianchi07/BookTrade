@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:myapp/controller/login.controller.dart';
-import 'package:myapp/views/chat.page.dart';
 import 'package:myapp/views/edit.profile.page.dart';
 import 'package:myapp/views/exchange.tracking.page.dart';
 import 'package:myapp/views/favorite.books.page.dart';
@@ -35,6 +34,7 @@ class _HomePageState extends State<HomePage> {
   final loginController = LoginController();
   final booksController = BooksController(); // Instância do BooksController
   final TextEditingController _searchController = TextEditingController();
+  ScrollController _scrollController = ScrollController();
   List<BookModel> favoriteGenreBooks = [];
   List<BookModel> allBooks = []; // Lista que armazena todos os livros
   bool busy = false;
@@ -52,6 +52,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void dispose() {
     _searchController.dispose(); // Libere o controlador de texto
+    _scrollController.dispose(); // Libere o ScrollController
     super.dispose();
   }
 
@@ -101,7 +102,7 @@ class _HomePageState extends State<HomePage> {
       List<String> favoriteBooks = [];
       if (userId != null) {
         favoriteBooks = await booksController.getFavoriteBookIds(userId);
-      }
+
 
       final recommendedBooks = await getRecommendedBooks(user.value.uid);
       // Consulta para carregar apenas livros com isAvailable = true
@@ -109,63 +110,62 @@ class _HomePageState extends State<HomePage> {
           .collection('books')
           .where('isAvailable', isEqualTo: true)
           .get();
-
-      setState(() {
         if (mounted) {
-          favoriteGenreBooks = recommendedBooks.map((data) {
-            return BookModel.fromMap(data);
-          }).toList();
+          setState(() {
+            favoriteGenreBooks = recommendedBooks.map((data) {
+              return BookModel.fromMap(data);
+            }).toList();
+          });
         }
-      });
-      setState(() {
         if (mounted) {
-          allBooks = snapshot.docs
-              .where((doc) =>
-          (doc.data() as Map<String, dynamic>)['userId'] != userId)
-              .map((doc) {
-            final data = doc.data() as Map<String, dynamic>;
+          setState(() {
+            allBooks = snapshot.docs
+                .where((doc) => (doc.data() as Map<String, dynamic>)['userId'] != userId)
+                .map((doc) {
+              final data = doc.data() as Map<String, dynamic>;
 
-            var bookImageUserUrls = data['bookImageUserUrls'];
-            if (bookImageUserUrls is String) {
-              bookImageUserUrls = [bookImageUserUrls];
-            } else if (bookImageUserUrls is List) {
-              bookImageUserUrls =
-                  bookImageUserUrls.map((item) => item.toString()).toList();
-            } else {
-              bookImageUserUrls = ['https://via.placeholder.com/100'];
-            }
+              var bookImageUserUrls = data['bookImageUserUrls'];
+              if (bookImageUserUrls is String) {
+                bookImageUserUrls = [bookImageUserUrls];
+              } else if (bookImageUserUrls is List) {
+                bookImageUserUrls =
+                    bookImageUserUrls.map((item) => item.toString()).toList();
+              } else {
+                bookImageUserUrls = ['https://via.placeholder.com/100'];
+              }
 
-            return BookModel(
-              userId: data['userId'] ?? '',
-              id: doc.id,
-              title: data['title'] ?? 'Título não disponível',
-              author: data['author'] ?? 'Autor desconhecido',
-              bookImageUserUrls: bookImageUserUrls,
-              imageApiUrl: data['imageApiUrl'],
-              publishedDate: (data['publishedDate'] as Timestamp?)?.toDate() ??
-                  DateTime.now(),
-              condition: data['condition'] ?? 'Condição não disponível',
-              edition: data['edition'] ?? 'Edição não disponível',
-              genres: data['genres'] != null
-                  ? List<String>.from(data['genres'])
-                  : [],
-              isbn: data['isbn'],
-              description: data['description'],
-              publicationYear: data['publicationYear'] ??
-                  'Ano de publicação não disponível',
-              publisher: data['publisher'] ?? 'Editora não disponível',
-              isAvailable: data['isAvailable'] ?? true,
-              userInfo: UInfo.fromMap(data['userInfo'] ?? {}),
-            );
-          }).toList();
+              return BookModel(
+                userId: data['userId'] ?? '',
+                id: doc.id,
+                title: data['title'] ?? 'Título não disponível',
+                author: data['author'] ?? 'Autor desconhecido',
+                bookImageUserUrls: bookImageUserUrls,
+                imageApiUrl: data['imageApiUrl'],
+                publishedDate: (data['publishedDate'] as Timestamp?)?.toDate() ??
+                    DateTime.now(),
+                condition: data['condition'] ?? 'Condição não disponível',
+                edition: data['edition'] ?? 'Edição não disponível',
+                genres: data['genres'] != null
+                    ? List<String>.from(data['genres'])
+                    : [],
+                isbn: data['isbn'],
+                description: data['description'],
+                publicationYear: data['publicationYear'] ??
+                    'Ano de publicação não disponível',
+                publisher: data['publisher'] ?? 'Editora não disponível',
+                isAvailable: data['isAvailable'] ?? true,
+                userInfo: UInfo.fromMap(data['userInfo'] ?? {}),
+              );
+            }).toList();
 
-          // Inicialmente, `books` contém todos os livros
-          books = List.from(allBooks);
+            // Inicialmente, `books` contém todos os livros
+            books = List.from(allBooks);
 
-          favoriteStatus = List.generate(
-              books.length, (index) => favoriteBooks.contains(books[index].id));
+            favoriteStatus = List.generate(
+                books.length, (index) => favoriteBooks.contains(books[index].id));
+          });
         }
-      });
+      }
     } catch (e) {
       print('Erro ao carregar livros: $e');
     }
@@ -189,10 +189,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<List<Map<String, dynamic>>> getRecommendedBooks(String userId) async {
+    List<Map<String, dynamic>> books;
     // Obtenha os gêneros favoritos do usuário
     final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
     List<String> favoriteGenres = List<String>.from(userDoc['favoriteGenres'] ?? []);
 
+    if (favoriteGenres.isNotEmpty) {
     // Consulta os livros que têm pelo menos um dos gêneros favoritos
     final booksQuery = await FirebaseFirestore.instance
         .collection('books')
@@ -200,7 +202,7 @@ class _HomePageState extends State<HomePage> {
         .get();
 
     // Filtra para excluir livros do próprio usuário e converte para Map<String, dynamic>
-    List<Map<String, dynamic>> books = booksQuery.docs
+    books = booksQuery.docs
         .where((doc) => doc['userInfo']['userId'] != userId)
         .map((doc) => doc.data())
         .toList();
@@ -209,8 +211,12 @@ class _HomePageState extends State<HomePage> {
     books.sort((a, b) {
       // Ordena pelo gênero se precisar, mas é opcional e depende da estrutura desejada
       // Verifica se os gêneros existem e têm elementos
-      String genreA = (a['genres'] != null && a['genres'].isNotEmpty) ? a['genres'].first : '';
-      String genreB = (b['genres'] != null && b['genres'].isNotEmpty) ? b['genres'].first : '';
+      String genreA = (a['genres'] != null && a['genres'].isNotEmpty)
+          ? a['genres'].first
+          : '';
+      String genreB = (b['genres'] != null && b['genres'].isNotEmpty)
+          ? b['genres'].first
+          : '';
 
       // Obtem os índices dos gêneros favoritos, tratando valores que podem ser -1
       int indexA = favoriteGenres.indexOf(genreA);
@@ -233,6 +239,9 @@ class _HomePageState extends State<HomePage> {
         return genreComparison;
       }
     });
+    } else {
+      books = [];
+    }
 
     return books;
   }
@@ -263,9 +272,12 @@ class _HomePageState extends State<HomePage> {
     } catch (e) {
       print('Erro ao atualizar favoritos: $e');
       // Reverte a mudança em caso de erro
-      setState(() {
-        favoriteStatus[index] = !favoriteStatus[index]; // Reverte o estado local
-      });
+      if (mounted) {
+        setState(() {
+          favoriteStatus[index] =
+          !favoriteStatus[index]; // Reverte o estado local
+        });
+      }
     }
   }
 
@@ -329,128 +341,130 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       drawer: _buildDrawer(),
-      body: RefreshIndicator(
-        onRefresh: _onRefresh,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Recomendados:',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Recomendados:',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxHeight: 300, // Altura máxima da área de rolagem
               ),
-              const SizedBox(height: 16),
-              ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxHeight: 300, // Altura máxima da área de rolagem
-                ),
-                child: Scrollbar(
-                  thumbVisibility: true, // Mostra a barra de rolagem
-                  child: books.isEmpty
-                      ? const SizedBox(
-                    height: 50,
-                    child: Center(
-                      child: Text(
-                        'Nenhum livro selecionado ainda',
-                        style: TextStyle(color: Colors.grey, fontSize: 14),
-                      ),
+              child: Scrollbar(
+                thumbVisibility: true, // Mostra a barra de rolagem
+                child: books.isEmpty
+                    ? const SizedBox(
+                  height: 50,
+                  child: Center(
+                    child: Text(
+                      'Nenhum livro selecionado ainda',
+                      style: TextStyle(color: Colors.grey, fontSize: 14),
                     ),
-                  )
-                      : ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: books.length,
-                    itemBuilder: (context, index) {
-                      final book = books[index];
-                      return InkWell(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => TradeOfferPage(book: book),
-                            ),
-                          );
-                        },
-                        child: BookCard(
-                          id: book.id,
-                          userId: book.userId,
-                          title: book.title,
-                          author: book.author,
-                          imageUserUrl: book.bookImageUserUrls[0],
-                          postedBy: book.userInfo.name,
-                          profileImageUrl: book.userInfo.profileImageUrl,
-                          customerRating: book.userInfo.customerRating,
-                          isFavorite: favoriteStatus[index],
-                          address: book.userInfo.address!,
-                          onFavoritePressed: () async {
-                            toggleFavoriteStatus(book.id, index);
-                            await _loadBooks();
-                          },
-                        ),
-                      );
-                    },
                   ),
-                ),
-              ),
-              const SizedBox(height: 32),
-              const Text(
-                'Baseado nos seus gêneros favoritos:',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxHeight: 300, // Altura máxima da área de rolagem
-                ),
-                child: Scrollbar(
-                  thumbVisibility: true, // Mostra a barra de rolagem
-                  child: favoriteGenreBooks.isEmpty
-                      ? const SizedBox(
-                    height: 50,
-                    child: Center(
-                      child: Text(
-                        'Não foi encontrado livros.',
-                        style: TextStyle(color: Colors.grey, fontSize: 14),
+                )
+                    : ListView.builder(
+                  controller: _scrollController,
+                  shrinkWrap: true,
+                  itemCount: books.length,
+                  itemBuilder: (context, index) {
+                    final book = books[index];
+                    return InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => TradeOfferPage(book: book),
+                          ),
+                        );
+                      },
+                      child: BookCard(
+                        id: book.id,
+                        userId: book.userId,
+                        title: book.title,
+                        author: book.author,
+                        imageUserUrl: book.bookImageUserUrls[0],
+                        postedBy: book.userInfo.name,
+                        profileImageUrl: book.userInfo.profileImageUrl,
+                        customerRating: book.userInfo.customerRating,
+                        isFavorite: favoriteStatus[index],
+                        address: book.userInfo.address!,
+                        onFavoritePressed: () async {
+                          toggleFavoriteStatus(book.id, index);
+                          await _loadBooks();
+                        },
                       ),
-                    ),
-                  )
-                      : ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: favoriteGenreBooks.length,
-                    itemBuilder: (context, index) {
-                      final book = favoriteGenreBooks[index];
-                      return InkWell(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => TradeOfferPage(book: book),
-                            ),
-                          );
-                        },
-                        child: BookCard(
-                          id: book.id,
-                          userId: book.userId,
-                          title: book.title,
-                          author: book.author,
-                          imageUserUrl: book.bookImageUserUrls[0],
-                          postedBy: book.userInfo.name,
-                          profileImageUrl: book.userInfo.profileImageUrl,
-                          customerRating: book.userInfo.customerRating,
-                          isFavorite: favoriteStatus[index],
-                          address: book.userInfo.address!,
-                          onFavoritePressed: () async {
-                            toggleFavoriteStatus(book.id, index);
-                            await _loadBooks();
-                          },
-                        ),
-                      );
-                    },
-                  ),
+                    );
+                  },
                 ),
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 32),
+            const Text(
+              'Baseado nos seus gêneros favoritos:',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxHeight: 300, // Altura máxima da área de rolagem
+              ),
+              child: Scrollbar(
+                thumbVisibility: true, // Mostra a barra de rolagem
+                child: favoriteGenreBooks.isEmpty
+                    ? const SizedBox(
+                  height: 50,
+                  child: Center(
+                    child: Text(
+                      'Não foi encontrado livros.',
+                      style: TextStyle(color: Colors.grey, fontSize: 14),
+                    ),
+                  ),
+                )
+                    : ListView.builder(
+                  controller: _scrollController,
+                  shrinkWrap: true,
+                  itemCount: favoriteGenreBooks.length,  // Verifique se o itemCount é igual ao tamanho de favoriteGenreBooks
+                  itemBuilder: (context, index) {
+                    if (index >= favoriteGenreBooks.length) {
+                      return const SizedBox.shrink();  // Evita acessar um índice inválido
+                    }
+                    final book = favoriteGenreBooks[index];
+                    return InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => TradeOfferPage(book: book),
+                          ),
+                        );
+                      },
+                      child: BookCard(
+                        id: book.id,
+                        userId: book.userId,
+                        title: book.title,
+                        author: book.author,
+                        imageUserUrl: book.bookImageUserUrls[0],
+                        postedBy: book.userInfo.name,
+                        profileImageUrl: book.userInfo.profileImageUrl,
+                        customerRating: book.userInfo.customerRating,
+                        isFavorite: favoriteStatus.isNotEmpty && index < favoriteStatus.length ? favoriteStatus[index] : false,
+                        address: book.userInfo.address,
+                        onFavoritePressed: () async {
+                          toggleFavoriteStatus(book.id, index);
+                          await _loadBooks();
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -567,11 +581,46 @@ class _HomePageState extends State<HomePage> {
                     Navigator.push(context, MaterialPageRoute(builder: (context) => TradeHistoryPage()));
                   },
                 ),
-                ListTile(
-                  leading: const Icon(Icons.notifications, color: Colors.black),
-                  title: const Text('Notificações'),
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationsPage()));
+                StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('notifications')
+                      .where('userId', isEqualTo: FirebaseAuth.instance.currentUser!.uid) // Filtra notificações do usuário logado
+                      .where('isUnread', isEqualTo: true) // Apenas notificações não lidas
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return ListTile(
+                        leading: const Icon(Icons.notifications, color: Colors.black),
+                        title: const Text('Notificações'),
+                        trailing: const Text('...'), // Mostra um indicador de carregamento
+                        onTap: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationsPage()));
+                        },
+                      );
+                    }
+
+                    final unreadCount = snapshot.data!.docs.length;
+
+                    return ListTile(
+                      leading: const Icon(Icons.notifications, color: Colors.black),
+                      title: const Text('Notificações'),
+                      trailing: unreadCount > 0
+                          ? Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          unreadCount.toString(),
+                          style: const TextStyle(color: Colors.white, fontSize: 12),
+                        ),
+                      )
+                          : null, // Não mostra nada se não houver notificações não lidas
+                      onTap: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationsPage()));
+                      },
+                    );
                   },
                 ),
                 ListTile(
@@ -588,11 +637,43 @@ class _HomePageState extends State<HomePage> {
                     Navigator.push(context, MaterialPageRoute(builder: (context) => FavoriteBooksPage()));
                   },
                 ),
-                ListTile(
-                  leading: const Icon(Icons.chat, color: Colors.black),
-                  title: const Text('Chat'),
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => ChatsPage()));
+                StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('messages')
+                      .where('isRead', isEqualTo: false)
+                      .where('receiverId', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+                      .snapshots(),
+                  builder: (context, unreadSnapshot) {
+                    if (unreadSnapshot.connectionState == ConnectionState.waiting) {
+                      return const ListTile(
+                        leading: Icon(Icons.chat, color: Colors.black),
+                        title: Text('Chat'),
+                        trailing: Text('...'), // Indicador de carregamento
+                        onTap: null,
+                      );
+                    }
+                    final unreadCount = unreadSnapshot.data?.docs.length ?? 0;
+
+                    return ListTile(
+                      leading: const Icon(Icons.chat, color: Colors.black),
+                      title: const Text('Chat'),
+                      trailing: unreadCount > 0
+                          ? Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          unreadCount.toString(),
+                          style: const TextStyle(color: Colors.white, fontSize: 12),
+                        ),
+                      )
+                          : null, // Não mostra nada se não houver mensagens não lidas
+                      onTap: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => ChatsPage()));
+                      },
+                    );
                   },
                 ),
                 ListTile(
